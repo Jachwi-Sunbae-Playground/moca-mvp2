@@ -10,14 +10,16 @@ ADR은 프로젝트에 영향을 주는 기술적 결정을 당시의 맥락과 
 4. 승인된 ADR의 결론을 바꿀 때는 기존 문서를 지우지 않고 새로운 ADR에서 대체한다.
 5. 구현 결과나 전제가 달라지면 결과와 재검토 조건을 갱신한다.
 
-새 ADR은 [ADR 템플릿](template.md)을 복사해 작성한다.
-
 ## 현재 ADR
 
 | 번호 | 제목 | 상태 | 결정일 |
 | --- | --- | --- | --- |
 | [0001](0001-use-monorepo.md) | 모노레포를 사용한다 | 승인 | 2026-08-04 |
-| [0002](0002-backend-runtime-and-build-tools.md) | 백엔드 런타임과 빌드 도구를 선택한다 | 승인 | 2026-08-04 |
-| [0003](0003-use-layered-architecture-and-jdbc-template-for-mvp.md) | MVP에 레이어드 구조와 JDBC Template을 사용한다 | 승인 | 2026-08-04 |
-| [0004](0004-use-mysql-and-testcontainers.md) | 로컬과 테스트 데이터베이스 환경을 구성한다 | 승인 | 2026-08-04 |
-| [0005](0005-use-wooteco-style-and-github-actions.md) | 코드 스타일과 CI 검증 방식을 선택한다 | 승인 | 2026-08-04 |
+| [0002](0002-select-backend-runtime.md) | 백엔드 런타임을 선택한다 | 승인 | 2026-08-04 |
+| [0003](0003-select-database-and-persistence.md) | 데이터베이스와 영속성 방식을 선택한다 | 승인 | 2026-08-04 |
+| [0004](0004-manage-local-development-environment.md) | 재현 가능한 개발 환경을 관리한다 | 승인 | 2026-08-04 |
+| [0005](0005-select-java-code-style.md) | Java 코드 스타일을 선택한다 | 승인 | 2026-08-04 |
+
+## 새 ADR 골격
+
+새 ADR에는 `상태`, `결정일`, `참여자`, `맥락`, `결정`, `근거`, `검토한 대안`, `결과와 트레이드오프`, `검증 방법`, `재검토 조건`을 작성한다.

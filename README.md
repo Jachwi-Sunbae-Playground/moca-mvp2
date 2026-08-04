@@ -11,22 +11,21 @@
 ├── .github/
 │   └── workflows/        # CI 워크플로
 ├── backend/
-│   ├── docs/             # 백엔드 요구사항, 실행 가이드, ADR, 컨벤션
+│   ├── config/           # 백엔드 개발 도구 설정
+│   ├── docs/             # 백엔드 문서
 │   ├── gradle/           # Gradle Wrapper
-│   └── src/              # Spring Boot 소스와 테스트
-├── config/
-│   └── code-style/       # 공통 Java 코드 스타일
+│   ├── src/              # Spring Boot 소스와 테스트
+│   ├── .env.example      # 백엔드 로컬 환경변수 예시
+│   └── compose.yaml      # 백엔드 로컬 인프라
 ├── frontend/             # 프론트엔드 애플리케이션(개발 시작 시 생성)
 ├── .editorconfig         # 공통 에디터 설정
-├── .env.example          # 로컬 환경변수 예시
 ├── .gitignore            # Git 추적 제외 규칙
-├── compose.yaml          # 로컬 공통 인프라
 └── README.md
 ```
 
-디렉터리는 실제 구성 요소나 문서가 추가되는 시점에 생성합니다.
+백엔드 문서 골격은 `backend/docs`에서 미리 관리하고, 프론트엔드처럼 아직 없는 애플리케이션 디렉터리는 실제 개발을 시작할 때 생성합니다.
 
 ## 시작하기
 
 - [백엔드 문서 안내](backend/docs/README.md)
-- [백엔드 로컬 개발 환경 구성 및 실행](backend/docs/development/backend-local-setup.md)
+- [백엔드 로컬 개발 환경 구성 및 실행](backend/docs/guides/local-development.md)

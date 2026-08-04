@@ -12,7 +12,7 @@
 
 | 제출 내용 | 기록 위치 |
 | --- | --- |
-| 개발 환경 구성 및 실행 방법 | [백엔드 로컬 개발 환경 가이드](../development/backend-local-setup.md) |
+| 개발 환경 구성 및 실행 방법 | [로컬 개발 가이드](../guides/local-development.md) |
 | 주요 기술 선택과 판단 근거 | [ADR 목록](../adr/README.md) |
 | 검토한 대안과 트레이드오프 | 각 ADR의 `검토한 대안`, `결과와 트레이드오프` |
 | 환경 재현 또는 실행 확인 결과 | 이 문서의 검증 결과와 팀원 재현 기록 |
@@ -22,28 +22,27 @@
 | 결정 | 선택한 이유 | 상세 기록 |
 | --- | --- | --- |
 | 모노레포 | 코드, 문서, CI 변경을 한 PR에서 검토하고 저장소 관리 비용을 줄인다 | [ADR-0001](../adr/0001-use-monorepo.md) |
-| Java 21 | 장기 지원 버전이며 팀 경험과 안정성의 균형이 좋다 | [ADR-0002](../adr/0002-backend-runtime-and-build-tools.md) |
-| Spring Boot 3.5.16 | 4.1보다 팀 경험과 생태계 호환성 위험이 낮아 MVP에 집중할 수 있다 | [ADR-0002](../adr/0002-backend-runtime-and-build-tools.md) |
-| Gradle 8.14.3 Wrapper | 별도 Gradle 설치 없이 팀 버전을 고정한다 | [ADR-0002](../adr/0002-backend-runtime-and-build-tools.md) |
-| Lombok 미사용 | 생성 코드보다 명시적인 Java 코드와 공통 이해를 우선한다 | [ADR-0002](../adr/0002-backend-runtime-and-build-tools.md) |
-| JDBC Template과 레이어드 구조 | 현재 MVP 복잡도에 맞게 구조 비용을 줄이고 SQL 동작을 명확히 본다 | [ADR-0003](../adr/0003-use-layered-architecture-and-jdbc-template-for-mvp.md) |
-| JPA와 헥사고날 도입 보류 | 실제 모델링 복잡성이 확인된 뒤 비용과 이점을 다시 판단한다 | [ADR-0003](../adr/0003-use-layered-architecture-and-jdbc-template-for-mvp.md) |
-| Docker Compose MySQL | 팀원의 로컬 설치 상태와 무관하게 같은 DB 버전을 실행한다 | [ADR-0004](../adr/0004-use-mysql-and-testcontainers.md) |
-| Testcontainers MySQL | H2나 Mock이 놓치는 실제 SQL과 매핑을 검증한다 | [ADR-0004](../adr/0004-use-mysql-and-testcontainers.md) |
-| 우테코 스타일과 EditorConfig | 익숙한 규칙을 재사용해 포맷 차이를 줄인다 | [ADR-0005](../adr/0005-use-wooteco-style-and-github-actions.md) |
-| GitHub Actions CI | 별도 서버 없이 PR에서 동일한 빌드와 테스트를 검증한다 | [ADR-0005](../adr/0005-use-wooteco-style-and-github-actions.md) |
+| Java 21 | 장기 지원 버전이며 팀 경험과 안정성의 균형이 좋다 | [ADR-0002](../adr/0002-select-backend-runtime.md) |
+| Spring Boot 3.5.16 | 4.1보다 팀 경험과 생태계 호환성 위험이 낮아 MVP에 집중할 수 있다 | [ADR-0002](../adr/0002-select-backend-runtime.md) |
+| Gradle 8.14.3 Wrapper | 별도 Gradle 설치 없이 팀 버전을 고정한다 | [ADR-0002](../adr/0002-select-backend-runtime.md) |
+| Lombok 미사용 | 생성 코드보다 명시적인 Java 코드와 공통 이해를 우선한다 | [ADR-0002](../adr/0002-select-backend-runtime.md) |
+| MySQL과 JdbcTemplate | 실제 MySQL SQL을 명시적으로 관리하고 현재 MVP의 구조 비용을 줄인다 | [ADR-0003](../adr/0003-select-database-and-persistence.md) |
+| JPA와 헥사고날 도입 보류 | 실제 모델링 복잡성이 확인된 뒤 비용과 이점을 다시 판단한다 | [ADR-0003](../adr/0003-select-database-and-persistence.md) |
+| Docker Compose와 Testcontainers | 로컬 설치와 Mock에 의존하지 않고 같은 MySQL에서 실행·검증한다 | [ADR-0004](../adr/0004-manage-local-development-environment.md) |
+| GitHub Actions CI | 별도 서버 없이 PR에서 동일한 빌드와 테스트를 검증한다 | [ADR-0004](../adr/0004-manage-local-development-environment.md) |
+| 우테코 스타일과 EditorConfig | 익숙한 규칙을 재사용해 포맷 차이를 줄인다 | [ADR-0005](../adr/0005-select-java-code-style.md) |
 
 ## 4. 구현 결과
 
 | 항목 | 결과 | 증거 |
 | --- | --- | --- |
-| 모노레포 기본 구조 | 완료 | `backend`, `backend/docs`, `config`, `.github/workflows` |
+| 모노레포 기본 구조 | 완료 | `backend`, `backend/docs`, `backend/config`, `.github/workflows` |
 | 버전이 고정된 백엔드 빌드 | 완료 | Gradle Wrapper, Java Toolchain, `backend/build.gradle` |
-| 로컬 MySQL 재현 | 완료 | `compose.yaml`, `.env.example` |
+| 로컬 MySQL 재현 | 완료 | `backend/compose.yaml`, `backend/.env.example` |
 | 실제 MySQL 통합 테스트 | 완료 | `IntegrationTest`, Testcontainers, `@ServiceConnection` |
-| 공통 코드 스타일 | 완료 | `.editorconfig`, 우테코 IntelliJ XML |
-| 로컬 실행 문서 | 완료 | [백엔드 로컬 개발 환경 가이드](../development/backend-local-setup.md) |
-| PR 자동 검증 | 완료 | `.github/workflows/backend-ci.yml`, [PR #1 CI](https://github.com/woowacourse-teams/2026-jachwi-sunbae/actions/runs/30888179911) |
+| Java 코드 스타일 | 완료 | `.editorconfig`, `backend/config/code-style` |
+| 로컬 실행 문서 | 완료 | [로컬 개발 가이드](../guides/local-development.md) |
+| PR 자동 검증 | 완료 | `.github/workflows/backend-ci.yml`, [Draft PR #1](https://github.com/woowacourse-teams/2026-jachwi-sunbae/pull/1) |
 
 ## 5. 최초 구성 환경 검증 결과
 
