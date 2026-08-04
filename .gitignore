@@ -1,0 +1,30 @@
+# Operating system
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.iml
+out/
+.vscode/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Gradle and Java
+.gradle/
+**/build/
+*.class
+
+# JavaScript and frontend build outputs
+node_modules/
+dist/
+.next/
+coverage/
+
