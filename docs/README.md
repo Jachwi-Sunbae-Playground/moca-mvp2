@@ -15,3 +15,6 @@
 ## 현재 문서
 
 - [백엔드 로컬 개발 환경 구성 및 실행](development/backend-local-setup.md)
+- [ADR 목록과 작성 규칙](adr/README.md)
+- [지정 요구사항 진행 현황](requirements/README.md)
+- [지정 요구사항 1: 개발 환경을 구축하고 팀이 소유한다](requirements/required-01-development-environment.md)
