@@ -2,7 +2,7 @@
 
 - 상태: 진행 중
 - 최초 기록일: 2026-08-04
-- 현재 판단: 초기 구성자 검증 완료, 다른 팀원의 독립 재현과 최초 PR CI 결과 확인 필요
+- 현재 판단: 초기 구성자와 최초 PR CI 검증 완료, 다른 팀원의 독립 재현과 팀 승인 필요
 
 ## 1. 목적
 
@@ -43,7 +43,7 @@
 | 실제 MySQL 통합 테스트 | 완료 | `IntegrationTest`, Testcontainers, `@ServiceConnection` |
 | 공통 코드 스타일 | 완료 | `.editorconfig`, 우테코 IntelliJ XML |
 | 로컬 실행 문서 | 완료 | [백엔드 로컬 개발 환경 가이드](../development/backend-local-setup.md) |
-| PR 자동 검증 | 구성 완료, 원격 실행 대기 | `.github/workflows/backend-ci.yml` |
+| PR 자동 검증 | 완료 | `.github/workflows/backend-ci.yml`, [PR #1 CI](https://github.com/woowacourse-teams/2026-jachwi-sunbae/actions/runs/30888179911) |
 
 ## 5. 최초 구성 환경 검증 결과
 
@@ -63,7 +63,7 @@
 | OpenAPI | 성공 | `/v3/api-docs` 응답 확인 |
 | 통합 테스트 | 성공 | Testcontainers MySQL에서 `SELECT 1` 실행 |
 | 전체 빌드 | 성공 | `./gradlew clean build --no-daemon` 성공 |
-| GitHub Actions | 대기 | 워크플로가 아직 기본 브랜치에 없어 수동 실행 API가 404 응답 |
+| GitHub Actions | 성공 | PR #1의 Backend CI에서 Java 21 설정, Gradle 전체 빌드, Testcontainers 테스트 성공 |
 
 ## 6. 발생한 문제와 해결 방법
 
@@ -73,14 +73,14 @@
 | 팀원별 MySQL 설치와 설정 차이 | JDBC SQL은 DB 제품과 버전 차이의 영향을 받는다 | MySQL 8.4.10 Docker 이미지를 Compose와 Testcontainers에서 함께 사용한다 |
 | H2나 Mock으로 실제 SQL을 보장할 수 없음 | 호출 성공과 MySQL 쿼리 성공은 다른 문제다 | 실제 MySQL에서 `SELECT 1`을 실행하는 통합 테스트를 추가했다 |
 | Compose와 Spring의 `.env` 처리 방식 차이 | Compose는 자동으로 읽지만 Spring 프로세스는 자동으로 읽지 않는다 | 실행 가이드에 환경변수 전달 방법을 명시했다 |
-| CI 워크플로를 병합 전에 수동 실행할 수 없음 | GitHub API가 기본 브랜치에 없는 새 워크플로를 찾지 못했다 | 최종 PR의 `pull_request` 이벤트에서 최초 원격 실행 결과를 확인한다 |
+| CI 워크플로를 병합 전에 수동 실행할 수 없음 | GitHub API가 기본 브랜치에 없는 새 워크플로를 찾지 못했다 | Draft PR #1의 `pull_request` 이벤트에서 최초 원격 실행 성공을 확인했다 |
 
 ## 7. 현재 환경의 한계
 
 - Docker를 실행할 수 없는 환경에서는 통합 테스트를 수행할 수 없다.
 - Windows와 Linux에서 독립적인 재현 검증을 아직 하지 않았다.
 - 다른 팀원이 완전히 새로운 디렉터리에서 문서만 보고 재현한 결과가 아직 없다.
-- CI는 로컬과 같은 명령으로 검증했지만 GitHub 호스팅 러너 결과는 최초 PR에서 확인해야 한다.
+- GitHub Actions의 Ubuntu 호스팅 러너는 검증했지만 다른 CI 운영체제와 자체 호스팅 러너는 검증하지 않았다.
 - 프론트엔드 개발 환경, 운영 프로필, 배포 환경은 이번 요구사항 범위에 아직 포함되지 않았다.
 - 데이터베이스 스키마와 마이그레이션 정책은 실제 기능과 테이블이 생길 때 결정해야 한다.
 - 코드 스타일은 IDE 설정을 공유하지만 현재 CI에서 자동 강제하지 않는다.
@@ -102,12 +102,11 @@
 - [x] 기술 선택 이유, 대안, 트레이드오프, 한계를 ADR에 기록했다.
 - [x] 초기 구성 환경에서 MySQL, 애플리케이션, 테스트, 전체 빌드를 검증했다.
 - [ ] 다른 팀원이 문서만 보고 새로운 환경에서 재현하고 결과를 기록했다.
-- [ ] 최종 PR에서 GitHub Actions 백엔드 CI가 성공했다.
+- [x] 최종 PR에서 GitHub Actions 백엔드 CI가 성공했다.
 - [ ] 팀이 문서와 ADR을 리뷰하고 현재 환경을 팀의 기준으로 승인했다.
 
 ## 10. 다음 행동
 
 1. 다른 백엔드 팀원이 새 디렉터리에서 개발 환경을 재현한다.
 2. 재현 결과와 발생한 문제를 이 문서에 기록한다.
-3. 최종 PR에서 GitHub Actions 결과를 확인한다.
-4. 팀 리뷰 후 남은 체크리스트를 완료하고 상태를 `완료`로 변경한다.
+3. 팀 리뷰 후 남은 체크리스트를 완료하고 상태를 `완료`로 변경한다.
