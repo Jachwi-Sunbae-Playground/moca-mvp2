@@ -37,7 +37,7 @@
 
 | 항목 | 결과 | 증거 |
 | --- | --- | --- |
-| 모노레포 기본 구조 | 완료 | `backend`, `docs`, `config`, `.github/workflows` |
+| 모노레포 기본 구조 | 완료 | `backend`, `backend/docs`, `config`, `.github/workflows` |
 | 버전이 고정된 백엔드 빌드 | 완료 | Gradle Wrapper, Java Toolchain, `backend/build.gradle` |
 | 로컬 MySQL 재현 | 완료 | `compose.yaml`, `.env.example` |
 | 실제 MySQL 통합 테스트 | 완료 | `IntegrationTest`, Testcontainers, `@ServiceConnection` |
