@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: jachwi-sunbae-backend
+  profiles:
+    default: local
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
