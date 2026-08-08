@@ -7,10 +7,12 @@
 | [`adr`](adr/README.md) | 기술 선택의 맥락, 대안, 트레이드오프와 재검토 조건 |
 | [`requirements`](requirements/01-development-environment.md) | 지정·자율 요구사항의 수행 과정과 증거 |
 | [`guides`](guides/local-development.md) | 개발자가 그대로 따라 할 수 있는 실행 절차 |
-| [`conventions`](conventions/backend-code-convention.md) | 팀이 반복해서 적용하는 코드·API·테스트·Git 규칙 |
+| [`conventions`](conventions/backend-code-convention.md) | 팀이 반복해서 적용하는 코드·API·테스트 규칙 |
 | [`architecture`](architecture/system-overview.md) | 시스템 경계, 패키지 구조와 데이터 모델 |
 | [`api`](api/README.md) | 구현 전 API 합의와 구현 후 OpenAPI 연결 |
 | [`operations`](operations/deployment.md) | 배포, 롤백, 모니터링과 장애 대응 절차 |
+
+Git·GitHub 협업 규칙은 백엔드에 한정되지 않으므로 [`docs/convention`](../../docs/convention/README.md)에서 관리한다.
 
 ## 문서 작성 원칙
 
