@@ -8,11 +8,24 @@
 com.jachwisunbae
 ├── {domain}
 │   ├── controller
+│   │   └── dto
+│   │       ├── request
+│   │       └── response
 │   ├── service
+│   │   └── dto
+│   │       ├── command
+│   │       └── result
 │   ├── repository
-│   ├── domain
-│   └── dto
+│   └── domain
+│
 └── common
+    ├── config
+    ├── exception
+    │   └── errorcode
+    ├── filter
+    ├── interceptor
+    ├── resolver
+    └── util
 ```
 
 ## 의존 방향
@@ -23,10 +36,74 @@ controller → service → repository
                domain
 ```
 
-- Controller는 HTTP 요청과 응답 변환을 담당한다.
-- Service는 유스케이스 실행, 비즈니스 검증과 트랜잭션을 담당한다.
-- Repository는 `JdbcTemplate`을 이용한 데이터 접근을 담당한다.
-- Domain은 업무 개념, 상태와 불변식을 표현한다.
-- `common`에는 둘 이상의 도메인에서 실제로 공유하는 기술 기능만 둔다.
+- Controller는 Repository를 직접 호출하지 않는다.
+- Repository는 Service와 Controller를 참조하지 않는다.
+- Domain 객체는 Controller DTO를 참조하지 않는다.
+- Service는 Controller Request·Response DTO를 참조하지 않는다.
+- 도메인 간 협력이 필요하면 해당 도메인의 Service를 통해 수행한다.
+- 도메인 간 순환 의존이 발생하면 책임과 경계를 재검토한다.
+
+## 패키지별 책임
+
+### Controller
+
+- HTTP 요청 역직렬화
+- Bean Validation
+- 인증된 사용자 정보 추출
+- Request를 Command로 변환
+- Service 호출
+- Result를 Response로 변환
+- HTTP 상태 코드와 Header 결정
+
+Controller에는 비즈니스 판단을 작성하지 않는다.
+
+### Service
+
+- 사용자 Use Case 실행
+- 트랜잭션 관리
+- Domain 객체와 Repository의 실행 순서 조율
+- 권한, 중복, 리소스 존재 여부와 상태 전이 검증
+- Command 입력과 Result 출력
+
+하나의 Domain 객체가 스스로 판단할 수 있는 규칙은 Service가 아니라 Domain 객체에 둔다.
+
+### Repository
+
+- `JdbcTemplate`을 이용한 SQL 실행
+- DB Row와 Domain 객체 간 변환
+- 저장, 수정, 삭제와 조회
+- 조회 결과가 없을 때의 처리
+- DB 예외를 애플리케이션에서 이해할 수 있는 형태로 변환
+
+Repository에는 비즈니스 규칙을 작성하지 않는다.
+
+### Domain
+
+- Entity와 Value Object
+- 불변 조건
+- 상태 변경 규칙
+- 비즈니스 판단
+- Domain Policy
+
+Domain 객체는 getter와 setter만 가진 데이터 묶음으로 만들지 않는다.
+
+### Common
+
+여러 도메인이 함께 사용하는 기술 공통 코드만 둔다.
+
+- Spring 설정
+- 전역 예외 처리
+- 공통 오류 응답
+- 인증 Filter와 Interceptor
+- Argument Resolver
+- 로깅 설정
+
+특정 Domain의 규칙은 `common`에 두지 않는다. `common`을 이름을 정하기 어려운 코드의 임시 보관소로 사용하지 않는다.
+
+`common/exception`의 예외 클래스 구조와 HTTP 변환 규칙은 [예외 컨벤션](../conventions/exception-convention.md)을 따른다.
+
+`util`에는 기술적으로 범용적인 코드만 두고, 가능한 경우 책임이 드러나는 이름을 사용한다.
+
+---
 
 세부 작성 규칙은 [백엔드 코드 컨벤션](../conventions/backend-code-convention.md), 선택 근거는 [ADR-0003](../adr/0003-select-database-and-persistence.md)을 따른다.
