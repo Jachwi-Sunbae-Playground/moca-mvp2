@@ -43,6 +43,8 @@
 - 후속 Issue:
 ```
 
+이 양식은 [`.github/ISSUE_TEMPLATE/issue.md`](../../.github/ISSUE_TEMPLATE/issue.md)에 등록되어 있어 Issue를 생성하면 자동으로 채워진다. 양식을 바꾸면 이 문서와 템플릿 파일을 같은 PR에서 수정한다.
+
 ## PR
 
 - PR에는 변경 목적, 주요 설계 결정, 테스트 결과, Swagger 변경 사항을 명시한다.
@@ -87,6 +89,8 @@ Related to #
 - [ ] 기존 테스트가 통과합니다.
 - [ ] 변경 사항에 대한 테스트를 작성했습니다.
 ```
+
+이 양식은 [`.github/pull_request_template.md`](../../.github/pull_request_template.md)에 등록되어 있어 PR을 생성하면 자동으로 채워진다. 양식을 바꾸면 이 문서와 템플릿 파일을 같은 PR에서 수정한다.
 
 ## 머지
 
