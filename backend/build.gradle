@@ -33,5 +33,15 @@ dependencies {
 }
 
 tasks.named('test') {
+	useJUnitPlatform {
+		excludeTags 'acceptance'
+	}
+}
+
+tasks.register('testAll', Test) {
+	group = 'verification'
+	description = '인수 테스트를 포함한 모든 테스트를 실행한다.'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
 	useJUnitPlatform()
 }

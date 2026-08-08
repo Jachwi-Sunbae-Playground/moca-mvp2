@@ -2,30 +2,11 @@
 
 ## 핵심 원칙
 
-- 업무 도메인을 먼저 나누고 각 도메인 안에서 레이어를 구분한다.
-- 의존 방향은 `controller → service → repository`를 기본으로 한다.
+- 패키지 구조, 의존 방향과 패키지별 책임은 [백엔드 패키지 구조](../architecture/backend-package-structure.md)를 따른다.
 - 1차 MVP는 `JdbcTemplate`과 레이어드 구조를 사용하며 JPA와 헥사고날 아키텍처는 도메인 복잡도가 확인될 때 재검토한다.
 - 실제 기능이 생길 때만 패키지와 추상화를 추가한다.
 
-## 패키지 구조
-
-```text
-com.jachwisunbae
-├── {domain}
-│   ├── controller
-│   │   └── dto
-│   │       ├── request
-│   │       └── response
-│   ├── service
-│   │   └── dto
-│   │       ├── command
-│   │       └── result
-│   ├── repository
-│   └── domain
-└── common
-    ├── config
-    └── exception
-```
+## DTO
 
 - Controller DTO는 HTTP 입력 검증과 응답 형식을 담당한다.
 - Command와 Result는 서비스의 공개 유스케이스 경계를 분리할 필요가 있을 때 사용한다.
@@ -36,8 +17,6 @@ com.jachwisunbae
 
 - Entity나 도메인 객체를 API 응답으로 직접 노출하지 않는다.
 - 도메인 객체는 의미 있는 생성·상태 변경 메서드를 사용하고 public setter를 두지 않는다.
-- 입력 형식은 Request DTO, 권한·중복·상태 전이는 Service, 객체의 불변식은 Domain에서 검증한다.
-- 트랜잭션 경계는 Service에서 관리한다.
 - Lombok은 사용하지 않는다.
 - 클래스는 명사형 UpperCamelCase, 메서드는 동사형 lowerCamelCase, 상수는 UPPER_SNAKE_CASE를 사용한다.
 - `Manager`, `Processor`, `Util`처럼 책임이 모호한 이름보다 업무 의미가 드러나는 이름을 사용한다.
