@@ -1,0 +1,44 @@
+name: Docs Check
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "**.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/pull_request_template.md"
+      - ".github/scripts/check_docs.py"
+      - ".github/workflows/docs-check.yml"
+      - "backend/.env.example"
+  push:
+    branches:
+      - main
+    paths:
+      - "**.md"
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/pull_request_template.md"
+      - ".github/scripts/check_docs.py"
+      - ".github/workflows/docs-check.yml"
+      - "backend/.env.example"
+  workflow_dispatch:
+
+concurrency:
+  group: docs-check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check docs consistency
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Check docs consistency
+        run: python3 .github/scripts/check_docs.py

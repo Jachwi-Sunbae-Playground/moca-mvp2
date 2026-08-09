@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r \".tool_input.file_path // .tool_response.filePath // empty\" | { read -r f; case \"$f\" in *.md|*.env.example|*ISSUE_TEMPLATE*|*pull_request_template*) out=$(python3 \"$(git rev-parse --show-toplevel)/.github/scripts/check_docs.py\" 2>&1) || { printf \"%s\\n\" \"$out\" >&2; exit 2; };; esac; }",
+            "timeout": 30,
+            "statusMessage": "문서 정합성 검사 중"
+          }
+        ]
+      }
+    ]
+  }
+}
