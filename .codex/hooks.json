@@ -1,8 +1,9 @@
 {
+  "description": "문서를 수정한 직후 정합성을 검사한다. 판단 로직은 .github/scripts/docs_hook.sh 한 곳에 둔다.",
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "Write|Edit",
+        "matcher": "apply_patch|Edit|Write",
         "hooks": [
           {
             "type": "command",
