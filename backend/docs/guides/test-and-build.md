@@ -10,6 +10,14 @@
 
 Docker가 실행 중이어야 한다. 로컬 Compose MySQL은 필요하지 않으며 Testcontainers가 임시 MySQL을 생성하고 정리한다.
 
+`./gradlew test`는 `acceptance` 태그가 붙은 인수 테스트를 제외한다. 인수 테스트까지 실행하려면 다음을 사용한다.
+
+```bash
+./gradlew testAll
+```
+
+테스트 종류별 작성 기준은 [테스트 전략](../conventions/test-strategy.md)을 따른다.
+
 ## 전체 빌드
 
 ```bash

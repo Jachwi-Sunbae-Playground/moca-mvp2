@@ -12,15 +12,12 @@
 Gradle과 MySQL은 별도로 설치하지 않는다. Gradle Wrapper와 Docker Compose가 팀 버전을 준비한다.
 
 ```bash
-git clone --branch codex/backend-environment-setup --single-branch \
-  https://github.com/woowacourse-teams/2026-jachwi-sunbae.git
+git clone https://github.com/woowacourse-teams/2026-jachwi-sunbae.git
 cd 2026-jachwi-sunbae/backend
 java -version
 docker --version
 docker compose version
 ```
-
-위 브랜치가 `main`에 병합된 뒤에는 `--branch`와 `--single-branch` 없이 복제한다.
 
 ## 2. 환경변수 준비
 

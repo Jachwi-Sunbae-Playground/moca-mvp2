@@ -6,9 +6,11 @@
 
 여러 플랫폼에서 찾은 매물 후보를 한곳에 모으고, 방문 전·집보는 현장·계약 직전에 무엇을 확인할지 알려주며, 직접 확인한 상태와 메모를 매물별로 기록·비교하도록 돕는 **임차인 전용 집 선택 도구**입니다.
 
-## 제품 문서
+## 문서
 
-제품의 방향, 가설, 실험 기록은 `docs/`에서 관리합니다.
+제품의 방향과 팀 공통 규칙은 `docs/`, 백엔드 문서는 백엔드 코드와 같은 경계인 `backend/docs`에서 관리합니다.
+
+### 제품
 
 - [자취선배 개요](docs/product/overview.md) — 한 문장 소개, 제품 범위, 하지 않는 일, 장기 방향
 - [문제와 사용자](docs/product/problem-and-users.md) — 해결하려는 문제, 타겟, 시장, 기존 플랫폼과의 차이
@@ -17,16 +19,25 @@
 - [피벗 히스토리와 학습](docs/learnings/pivot-history.md) — 이전 검증에서 현재 방향까지의 학습
 - [실험 기록](docs/experiments/) — 실험별 설계·결과·판정
 
+### 팀 공통
+
+- [컨벤션](docs/convention/README.md) — 브랜치·커밋, 이슈·PR, 코드 리뷰, 문서 관리
+- [문서 관리](docs/convention/documentation.md) — 문서 분류, 정본과 대조 대상, 정합성 검사
+
 ## 저장소 구조
 
-이 저장소는 백엔드와 프론트엔드를 함께 관리하는 모노레포입니다. 제품·팀 공통 문서는 `docs/`에서, 백엔드 문서는 백엔드 코드와 같은 경계인 `backend/docs`에서 관리합니다.
+이 저장소는 백엔드와 프론트엔드를 함께 관리하는 모노레포입니다.
 
 ```text
 2026-jachwi-sunbae/
 ├── .github/
-│   └── workflows/        # CI 워크플로
+│   ├── ISSUE_TEMPLATE/   # 이슈 템플릿
+│   ├── scripts/          # 문서 정합성 검사 스크립트
+│   ├── workflows/        # CI 워크플로
+│   └── pull_request_template.md
 ├── docs/                 # 제품·팀 공통 문서 (코드와 독립)
 │   ├── product/          # 개요, 문제·사용자, 가설, 브랜드
+│   ├── convention/       # 브랜치·커밋, 이슈·PR, 코드 리뷰, 문서 관리
 │   ├── experiments/      # 실험별 설계·결과·판정
 │   ├── learnings/        # 피벗 히스토리와 학습
 │   └── assets/           # 브랜드 이미지
@@ -37,13 +48,13 @@
 │   ├── src/              # Spring Boot 소스와 테스트
 │   ├── .env.example      # 백엔드 로컬 환경변수 예시
 │   └── compose.yaml      # 백엔드 로컬 인프라
-├── frontend/             # 프론트엔드 애플리케이션(개발 시작 시 생성)
+├── frontend/             # 프론트엔드 애플리케이션
 ├── .editorconfig         # 공통 에디터 설정
 ├── .gitignore            # Git 추적 제외 규칙
 └── README.md
 ```
 
-백엔드 문서 골격은 `backend/docs`에서 미리 관리하고, 프론트엔드처럼 아직 없는 애플리케이션 디렉터리는 실제 개발을 시작할 때 생성합니다.
+이 구조는 [문서 관리](docs/convention/documentation.md)의 정합성 검사 대상이며, 디렉터리를 추가하면 이 트리도 같은 PR에서 수정합니다.
 
 ## 시작하기
 
