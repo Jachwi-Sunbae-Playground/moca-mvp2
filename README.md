@@ -30,12 +30,16 @@
 
 ```text
 2026-jachwi-sunbae/
+├── .agents/
+│   └── skills/           # Codex 검토 절차 (.claude/skills와 동일)
 ├── .claude/
 │   ├── skills/           # Claude Code 검토 절차
 │   └── settings.json     # 문서 정합성 훅
+├── .codex/
+│   └── hooks.json        # 문서 정합성 훅
 ├── .github/
 │   ├── ISSUE_TEMPLATE/   # 이슈 템플릿
-│   ├── scripts/          # 문서 정합성 검사 스크립트
+│   ├── scripts/          # 문서 정합성 검사와 훅 스크립트
 │   ├── workflows/        # CI 워크플로
 │   └── pull_request_template.md
 ├── docs/                 # 제품·팀 공통 문서 (코드와 독립)
@@ -54,7 +58,8 @@
 ├── frontend/             # 프론트엔드 애플리케이션
 ├── .editorconfig         # 공통 에디터 설정
 ├── .gitignore            # Git 추적 제외 규칙
-├── CLAUDE.md             # Claude Code가 매 세션 읽는 작업 규칙
+├── AGENTS.md             # 에이전트가 매 세션 읽는 작업 규칙 (CLAUDE.md와 동일)
+├── CLAUDE.md             # 에이전트가 매 세션 읽는 작업 규칙 (AGENTS.md와 동일)
 └── README.md
 ```
 

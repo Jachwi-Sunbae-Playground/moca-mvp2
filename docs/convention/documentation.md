@@ -80,6 +80,8 @@ ADR은 전체를 동결하지 않는다. [ADR 작성 규칙](../../backend/docs/
 | [핵심 가설](../product/hypotheses.md) | [실험 기록](../experiments/)의 결과 | 사람 |
 | [`frontend/README.md`](../../frontend/README.md) | `frontend/` 구조와 `package.json` | 사람 |
 | [`CLAUDE.md`](../../CLAUDE.md) | `docs/convention/`과 `backend/docs/conventions/`의 규칙 | 사람 |
+| [`AGENTS.md`](../../AGENTS.md) | `CLAUDE.md` | A-3 |
+| `.agents/skills/` | `.claude/skills/` | A-4 |
 
 `검사` 열이 `사람`인 문서는 아직 대조 대상이 없거나 서술형이라 기계가 판단하기 어렵다. 코드가 생기면 검사로 옮긴다.
 
@@ -91,12 +93,15 @@ python3 .github/scripts/check_docs.py
 
 `.md` 파일이나 `.github/`, `backend/.env.example`이 바뀌는 PR에서 자동으로 실행되며, 실패하면 병합할 수 없다.
 
-Claude Code로 작업할 때는 문서를 수정한 직후 같은 스크립트가 훅으로 실행된다. 설정과 Skill은 [Claude Code 작업 환경](claude-code.md)에 정리한다.
+Claude Code나 Codex로 작업할 때는 문서를 수정한 직후 같은 스크립트가 훅으로 실행된다. 설정과 Skill은 [에이전트 작업 환경](agent-tooling.md)에 정리한다.
 
 | 검사 | 내용 |
 | --- | --- |
 | A-1 | 모든 `.md`의 상대 링크가 실제 파일을 가리킨다 |
 | A-2 | 이슈·PR 템플릿이 [이슈와 PR](issue-and-pr.md)의 본문과 정확히 같다 |
+| A-3 | `CLAUDE.md`와 `AGENTS.md`의 내용이 같다 |
+| A-4 | Claude Code와 Codex의 Skill이 같다 |
+| A-5 | 두 에이전트의 훅이 공용 스크립트를 사용한다 |
 | B-1 | 목차 문서가 실제 파일·디렉터리 목록과 같다 |
 | B-2 | 환경변수 표가 `backend/.env.example`과 같다 |
 
