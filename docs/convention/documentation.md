@@ -91,7 +91,7 @@ ADR은 전체를 동결하지 않는다. [ADR 작성 규칙](../../backend/docs/
 python3 .github/scripts/check_docs.py
 ```
 
-`.md` 파일이나 `.github/`, `backend/.env.example`이 바뀌는 PR에서 자동으로 실행되며, 실패하면 병합할 수 없다.
+모든 PR에서 자동으로 실행되며, 실패하면 병합할 수 없다. 검사가 몇 초로 끝나므로 경로 필터를 두지 않는다. 검사 대상이 늘었을 때 필터를 빠뜨리는 편이 더 위험하다.
 
 Claude Code나 Codex로 작업할 때는 문서를 수정한 직후 같은 스크립트가 훅으로 실행된다. 설정과 Skill은 [에이전트 작업 환경](agent-tooling.md)에 정리한다.
 
