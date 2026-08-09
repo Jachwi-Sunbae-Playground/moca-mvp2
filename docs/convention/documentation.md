@@ -79,6 +79,7 @@ ADR은 전체를 동결하지 않는다. [ADR 작성 규칙](../../backend/docs/
 | [데이터베이스 모델](../../backend/docs/architecture/database-model.md) | 실제 테이블 스키마 | 사람 |
 | [핵심 가설](../product/hypotheses.md) | [실험 기록](../experiments/)의 결과 | 사람 |
 | [`frontend/README.md`](../../frontend/README.md) | `frontend/` 구조와 `package.json` | 사람 |
+| [`CLAUDE.md`](../../CLAUDE.md) | `docs/convention/`과 `backend/docs/conventions/`의 규칙 | 사람 |
 
 `검사` 열이 `사람`인 문서는 아직 대조 대상이 없거나 서술형이라 기계가 판단하기 어렵다. 코드가 생기면 검사로 옮긴다.
 

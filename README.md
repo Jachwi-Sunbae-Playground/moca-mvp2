@@ -51,6 +51,7 @@
 ├── frontend/             # 프론트엔드 애플리케이션
 ├── .editorconfig         # 공통 에디터 설정
 ├── .gitignore            # Git 추적 제외 규칙
+├── CLAUDE.md             # Claude Code가 매 세션 읽는 작업 규칙
 └── README.md
 ```
 
