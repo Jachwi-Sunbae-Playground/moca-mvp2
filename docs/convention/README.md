@@ -11,6 +11,7 @@
 | [이슈와 PR](issue-and-pr.md) | 이슈를 만들고 PR을 올리고 머지할 때 |
 | [코드 리뷰](code-review.md) | 리뷰를 남기고 답변할 때 |
 | [문서 관리](documentation.md) | 문서를 추가하거나 고칠 때 |
+| [Claude Code 작업 환경](claude-code.md) | Claude Code로 작업하거나 자동 장치를 바꿀 때 |
 
 코드 작성 규칙은 각 애플리케이션 경계에서 관리한다.
 

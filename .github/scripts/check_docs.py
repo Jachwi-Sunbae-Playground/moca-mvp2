@@ -128,11 +128,7 @@ def check_backend_docs_index():
 def check_root_readme():
     doc = read("README.md")
 
-    top_level = {
-        p.name
-        for p in ROOT.iterdir()
-        if p.name not in {".git", ".idea", ".claude"} and not p.name.startswith(".DS")
-    }
+    top_level = {p.name for p in ROOT.iterdir() if p.name != ".git"}
     tracked_top = {rel(p).split("/")[0] for p in tracked("*")}
     for name in sorted(top_level & tracked_top):
         if name not in doc:

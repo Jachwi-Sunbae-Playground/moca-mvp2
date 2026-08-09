@@ -30,6 +30,9 @@
 
 ```text
 2026-jachwi-sunbae/
+├── .claude/
+│   ├── skills/           # Claude Code 검토 절차
+│   └── settings.json     # 문서 정합성 훅
 ├── .github/
 │   ├── ISSUE_TEMPLATE/   # 이슈 템플릿
 │   ├── scripts/          # 문서 정합성 검사 스크립트
