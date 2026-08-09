@@ -91,6 +91,8 @@ python3 .github/scripts/check_docs.py
 
 `.md` 파일이나 `.github/`, `backend/.env.example`이 바뀌는 PR에서 자동으로 실행되며, 실패하면 병합할 수 없다.
 
+Claude Code로 작업할 때는 `.claude/settings.json`의 `PostToolUse` 훅이 문서를 수정한 직후 같은 스크립트를 실행한다. CI까지 가기 전에 바로 알 수 있다.
+
 | 검사 | 내용 |
 | --- | --- |
 | A-1 | 모든 `.md`의 상대 링크가 실제 파일을 가리킨다 |
