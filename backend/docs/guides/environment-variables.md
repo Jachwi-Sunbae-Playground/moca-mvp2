@@ -1,5 +1,8 @@
 # 환경변수
 
+- 문서 성격: 파생
+- 대조 대상: `backend/.env.example`
+
 ## 관리 원칙
 
 - 예시와 기본값은 `backend/.env.example`에 기록하고 Git에 커밋한다.
