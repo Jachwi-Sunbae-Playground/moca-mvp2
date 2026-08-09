@@ -25,10 +25,14 @@ def fail(check, message):
 
 
 def tracked(pattern):
+    """추적 중이면서 실제로 존재하는 파일만 돌려준다.
+
+    작업 트리에서 지웠지만 아직 커밋하지 않은 파일이 있어도 검사가 죽지 않는다.
+    """
     out = subprocess.run(
         ["git", "ls-files", pattern], cwd=ROOT, capture_output=True, text=True, check=True
     )
-    return [ROOT / line for line in out.stdout.split()]
+    return [path for line in out.stdout.split() if (path := ROOT / line).exists()]
 
 
 def read(path):
@@ -90,6 +94,51 @@ def check_templates():
             "A-2 템플릿",
             ".github/pull_request_template.md 가 docs/convention/issue-and-pr.md 의 PR 본문과 다르다",
         )
+
+
+# --- A-3. 두 에이전트의 규칙 파일이 서로 같은가 -------------------------------
+
+
+def check_agent_instructions():
+    if normalize(read("CLAUDE.md")) != normalize(read("AGENTS.md")):
+        fail("A-3 에이전트 규칙", "CLAUDE.md 와 AGENTS.md 의 내용이 다르다")
+
+
+# --- A-4. 두 에이전트의 Skill이 서로 같은가 -----------------------------------
+
+
+def relative_files(base):
+    if not base.exists():
+        return set()
+    return {str(p.relative_to(base)) for p in base.rglob("*") if p.is_file()}
+
+
+def check_agent_skills():
+    claude = ROOT / ".claude/skills"
+    codex = ROOT / ".agents/skills"
+    in_claude, in_codex = relative_files(claude), relative_files(codex)
+
+    for name in sorted(in_claude - in_codex):
+        fail("A-4 Skill", f".agents/skills/{name} 이 없다")
+    for name in sorted(in_codex - in_claude):
+        fail("A-4 Skill", f".claude/skills/{name} 이 없다")
+    for name in sorted(in_claude & in_codex):
+        left = (claude / name).read_text(encoding="utf-8")
+        right = (codex / name).read_text(encoding="utf-8")
+        if normalize(left) != normalize(right):
+            fail("A-4 Skill", f".claude/skills/{name} 과 .agents/skills/{name} 의 내용이 다르다")
+
+
+# --- A-5. 두 에이전트의 훅이 공용 스크립트를 사용하는가 -----------------------
+
+
+def check_agent_hooks():
+    for name in (".claude/settings.json", ".codex/hooks.json"):
+        path = ROOT / name
+        if not path.exists():
+            fail("A-5 훅", f"{name} 이 없다")
+        elif "docs_hook.sh" not in read(name):
+            fail("A-5 훅", f"{name} 이 공용 훅 스크립트를 사용하지 않는다")
 
 
 # --- B-1. 목차 문서가 실제 파일 목록과 같은가 ---------------------------------
@@ -155,6 +204,9 @@ def check_env_vars():
 CHECKS = [
     check_links,
     check_templates,
+    check_agent_instructions,
+    check_agent_skills,
+    check_agent_hooks,
     check_convention_index,
     check_adr_index,
     check_backend_docs_index,
