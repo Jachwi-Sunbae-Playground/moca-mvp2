@@ -6,8 +6,9 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "ignoreDeprecations": "6.0",
-    "jsx": "react",
-    "esModuleInterop": true
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "types": ["node"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "global.d.ts"],
   "exclude": ["node_modules", "dist"]

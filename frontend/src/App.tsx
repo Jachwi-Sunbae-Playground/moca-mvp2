@@ -1,14 +1,29 @@
-import React from 'react';
-import logo from './assets/logo.svg';
+import AppProviders from './app/AppProviders';
+import AppRoutes from './app/AppRoutes';
+import { getPublicConfig } from './app/publicConfig';
+import StatusPanel from './components/StatusPanel';
+import type { PublicConfig } from './types/PublicConfig';
 import './style.css';
 
-const App = () => {
+type AppProps = {
+  config?: PublicConfig;
+};
+
+const App = ({ config }: AppProps) => {
+  let resolvedConfig: PublicConfig;
+
+  try {
+    resolvedConfig = config ?? getPublicConfig();
+  } catch (error) {
+    const description = error instanceof Error ? error.message : '공개 환경변수 설정을 확인해 주세요.';
+
+    return <StatusPanel title="애플리케이션 설정이 필요합니다" description={description} tone="error" />;
+  }
+
   return (
-    <div className="container">
-      <img src={logo} alt="Logo" className="logo"></img>
-      <h1>자취선배</h1>
-      <div className="init">HELLO WORLD</div>
-    </div>
+    <AppProviders>
+      <AppRoutes config={resolvedConfig} />
+    </AppProviders>
   );
 };
 

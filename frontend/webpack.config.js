@@ -1,16 +1,26 @@
 const path = require('path');
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+
 const shouldAnalyze = process.env.ANALYZE === 'true';
+const isBrowserTestHarness = process.env.BROWSER_TEST_HARNESS === 'true';
 
 module.exports = {
-  mode: 'development',
-  entry: './src/main.tsx', // 웹팩이 읽기 시작할 파일을 .tsx로 변경했어요.
+  entry: isBrowserTestHarness ? './src/test-browser/main.tsx' : './src/main.tsx',
+  output: {
+    publicPath: '/',
+  },
   plugins: [
+    new webpack.DefinePlugin({
+      __API_BASE_URL__: JSON.stringify(process.env.API_BASE_URL ?? ''),
+      __GOOGLE_CLIENT_ID__: JSON.stringify(process.env.GOOGLE_CLIENT_ID ?? ''),
+      __GOOGLE_REDIRECT_URI__: JSON.stringify(process.env.GOOGLE_REDIRECT_URI ?? ''),
+    }),
     new HtmlWebpackPlugin({
-      template: './index.html', // 템플릿 HTML
-      filename: 'index.html', // 출력될 HTML 파일 이름
-      inject: true, // <script> 태그 자동 삽입
+      template: './index.html',
+      filename: 'index.html',
+      inject: true,
     }),
     new BundleAnalyzerPlugin({
       analyzerMode: shouldAnalyze ? 'static' : 'disabled',
@@ -21,15 +31,15 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(ts|tsx)$/, // .ts와 .tsx 파일을 대상으로
+        test: /\.(ts|tsx)$/,
         use: [
           {
             loader: 'babel-loader',
             options: {
               presets: [
-                '@babel/preset-env', // 최신 JS 문법을 변환해요
-                '@babel/preset-react', // JSX를 변환해요
-                '@babel/preset-typescript', // 타입스크립트를 변환해요
+                '@babel/preset-env',
+                ['@babel/preset-react', { runtime: 'automatic' }],
+                '@babel/preset-typescript',
               ],
             },
           },
@@ -37,31 +47,32 @@ module.exports = {
         exclude: /node_modules/,
       },
       {
-        test: /\.css$/, // .css 파일을 처리해요
-        use: [
-          'style-loader', // CSS를 <style> 태그로 주입해요
-          'css-loader', // CSS를 JavaScript 모듈로 변환해요
-        ],
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif)$/i, // 이미지 파일 확장자
-        type: 'asset', // Asset Modules 사용
+        test: /\.(png|svg|jpg|jpeg|gif)$/i,
+        type: 'asset',
       },
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'], // .tsx 확장자도 처리할 수 있게 해요
+    extensions: ['.tsx', '.ts', '.js'],
+  },
+  performance: {
+    maxAssetSize: 350 * 1024,
+    maxEntrypointSize: 350 * 1024,
   },
   devServer: {
     static: {
-      directory: path.join(__dirname, 'dist'), // 빌드된 파일을 이 경로에서 서빙해요
+      directory: path.join(__dirname, 'dist'),
     },
-    port: 3000, // localhost:3000에서 실행
-    open: true, // 서버 실행 시 브라우저 자동 열기
-    hot: true, // HMR 사용
-    historyApiFallback: true, // SPA 라우팅 지원
+    port: 3000,
+    open: false,
+    hot: true,
+    historyApiFallback: true,
     client: {
-      overlay: true, // 에러 발생 시 브라우저에 띄워줘요
+      overlay: true,
     },
   },
 };

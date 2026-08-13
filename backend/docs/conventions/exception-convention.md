@@ -16,11 +16,13 @@ common/exception
 │   ├── ClientException
 │   ├── InvalidCommandException
 │   ├── BusinessRuleViolationException
-│   └── ResourceNotFoundException
+│   ├── ResourceNotFoundException
+│   └── AuthenticationFailedException
 ├── server
 │   ├── ServerException
 │   ├── DataInconsistencyException
-│   └── ExternalServiceException
+│   ├── ExternalServiceException
+│   └── UpstreamServiceException
 ├── errorcode
 │   └── ErrorCode
 ├── ErrorResponse
@@ -61,7 +63,15 @@ common/exception
 | `DataInconsistencyException` | `500 Internal Server Error` |
 | `ExternalServiceException` | `500 Internal Server Error` |
 
-인증·권한 오류(`401`, `403`)에 대응하는 예외는 미정이며 인증 방식을 결정할 때 정의한다.
+인증 필터에서 발생하는 오류는 Controller 이후의 `GlobalExceptionHandler`에 도달하지 않는다. `JachwiAuthenticationEntryPoint`가 같은 오류 응답 형식으로 다음 코드를 반환한다.
+
+| 상황 | 상태 코드 | 오류 코드 |
+| --- | --- | --- |
+| Bearer Access Token 누락·잘못된 인증 스킴 | `401 Unauthorized` | `UNAUTHENTICATED` |
+| Access Token 만료 | `401 Unauthorized` | `ACCESS_TOKEN_EXPIRED` |
+| 서명·issuer·audience·subject·형식 오류 | `401 Unauthorized` | `ACCESS_TOKEN_INVALID` |
+
+`UpstreamServiceException`은 Google token endpoint 통신과 JWK 조회처럼 상류 시스템이 실패한 경우 사용하며 `ErrorCode`에 따라 `502 Bad Gateway`로 변환한다.
 
 ## 오류 응답
 
@@ -76,6 +86,7 @@ common/exception
 - 오류 코드는 `UPPER_SNAKE_CASE`를 사용한다.
 - 오류 코드는 `도메인_상태` 형식으로 작성한다.
 - 검증 오류에만 `errors`에 필드별 상세 내용을 넣는다.
+- authorization code, code verifier, nonce, token, 비밀번호, 비밀키, 메모, 발견 경로와 사진은 검증 오류의 `rejectedValue`에 포함하지 않는다.
 
 ## Swagger 문서화
 
