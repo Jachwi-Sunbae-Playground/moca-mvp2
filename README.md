@@ -24,6 +24,10 @@
 - [컨벤션](docs/convention/README.md) — 브랜치·커밋, 이슈·PR, 코드 리뷰, 문서 관리
 - [문서 관리](docs/convention/documentation.md) — 문서 분류, 정본과 대조 대상, 정합성 검사
 
+### 운영
+
+- [배포 아키텍처 설계](docs/operations/deployment-architecture.md) — 배포 대상, 플랫폼 선택과 근거, 비용 추정
+
 ## 저장소 구조
 
 이 저장소는 백엔드와 프론트엔드를 함께 관리하는 모노레포입니다.
@@ -47,6 +51,7 @@
 │   ├── convention/       # 브랜치·커밋, 이슈·PR, 코드 리뷰, 문서 관리
 │   ├── experiments/      # 실험별 설계·결과·판정
 │   ├── learnings/        # 피벗 히스토리와 학습
+│   ├── operations/       # 배포 아키텍처 설계
 │   └── assets/           # 브랜드 이미지
 ├── backend/
 │   ├── config/           # 백엔드 개발 도구 설정
