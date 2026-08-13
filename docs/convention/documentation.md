@@ -72,6 +72,7 @@ ADR은 전체를 동결하지 않는다. [ADR 작성 규칙](../../backend/docs/
 | [`README.md`](../../README.md) | 최상위 디렉터리와 `docs/` 하위 디렉터리 | B-1 |
 | [환경변수](../../backend/docs/guides/environment-variables.md) | `backend/.env.example` | B-2 |
 | [로컬 개발](../../backend/docs/guides/local-development.md) | `compose.yaml`, `build.gradle`, 실행 URL | 사람 |
+| [데이터베이스 마이그레이션](../../backend/docs/guides/database-migrations.md) | `build.gradle`, `application.yml`, `db/migration` | 사람 |
 | [테스트와 빌드](../../backend/docs/guides/test-and-build.md) | `build.gradle`의 테스트 태스크 | 사람 |
 | [백엔드 패키지 구조](../../backend/docs/architecture/backend-package-structure.md) | `build.gradle`의 `group`, `backend/src` 구조 | 사람 |
 | [시스템 개요](../../backend/docs/architecture/system-overview.md) | 실제 구성 요소 | 사람 |

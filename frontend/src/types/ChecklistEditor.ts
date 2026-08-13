@@ -1,0 +1,49 @@
+import type { CheckItem, ChecklistItem } from './Checklist';
+
+type ChecklistEditorItemBase = {
+  clientKey: string;
+  checklistItemId: number | null;
+  question: string;
+};
+
+export type ChecklistEditorProvidedItem = ChecklistEditorItemBase & {
+  origin: 'PROVIDED';
+  sourceCheckItemId: number;
+  guide: string | null;
+};
+
+export type ChecklistEditorCustomItem = ChecklistEditorItemBase & {
+  origin: 'CUSTOM';
+  sourceCheckItemId: null;
+  guide: null;
+};
+
+export type ChecklistEditorItem = ChecklistEditorProvidedItem | ChecklistEditorCustomItem;
+
+export const checklistItemToEditorItem = (item: ChecklistItem): ChecklistEditorItem =>
+  item.origin === 'PROVIDED'
+    ? {
+        clientKey: `existing:${item.checklistItemId}`,
+        origin: 'PROVIDED',
+        checklistItemId: item.checklistItemId,
+        sourceCheckItemId: item.sourceCheckItemId,
+        question: item.question,
+        guide: item.guide,
+      }
+    : {
+        clientKey: `existing:${item.checklistItemId}`,
+        origin: 'CUSTOM',
+        checklistItemId: item.checklistItemId,
+        sourceCheckItemId: null,
+        question: item.question,
+        guide: null,
+      };
+
+export const checkItemToEditorItem = (item: CheckItem): ChecklistEditorProvidedItem => ({
+  clientKey: `provided:${item.checkItemId}`,
+  origin: 'PROVIDED',
+  checklistItemId: null,
+  sourceCheckItemId: item.checkItemId,
+  question: item.question,
+  guide: item.guide,
+});

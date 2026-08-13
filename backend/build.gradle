@@ -8,6 +8,8 @@ group = 'com.jachwisunbae'
 version = '0.0.1-SNAPSHOT'
 description = 'Jachwi Sunbae backend application'
 
+def flywayVersion = '13.0.0'
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
@@ -21,10 +23,17 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation "org.flywaydb:flyway-core:${flywayVersion}"
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.9.0'
+	implementation platform('software.amazon.awssdk:bom:2.41.24')
+	implementation 'software.amazon.awssdk:s3'
+	implementation 'com.twelvemonkeys.imageio:imageio-webp:3.13.1'
 	runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly "org.flywaydb:flyway-mysql:${flywayVersion}"
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.testcontainers:junit-jupiter'

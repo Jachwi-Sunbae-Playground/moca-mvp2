@@ -18,6 +18,14 @@ Docker가 실행 중이어야 한다. 로컬 Compose MySQL은 필요하지 않�
 
 테스트 종류별 작성 기준은 [테스트 전략](../conventions/test-strategy.md)을 따른다.
 
+인증 구현은 다음 범위를 자동 검증한다.
+
+- Google code 교환과 ID Token 검증 어댑터 단위 테스트
+- `members` SQL, UNIQUE와 프로필 갱신 Repository 테스트
+- 동시 최초 로그인 통합 테스트
+- 로그인, JWT 정상·누락·스킴 오류·변조·만료·형식 오류와 현재 회원 조회 인수 테스트
+- OpenAPI의 공개·보호 API와 Bearer 보안 스킴
+
 ## 전체 빌드
 
 ```bash
@@ -30,5 +38,6 @@ PR을 올리기 전에 전체 빌드를 실행한다. GitHub Actions의 Backend 
 
 - 컴파일과 모든 테스트가 성공한다.
 - 통합 테스트가 로컬 MySQL이 아닌 Testcontainers MySQL에서 실행된다.
+- 인수 테스트는 실제 Google 서버나 실제 사용자 인증정보에 의존하지 않는다.
 - 실패한 테스트를 비활성화하거나 삭제해 빌드를 통과시키지 않는다.
 - 환경 문제로 실패했다면 재현 명령, 기대 결과, 실제 결과와 OS·Java·Docker 버전을 관련 이슈에 기록한다. 비밀번호와 토큰은 포함하지 않는다.

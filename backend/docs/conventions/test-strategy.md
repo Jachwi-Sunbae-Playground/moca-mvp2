@@ -20,9 +20,11 @@ Domain 단위 테스트는 Spring과 외부 시스템 없이 순수 Java 객체�
 - 금액과 날짜의 경계값
 - 상태 변경 규칙
 - 권한 판단
-- 지원 자격 판단
-- 매물 비교 규칙
-- 계약 전 확인 규칙
+- 체크리스트 최소 구성·중복·단계 일치
+- PROVIDED·CUSTOM 출처 배타성, CUSTOM trim·1~200 코드포인트 경계와 로컬 ID 중복
+- 방문 완료와 완료 후 수정 규칙
+- 방문 진행 요약 계산
+- 구조화 사전 메모의 빈 값·null·유니코드 코드포인트 경계와 legacy 추가 메모 변경 시 필드 보존
 
 ## Service 단위 테스트
 
@@ -108,6 +110,11 @@ Service 통합 테스트가 Repository를 사용하더라도 복잡한 SQL의 �
 - Service 트랜잭션
 - 여러 Repository가 참여하는 Use Case
 - 외부 Client와의 통합
+- 구조화 메모 upsert와 legacy 메모 dual-write 중간 실패의 전체 롤백
+- 같은 매물의 동시 메모 저장 직렬화와 마지막 커밋값 정책
+- PROVIDED·CUSTOM 혼합 생성·조회, 기존 로컬 ID 보존 diff와 새 항목 ID 발급
+- 다른 체크리스트 로컬 ID 거부, CUSTOM이 있는 legacy 전체 변경 409와 이름·항목 롤백
+- PROVIDED·CUSTOM 방문 스냅샷과 원본 수정·항목 삭제·체크리스트 삭제 뒤 불변성
 
 ### 작성 기준
 
@@ -144,13 +151,14 @@ Service 통합 테스트가 Repository를 사용하더라도 복잡한 SQL의 �
 
 ### 작성 대상
 
-1차 MVP 대상이며 기능 구현 시점에 갱신한다.
+1차 MVP 대상이며 기능 구현 시점에 순차적으로 갱신한다.
 
-- 회원가입 후 로그인
-- 지원 조건 입력 후 확인 가능한 정책 조회
-- 매물 등록 후 상세 조회
-- 매물 방문 기록 생성 후 비교
-- 계약 전 확인 항목 생성
+- Google 로그인 후 자체 JWT로 현재 회원 조회 — 구현됨
+- 매물 두 개 등록 후 목록·상세·수정·구조화·legacy 메모·삭제와 소유권 격리 — 구현됨
+- PROVIDED·CUSTOM 혼합 체크리스트 생성·조회·ID 보존 전체 변경·legacy 409와 매물 활성 연결 — 구현됨
+- 같은 매물의 복수 방문, CUSTOM 불변 스냅샷과 서로 다른 두 매물의 방문 기록 저장·완료 — 구현됨
+- 완료한 방문의 상태·인라인 메모 수정과 최초 완료 시각 유지 — 구현됨
+- 두 회원·두 매물·사진·공유 체크리스트·원본 변경 전후 방문을 연결한 전체 소유권·스냅샷 흐름 — 구현됨
 
 ### 작성 기준
 
@@ -159,3 +167,11 @@ Service 통합 테스트가 Repository를 사용하더라도 복잡한 SQL의 �
 - 모든 Validation과 Domain 경계값을 인수 테스트에서 반복하지 않는다.
 - HTTP 상태, Response Body, 오류 코드를 검증한다.
 - 구현 내부의 Service나 Repository 호출 여부를 검증하지 않는다.
+
+`MvpBackendBaselineAcceptanceTest`는 링크·텍스트 발견 경로 매물, 구조화·legacy 메모, 인증 사진 Blob, PROVIDED·CUSTOM 활성 체크리스트, 원본 수정·삭제 전후 복수 방문, 독립 상태·메모 CAS와 충돌, 완료 후 편집, 두 회원 소유권과 삭제 영향을 한 흐름으로 검증한다. 실제 OpenAPI에서는 정확히 27개 연산, 공개 1개·보호 26개, Bearer·401·성공 상태, 내부 `memberId` 입력 부재, 전체 path parameter와 API-101·301·302·303·501 query 보존, 사진 multipart·binary, v1.1 정본·nullable·deprecated 스키마와 API-505·506을 검증한다. 같은 테스트에서 최초·반복 `/v3/api-docs` 생성에 JSON schema 변환 경고가 없는지 확인하고 Flyway 적용 뒤 health도 확인한다. `MvpDatabaseBaselineRepositoryTest`는 13개 제품 테이블, Flyway V1~V4 이력과 고정 checksum, 핵심 제약·삭제 규칙, 제거 기능 부재와 메모·방문 버전 경계를 실제 MySQL 메타데이터로 검증한다. `FlywayMigrationIntegrationTest`는 실제 V1 스크립트에서 시작한 pre-Flyway DB의 명시적 baseline, 데이터·스냅샷·버전 보존, backfill, 제약, 재실행과 checksum 실패를 MySQL에서 검증한다.
+
+`PropertyPreVisitMemoRepositoryTest`는 구조화 메모 upsert·소유권·fallback·cascade를, `PropertyServiceIntegrationTest`는 양방향 강제 실패 시 dual-write 원자성을, `PropertyMemoConcurrencyIntegrationTest`는 매물 행 잠금과 마지막 커밋값 정책을 검증한다. `PropertyAcceptanceTest`는 API-103·106의 v1.1 전체 저장, v1.0 `content` 호환·보존, 전체 지우기, 오류 비노출과 실제 OpenAPI 스키마를 검증한다.
+
+`ChecklistRequestTest`는 누락·명시적 null을 포함한 v1.1·legacy 표현 구분과 CUSTOM 코드포인트 경계를 검증한다. `ChecklistRepositoryTest`는 실제 MySQL의 로컬 ID·배타 CHECK·nullable 출처를, `ChecklistServiceIntegrationTest`는 ID 보존 diff·비활성 PROVIDED 유지·다른 Checklist ID 404·legacy 409·롤백·동시 직렬화를 검증한다. `ChecklistAcceptanceTest`는 API-304·305·306의 혼합 요청·응답·deprecated 필드와 OpenAPI 409를 검증한다.
+
+`VisitDomainTest`와 `VisitItemRequestTest`는 인라인 메모의 Unicode 코드포인트·null·개행·공백 규칙, 두 채널 보존과 v1.1·legacy 상태 version 표현을 검증한다. `VisitRepositoryTest`는 실제 MySQL에서 두 조건부 UPDATE의 SET·WHERE 독립성, 채널별 충돌, 소유권과 CHECK를 검증한다. `VisitServiceIntegrationTest`와 `VisitAcceptanceTest`는 API-502·503의 두 origin 스냅샷과 API-504·506의 값·version·저장 시각 독립성, 원본 삭제 뒤 메모, 같은 값 저장·빈 문자열 삭제, 완료 후 수정과 오류 비노출을 검증한다. `VisitConcurrencyIntegrationTest`는 상태/상태와 메모/메모의 단일 성공, 상태/메모의 동시 성공, 서로 다른 항목 회귀, 완료와 각 채널 경합 및 최초 완료 시각을 실제 commit 순서 가정 없이 검증한다.

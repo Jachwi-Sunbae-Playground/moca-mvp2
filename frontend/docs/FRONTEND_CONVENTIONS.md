@@ -135,7 +135,8 @@ export default PostCard;
 npm run typecheck
 npm run lint
 npm run format:check
+npm run test
 npm run build
 ```
 
-코드를 제출하기 전에 타입 검사, 린트, 포맷 검사, 빌드를 모두 통과시키는 것을 기준으로 합니다.
+코드를 제출하기 전에 타입 검사, 린트, 포맷 검사, 테스트, 빌드를 모두 통과시키는 것을 기준으로 합니다.

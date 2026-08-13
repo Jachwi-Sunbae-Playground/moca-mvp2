@@ -2,8 +2,8 @@
 
 ## 문서 역할
 
-- 구현 전에는 [API 명세](api-specification.md)로 프론트엔드와 경로, 요청, 응답과 오류를 합의한다.
-- 구현 후에는 Swagger UI와 `/v3/api-docs`에서 실제 계약을 확인한다.
+- 프론트엔드는 [API 명세의 v1.1 인계 기준선](api-specification.md#프론트엔드-v11-인계-기준선)과 [27개 구현 추적표](api-specification.md#구현-추적)를 계약 정본으로 사용한다.
+- 구현 후에는 Swagger UI와 `/v3/api-docs`에서 배포된 실제 계약과 `info.version`을 확인한다.
 - 사전 명세와 OpenAPI 결과가 다르면 코드 또는 문서를 같은 PR에서 수정한다.
 
 ## 설계 시점
