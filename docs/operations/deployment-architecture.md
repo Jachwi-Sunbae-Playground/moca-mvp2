@@ -101,7 +101,15 @@ GitHub(main 병합)
 | `project-db` | `sg-0ce905a3e798a6a78` | RDS |
 | `project-public` | `sg-017bc5d8159ac557e` | 이번 구성에서는 쓰지 않는다 |
 
-보안 그룹 원칙: ALB는 외부에서 443만 받고, EC2 애플리케이션 포트는 `project-lb`에서 오는 트래픽만 허용한다. RDS 3306은 `project-app`에서 오는 트래픽만 허용한다.
+보안 그룹 원칙: ALB는 외부에서 443만 받고, EC2 애플리케이션 포트는 `project-lb`에서 오는 트래픽만 허용한다. RDS 3306은 `project-app`에서 들어올 수 있어야 한다.
+
+**`project-db`는 여러 팀이 공유하는 공용 보안 그룹이다.** 규칙이 9개 있고 3306이 `project-app` 외에 `project-public`에서도 열려 있다. 필요한 규칙(3306 ← `project-app`)은 이미 있으므로 추가할 것은 없다. 불필요한 규칙을 지우면 같은 그룹을 쓰는 다른 팀 DB가 끊기므로 **팀 임의로 수정하지 않는다.**
+
+따라서 "3306을 `project-app`에서만 허용한다"는 원칙은 네트워크 계층에서 완전히 강제되지 않는다. 다음으로 방어한다.
+
+- RDS 퍼블릭 액세스를 끈다. VPC 밖에서는 도달할 수 없다.
+- 강한 마스터 암호를 쓰고 SSM SecureString에만 둔다.
+- 애플리케이션은 마스터 계정이 아니라 필요한 권한만 가진 전용 DB 사용자로 접속한다.
 
 **인터넷 egress는 확인했다(2026-08-13).** `project-app-a`(`subnet-0e693cde6a836c0b8`, `10.0.20.0/24`, `ap-northeast-2a`)에 라우팅 테이블 `rtb-project-private-a`(`rtb-03226c586ffce1d86`)가 명시적으로 연결되어 있고, `0.0.0.0/0`이 NAT 게이트웨이 `nat-0198ce7cbc3e952...`로 향한다. 상태는 활성이며 블랙홀이 아니다. 따라서 EC2는 사설 서브넷 `project-app`에 둔다. `project-public` + 퍼블릭 IP 대안은 채택하지 않는다.
 
@@ -119,9 +127,22 @@ NAT 게이트웨이를 새로 만드는 선택지는 월 약 $32로 예산을 �
 
 ### 4.3 데이터베이스 (RDS)
 
-- 엔진 MySQL 8.4 계열, `db.t4g.micro`, 스토리지 gp3 20GB로 시작한다.
-- 자동 백업(보존 기간 설정)과 수동 스냅샷을 사용한다. 이는 [롤백](../../backend/docs/operations/rollback.md)이 요구하는 "검증된 백업을 격리된 대상에 복구"를 실제로 가능하게 하는 근거다.
-- 퍼블릭 액세스를 끄고 `project-storage` 서브넷에 둔다. `project-app`에서만 접근한다.
+2026-08-14에 생성했다.
+
+| 항목 | 값 |
+| --- | --- |
+| 식별자 | `jachwi-sunbae-db` |
+| 엔진 | MySQL Community 8.4.9 |
+| 인스턴스 | `db.t4g.micro`, gp3 20GB, 단일 AZ(`ap-northeast-2c`) |
+| 엔드포인트 | `jachwi-sunbae-db.cqsc6pyqhwww.ap-northeast-2.rds.amazonaws.com:3306` |
+| 마스터 사용자 | `jachwi_admin` (암호는 SSM SecureString에만 둔다) |
+| 자동 백업 | 7일 |
+| 파라미터 그룹 | `default.mysql8.4` |
+
+- 자동 백업과 수동 스냅샷을 사용한다. 이는 [롤백](../../backend/docs/operations/rollback.md)이 요구하는 "검증된 백업을 격리된 대상에 복구"를 실제로 가능하게 하는 근거다.
+- 퍼블릭 액세스를 껐고 `project-storage` 서브넷에 있다.
+- 자격 증명은 Secrets Manager가 아니라 자체 관리로 둔다. 비밀은 SSM Parameter Store로 일원화하고([4.8 비밀·환경변수](#48-비밀환경변수)), Secrets Manager는 시크릿당 월 요금이 붙는다.
+- **커스텀 파라미터 그룹을 만들지 않는다.** 기본 그룹의 `character_set_*`은 엔진 기본값(`-`)으로 보이지만, 마이그레이션이 테이블마다 `DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci`를 명시하므로 서버 기본값과 무관하게 `utf8mb4`로 만들어진다. 서버 설정에 의존하는 부분이 없다.
 - 시간대는 UTC로 둔다([시스템 개요](../../backend/docs/architecture/system-overview.md)의 UTC 기준과 일치).
 
 ### 4.4 사진 저장소 (S3)
@@ -170,8 +191,16 @@ NAT 게이트웨이를 새로 만드는 선택지는 월 약 $32로 예산을 �
 ### 4.8 비밀·환경변수
 
 - 운영 프로필 `prod`를 신설한다. 로컬 기본값([환경변수](../../backend/docs/guides/environment-variables.md))과 분리한다.
-- 운영 비밀(`DB_PASSWORD`, `JWT_SECRET_BASE64`, `GOOGLE_OAUTH_CLIENT_SECRET` 등)은 SSM Parameter Store의 `SecureString`에 두고, EC2 `ec2-project` role로 기동 시 읽어 주입한다. 액세스 키를 EC2에 두지 않는다.
+- 운영 값은 SSM Parameter Store에 `/jachwi-sunbae/prod/<환경변수명>` 경로로 둔다. 비밀은 `SecureString`, 나머지는 `String`이다. EC2 `ec2-project` role로 기동 시 읽어 주입하며 액세스 키를 EC2에 두지 않는다.
+- `SecureString`의 KMS 키는 계정 기본값 `alias/aws/ssm`을 쓴다. 팀은 KMS 키를 새로 만들 수 없고, 고객 관리형 키를 쓰면 `ec2-project` role에 `kms:Decrypt`가 따로 필요하다.
 - 실제 비밀은 저장소·문서·`.env.example`에 커밋하지 않는다는 원칙을 그대로 유지한다.
+
+| 유형 | 파라미터 |
+| --- | --- |
+| `SecureString` | `DB_PASSWORD`, `JWT_SECRET_BASE64`, `GOOGLE_OAUTH_CLIENT_SECRET` |
+| `String` | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS`, `CORS_ALLOWED_ORIGINS`, `PHOTO_STORAGE_REGION`, `PHOTO_STORAGE_BUCKET` |
+
+**사진 저장소 자격증명은 그대로 옮길 수 없다.** 현재 `application.yml`은 `PHOTO_STORAGE_ACCESS_KEY`·`PHOTO_STORAGE_SECRET_KEY`를 필수로 요구하지만, 운영에서는 정적 키를 두지 않고 EC2 인스턴스 role로 접근한다([4.4 사진 저장소](#44-사진-저장소-s3)). `prod` 프로필에서는 이 두 값을 SSM에 두지 말고, 기본 자격증명 공급자 체인을 쓰도록 설정을 분기한다. `PHOTO_STORAGE_ENDPOINT`도 MinIO 주소가 아니라 실제 S3 엔드포인트여야 한다.
 
 ## 5. 배포 자동화 파이프라인
 
