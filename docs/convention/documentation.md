@@ -81,6 +81,7 @@ ADR은 전체를 동결하지 않는다. [ADR 작성 규칙](../../backend/docs/
 | [데이터베이스 모델](../../backend/docs/architecture/database-model.md) | 실제 테이블 스키마 | 사람 |
 | [핵심 가설](../product/hypotheses.md) | [실험 기록](../experiments/)의 결과 | 사람 |
 | [`frontend/README.md`](../../frontend/README.md) | `frontend/` 구조와 `package.json` | 사람 |
+| [프론트엔드 배포](../../frontend/docs/deployment.md) | `frontend/webpack.config.js`, 실제 CloudFront·파이프라인 구성 | 사람 |
 | [`CLAUDE.md`](../../CLAUDE.md) | `docs/convention/`과 `backend/docs/conventions/`의 규칙 | 사람 |
 | [`AGENTS.md`](../../AGENTS.md) | `CLAUDE.md` | A-3 |
 | `.agents/skills/` | `.claude/skills/` | A-4 |
