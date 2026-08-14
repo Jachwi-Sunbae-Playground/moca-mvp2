@@ -1,0 +1,28 @@
+version: 0.2
+
+# 배포용 빌드다. 테스트는 GitHub Actions(backend-ci.yml)가 PR과 main push에서 실행한다.
+# 여기서 다시 실행하지 않는 이유는 두 가지다. 경계를 나누어 중복을 없애고,
+# 통합 테스트가 Testcontainers로 Docker를 요구해 CodeBuild에 특권 모드가 필요해지기 때문이다.
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+
+  build:
+    commands:
+      - chmod +x backend/gradlew
+      - backend/gradlew -p backend --no-daemon clean bootJar
+
+  post_build:
+    commands:
+      - mkdir -p bundle
+      - cp -r backend/deploy/. bundle/
+      # bootJar 산출물만 고른다. 버전이 바뀌어도 되도록 이름을 고정하지 않는다.
+      - cp "$(find backend/build/libs -name '*.jar' ! -name '*-plain.jar' | head -n 1)" bundle/app.jar
+      - ls -l bundle
+
+artifacts:
+  base-directory: bundle
+  files:
+    - '**/*'

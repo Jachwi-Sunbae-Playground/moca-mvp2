@@ -1,0 +1,24 @@
+[Unit]
+Description=Jachwi Sunbae backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jachwi
+Group=jachwi
+
+# systemd가 root 권한으로 읽은 뒤 User로 내려간다. 따라서 이 파일은 0600 root:root으로 두고
+# 애플리케이션 계정에 읽기 권한을 주지 않는다. 운영 비밀이 들어 있다.
+EnvironmentFile=/etc/jachwi-sunbae/app.env
+
+ExecStart=/usr/bin/java -XX:MaxRAMPercentage=50.0 -jar /opt/jachwi-sunbae/app.jar
+WorkingDirectory=/opt/jachwi-sunbae
+
+# Spring Boot는 SIGTERM 종료 시 143을 반환한다. 실패로 보지 않는다.
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
