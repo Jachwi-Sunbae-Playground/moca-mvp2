@@ -124,27 +124,28 @@ NAT 게이트웨이를 새로 만드는 선택지는 월 약 $32로 예산을 �
 | 항목 | 값 |
 | --- | --- |
 | 이름 | `jachwi-sunbae-prod` |
-| AMI | Ubuntu Server 26.04 LTS **arm64** (`ami-019e063f3fff5d27f`) |
+| AMI | Amazon Linux 2023 **arm64** |
 | 타입 | `t4g.small` (2 vCPU / 2GiB) |
 | 서브넷 | `project-app-a` (`subnet-0e693cde6a836c0b8`), 퍼블릭 IP 없음 |
 | 보안 그룹 | `project-app` (`sg-034df39fb4edbf0e6`) |
 | IAM 프로파일 | `ec2-project` |
 | 루트 볼륨 | 20GiB |
-| 키 페어 | **없음** |
+| 키 페어 | 없음 |
 
 - 타입은 `t4g.small`(ARM, 2GB RAM)로 시작한다. `t4g.micro`(1GB)는 JVM에 빠듯해 최후의 축소 카드로만 둔다.
 - **AMI는 arm64여야 한다.** `t4g`는 ARM이므로 x86 AMI를 고르면 기동하지 않거나 CodeDeploy 에이전트가 붙지 않는다. 아키텍처는 인스턴스를 다시 만들지 않으면 바꿀 수 없다.
-- 계획은 Ubuntu 24.04 LTS였으나 빠른 시작 목록에 26.04만 있어 26.04로 만들었다. **CodeDeploy 에이전트가 26.04를 지원하는지 확인해야 한다.** AWS가 지원 목록에 올린 배포판에서만 검증되며, 설치가 실패하면 배포 파이프라인 전체가 막힌다. 그 경우 24.04 이미지로 다시 만든다.
+- 처음에는 Ubuntu로 만들었으나 빠른 시작 목록에 26.04만 있었다. CodeDeploy 에이전트는 AWS가 지원 목록에 올린 배포판에서만 검증되는데 26.04는 갓 나온 버전이라 확인되지 않았고, 설치가 실패하면 배포 파이프라인 전체가 막힌다. 검증된 조합을 택해 Amazon Linux 2023으로 다시 만들었다.
 - 인스턴스에 IAM role `ec2-project`를 연결한다. 이 role로 S3(사진)·CloudWatch(로그)·CodeDeploy 산출물 접근을 액세스 키 없이 수행한다.
 - **접속 수단을 먼저 확보한 뒤에 만든다.** `project-app`은 퍼블릭 IP가 없는 사설 서브넷이므로 SSH로 직접 닿을 수 없다. 세션 관리자가 동작하지 않는데 키 페어도 없으면 인스턴스에 들어갈 방법이 없고, 서브넷과 키 페어는 둘 다 재생성 없이 바꿀 수 없다. 운영 비밀을 로컬 설정 파일에 두기로 했으므로([4.8 비밀·환경변수](#48-비밀환경변수)) 셸 접속은 선택이 아니라 필수다.
 - 세션 관리자 가용 여부는 Systems Manager → Fleet Manager의 관리형 노드 목록에 인스턴스가 나타나는지로 판별한다. 나타나지 않으면 `ec2-project` role에 SSM 권한이 없는 것이므로 `project-public` + 퍼블릭 IP + 키 페어 구성으로 다시 만든다.
-- CodeDeploy 에이전트와 애플리케이션 실행 런타임(JDK 21)을 설치한다. CodeDeploy 에이전트는 Ruby로 동작하므로 `ruby-full`이 함께 필요하다. 접속 수단이 확정되기 전이라도 준비되도록 사용자 데이터로 설치한다.
+- CodeDeploy 에이전트와 애플리케이션 실행 런타임(JDK 21)을 설치한다. CodeDeploy 에이전트는 Ruby로 동작하므로 `ruby`가 함께 필요하다. 접속 수단이 확정되기 전이라도 준비되도록 사용자 데이터로 설치한다.
 
 ```bash
 #!/bin/bash
-apt-get update
-apt-get install -y openjdk-21-jdk ruby-full wget
+dnf install -y java-21-amazon-corretto ruby wget
 ```
+
+- SSM 에이전트와 AWS CLI v2는 Amazon Linux 2023에 기본 설치되어 있어 따로 넣지 않는다.
 
 - 태그 3종을 설정한다.
 
@@ -287,7 +288,6 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 | 항목 | 상태 | 필요한 확인 |
 | --- | --- | --- |
 | EC2 셸 접속 수단 | **확인 필요. 다른 작업을 막는다** | 세션 관리자가 되는지 Fleet Manager 관리형 노드 목록으로 판별한다. 안 되면 `project-public` + 퍼블릭 IP + 키 페어로 다시 만든다 |
-| Ubuntu 26.04와 CodeDeploy 에이전트 | 확인 필요 | AWS가 지원 목록에 올린 배포판인지 확인한다. 에이전트 설치가 실패하면 24.04로 내린다 |
 | apex 도메인 처리 | 결정 필요 | 가비아 웹 포워딩으로 `www`에 리다이렉트할지, `www`만 안내할지 택1 |
 | 제공 role 권한 범위 | 확인 필요 | `codebuild-project`·`codedeploy-project`·`ec2-project`가 S3·CloudFront에 필요한 권한을 포함하는지 확인. 부족하면 `#8기-기술-검토` 문의 |
 | 프론트 운영 env·재빌드 | 반영 필요 | 빌드 타임 주입이므로 CodeBuild에 운영 `API_BASE_URL`·`GOOGLE_REDIRECT_URI` 전달. Google OAuth 콘솔·백엔드 허용 목록에도 운영 redirect URI 등록 |
@@ -301,6 +301,6 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 | 배포 자동화 | CodePipeline+CodeBuild+CodeDeploy | GitHub Actions self-hosted runner를 EC2에 설치 | 셋업은 더 단순하나, 팀이 AWS 네이티브 CI/CD 학습을 자율 요구사항으로 가져갈 수 있어 학습 가치가 큰 쪽을 택함. 러너 방식은 축소 대안으로 유지 |
 | 데이터베이스 | RDS MySQL | EC2에 MySQL 직접 설치 | 비용은 낮으나 백업·복구·운영 부담이 크고, 롤백 절차의 백업 복구 전제와 맞지 않음 |
 | 비밀 관리 | EC2 로컬 설정 파일 | SSM Parameter Store(SecureString), AWS Secrets Manager | Parameter Store는 사용 가능한 서비스 목록에 없고 실제 접근도 거부됐다. Secrets Manager는 시크릿당 월 요금이 붙어 예산에 부담이 된다. 둘 다 쓸 수 없어 남은 방법을 택했다 |
-| EC2 운영체제 | Ubuntu (arm64) | Amazon Linux 2023 (arm64) | AWS CLI v2가 기본 설치되고 AWS 공식 문서와 잘 맞는 장점이 있으나, 팀이 익숙한 쪽을 택함. 배포는 잘될 때가 아니라 막혔을 때가 문제이며 그때 손에 익은 환경과 참고 자료의 양이 복구 속도를 좌우한다. SSM 에이전트는 양쪽 공식 AMI에 모두 들어 있어 차이가 없다 |
+| EC2 운영체제 | Amazon Linux 2023 (arm64) | Ubuntu (arm64) | 팀에 익숙하고 참고 자료가 많아 우분투를 먼저 택했으나, 빠른 시작 목록에 26.04만 있었다. CodeDeploy 에이전트는 AWS가 지원 목록에 올린 배포판에서만 검증되고 26.04는 갓 나온 버전이라 확인되지 않았다. 파이프라인 전체를 막을 수 있는 위험이라 검증된 조합을 택했다. SSM 에이전트와 AWS CLI v2가 기본 설치되는 이점도 있다 |
 | 프론트 서빙 | S3+CloudFront | EC2에 nginx로 함께 서빙 | 정적 SPA에 CDN 캐싱 이점이 크고 백엔드와 장애가 분리됨. 프론트엔드 캐시 요구사항과도 맞음 |
 | 진입 계층 | ALB+WAF+ACM | EC2에 직접 도메인·HTTPS(certbot) | ACM·WAF는 EC2에 직접 붙지 않고, "요청 수신에 WAF 필요" 요건을 EC2 단독으로 충족할 수 없음. 비용 압박 시 CloudFront 앞단으로 대체 검토 |
