@@ -120,9 +120,16 @@ NAT 게이트웨이를 새로 만드는 선택지는 월 약 $32로 예산을 �
 ### 4.2 컴퓨트 (EC2)
 
 - 타입 `t4g.small`(ARM, 2GB RAM)로 시작한다. `t4g.micro`(1GB)는 JVM에 빠듯해 최후의 축소 카드로만 둔다.
-- AMI는 ARM 아키텍처(arm64)를 사용한다. `t4g`는 ARM이므로 x86 AMI를 고르면 기동하지 않거나 CodeDeploy 에이전트가 붙지 않는다.
+- **AMI는 Ubuntu Server 24.04 LTS의 arm64 이미지를 사용한다.** `t4g`는 ARM이므로 x86 AMI를 고르면 기동하지 않거나 CodeDeploy 에이전트가 붙지 않는다. 아키텍처는 인스턴스를 다시 만들지 않으면 바꿀 수 없다.
 - 인스턴스에 IAM role `ec2-project`를 연결한다. 이 role로 S3(사진)·SSM(비밀)·CloudWatch(로그)·CodeDeploy 산출물 접근을 액세스 키 없이 수행한다.
-- CodeDeploy 에이전트와 애플리케이션 실행 런타임(JDK 21)을 설치한다.
+- CodeDeploy 에이전트와 애플리케이션 실행 런타임(JDK 21)을 설치한다. CodeDeploy 에이전트는 Ruby로 동작하므로 `ruby-full`이 함께 필요하다. 접속 수단이 확정되기 전이라도 준비되도록 사용자 데이터로 설치한다.
+
+```bash
+#!/bin/bash
+apt-get update
+apt-get install -y openjdk-21-jdk ruby-full wget
+```
+
 - 태그 3종을 설정한다.
 
 ### 4.3 데이터베이스 (RDS)
@@ -263,5 +270,6 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 | --- | --- | --- | --- |
 | 배포 자동화 | CodePipeline+CodeBuild+CodeDeploy | GitHub Actions self-hosted runner를 EC2에 설치 | 셋업은 더 단순하나, 팀이 AWS 네이티브 CI/CD 학습을 자율 요구사항으로 가져갈 수 있어 학습 가치가 큰 쪽을 택함. 러너 방식은 축소 대안으로 유지 |
 | 데이터베이스 | RDS MySQL | EC2에 MySQL 직접 설치 | 비용은 낮으나 백업·복구·운영 부담이 크고, 롤백 절차의 백업 복구 전제와 맞지 않음 |
+| EC2 운영체제 | Ubuntu Server 24.04 LTS (arm64) | Amazon Linux 2023 (arm64) | AWS CLI v2가 기본 설치되고 AWS 공식 문서와 잘 맞는 장점이 있으나, 팀이 익숙한 쪽을 택함. 배포는 잘될 때가 아니라 막혔을 때가 문제이며 그때 손에 익은 환경과 참고 자료의 양이 복구 속도를 좌우한다. SSM 에이전트는 양쪽 공식 AMI에 모두 들어 있어 차이가 없다 |
 | 프론트 서빙 | S3+CloudFront | EC2에 nginx로 함께 서빙 | 정적 SPA에 CDN 캐싱 이점이 크고 백엔드와 장애가 분리됨. 프론트엔드 캐시 요구사항과도 맞음 |
 | 진입 계층 | ALB+WAF+ACM | EC2에 직접 도메인·HTTPS(certbot) | ACM·WAF는 EC2에 직접 붙지 않고, "요청 수신에 WAF 필요" 요건을 EC2 단독으로 충족할 수 없음. 비용 압박 시 CloudFront 앞단으로 대체 검토 |
