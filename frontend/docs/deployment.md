@@ -25,10 +25,10 @@ main 병합
 
 `webpack.config.js`의 `DefinePlugin`이 `API_BASE_URL`·`GOOGLE_CLIENT_ID`·`GOOGLE_REDIRECT_URI`를 번들에 박아넣는다. 런타임 설정이 아니므로 **값을 바꾸면 재빌드·재배포해야 한다.**
 
-| 환경변수 | 운영 값 |
-| --- | --- |
-| `API_BASE_URL` | `https://api.jachwi-sunbae.kr` |
-| `GOOGLE_CLIENT_ID` | Google Cloud 콘솔의 웹 클라이언트 ID |
+| 환경변수              | 운영 값                                              |
+| --------------------- | ---------------------------------------------------- |
+| `API_BASE_URL`        | `https://api.jachwi-sunbae.kr`                       |
+| `GOOGLE_CLIENT_ID`    | Google Cloud 콘솔의 웹 클라이언트 ID                 |
 | `GOOGLE_REDIRECT_URI` | `https://www.jachwi-sunbae.kr/oauth/google/callback` |
 
 값은 CodePipeline 빌드 액션의 환경변수로 전달한다. 번들에 박혀 브라우저에 그대로 노출되므로 비밀이 아니다. 클라이언트 시크릿은 여기 두지 않는다.
