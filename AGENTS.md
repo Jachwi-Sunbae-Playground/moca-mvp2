@@ -27,7 +27,7 @@
 
 ## 문체
 
-- `backend/docs/`, `docs/convention/` — 평서형 `~한다`
+- `backend/docs/`, `docs/convention/`, `docs/operations/` — 평서형 `~한다`
 - `docs/product/`, `README.md` — `~합니다`
 
 ## 백엔드
