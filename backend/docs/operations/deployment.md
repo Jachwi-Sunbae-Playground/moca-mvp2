@@ -1,9 +1,9 @@
 # 배포
 
-- 상태: 구성 중
-- 현재 배포 환경: EC2(`project-app` 서브넷) + RDS MySQL. 진입 계층(ALB)과 파이프라인은 구성 중이다
+- 상태: 동작 중
+- 현재 배포 환경: EC2(`project-app` 서브넷) + RDS MySQL. 진입 계층(ALB)은 구성 중이다
 - 문서 성격: 파생
-- 대조 대상: `backend/buildspec.yml`, `backend/deploy/`, 실제 AWS 파이프라인 구성
+- 대조 대상: `backend/deploy/`, 실제 AWS 파이프라인 구성
 
 전체 구성과 선택 근거는 [배포 아키텍처 설계](../../../docs/operations/deployment-architecture.md)에 있다. 이 문서는 백엔드를 실제로 배포하는 절차와 그 절차가 의존하는 서버 상태를 적는다.
 
@@ -13,26 +13,27 @@
 
 ```text
 main 병합
-  → CodePipeline
-    → CodeBuild(codebuild-project)  backend/buildspec.yml
-    → CodeDeploy(codedeploy-project) backend/deploy/appspec.yml
+  → CodePipeline(codepipeline-project)  jachwi-sunbae-line
+    → Commands 액션 ─ 관리형 환경에서 jar 빌드 ─ BuildArtifact
+    → CodeDeploy(codedeploy-project) ─ backend/deploy/appspec.yml
       → EC2 (ec2-project role, CodeDeploy 에이전트)
 ```
+
+아티팩트 저장소는 `techcourse-project-2026-artifacts`다.
 
 ## 저장소에 있는 것
 
 | 파일 | 역할 |
 | --- | --- |
-| `backend/buildspec.yml` | `bootJar`로 실행 가능한 jar를 만들고 배포 번들을 조립한다 |
 | `backend/deploy/appspec.yml` | CodeDeploy 훅 순서를 정의한다 |
 | `backend/deploy/jachwi-sunbae.service` | systemd 유닛 |
 | `backend/deploy/scripts/` | 배포 훅 스크립트 |
 
 ## 테스트를 어디서 실행하는가
 
-**CodeBuild는 테스트를 실행하지 않는다.** `bootJar`만 실행한다. 테스트는 GitHub Actions(`.github/workflows/backend-ci.yml`)가 PR과 `main` push에서 실행하므로, 배포되는 커밋은 이미 검증을 통과한 상태다.
+**빌드 단계는 테스트를 실행하지 않는다.** `clean bootJar -x test`만 실행한다. 테스트는 GitHub Actions(`.github/workflows/backend-ci.yml`)가 PR과 `main` push에서 실행하므로, 배포되는 커밋은 이미 검증을 통과한 상태다.
 
-같은 테스트를 두 곳에서 돌리지 않는 것이 첫 번째 이유다. 두 번째는 통합 테스트가 Testcontainers로 Docker를 요구해 CodeBuild에 특권 모드가 필요해지기 때문이다.
+같은 테스트를 두 곳에서 돌리지 않는 것이 첫 번째 이유다. 두 번째는 통합 테스트가 Testcontainers로 Docker를 요구해 관리형 빌드 환경에 특권 모드가 필요해지기 때문이다.
 
 ## 배포 훅
 
@@ -59,6 +60,21 @@ main 병합
 
 값의 목록과 운영에서 달라지는 부분은 [환경변수](../guides/environment-variables.md)에 있다.
 
+## 빌드를 CodeBuild가 아니라 Commands로 하는 이유
+
+별도 CodeBuild 프로젝트를 두지 않고 CodePipeline의 `Commands` 액션을 쓴다. 같은 계정의 다른 팀이 CodeBuild 경로에서 막혔기 때문이다. `codebuild-project` 서비스 role에 파이프라인 `SourceArtifact`를 읽을 `s3:GetObject` 권한이 없어 빌드 입력을 내려받지 못했고, 팀은 role 정책을 바꿀 수 없다.
+
+`Commands`는 파이프라인 서비스 role을 그대로 쓰므로 이 문제를 겪지 않는다. 대신 빌드 정의가 저장소가 아니라 콘솔에 있다. 파이프라인 설정을 바꾸면 이 문서를 함께 고친다.
+
+빌드 명령은 다음을 한다.
+
+1. Corretto 21을 설치하고 `JAVA_HOME`을 잡는다. **관리형 환경의 기본 Java가 17일 수 있어 버전을 명시한다.**
+2. `clean bootJar -x test`로 실행 가능한 jar를 만든다.
+3. `-plain.jar`가 아닌 jar를 `app.jar`로 복사한다.
+4. `backend/deploy/`의 내용을 작업 디렉터리 루트로 옮긴다. **`appspec.yml`이 아티팩트 최상단에 없으면 CodeDeploy가 배포를 시작하지 못한다.**
+
+출력 아티팩트 `BuildArtifact`에는 `app.jar`, `appspec.yml`, `jachwi-sunbae.service`, `scripts/**/*`가 들어간다. 이 목록을 비워두면 Deploy 단계의 입력이 저장소 원본으로 잡혀 배포가 실패한다.
+
 ## 로그 확인
 
 ```bash
@@ -70,7 +86,6 @@ sudo systemctl status jachwi-sunbae.service
 
 ## 아직 구성하지 않은 것
 
-- CodeBuild 프로젝트, CodeDeploy 애플리케이션·배포 그룹, CodePipeline은 콘솔에서 만든다.
 - ALB와 `api.jachwi-sunbae.kr` DNS는 첫 배포 뒤에 만든다. 앱이 없는 상태로 대상 그룹을 만들면 헬스체크가 실패하는데, 설정 문제인지 앱이 없어서인지 구분할 수 없다.
 
 배포 결과와 사용자 관찰은 [지정 요구사항 2](../requirements/02-deploy-and-observe.md)에 증거와 함께 기록한다.
