@@ -41,9 +41,9 @@
 | 진입·HTTPS | ALB + WAF(`techcourse-project-waf`) + ACM | LB에 WAF 연결이 필수. WAF 요금은 팀 예산에서 제외되고 ACM 퍼블릭 인증서는 무료 |
 | 도메인 | 가비아에서 구매한 `jachwi-sunbae.kr` | DNS 검증과 레코드는 가비아 DNS에서 설정 |
 | 배포 자동화 | CodePipeline + CodeBuild + CodeDeploy | 액세스 키 없이 제공된 service role로 배포 |
-| 비밀 관리 | SSM Parameter Store(SecureString) + EC2 `ec2-project` role | 액세스 키 없이 운영 비밀을 주입 |
+| 비밀 관리 | EC2 로컬 설정 파일(`0600`) + CodeDeploy 훅 | 액세스 키를 만들 수 없고 SSM Parameter Store도 제공되지 않음 |
 
-확정된 식별자는 다음과 같다. 팀 서비스 영문명은 도메인과 맞춰 `jachwi-sunbae`로 두고 태그·S3 폴더명·SSM 경로에 일관되게 쓴다.
+확정된 식별자는 다음과 같다. 팀 서비스 영문명은 도메인과 맞춰 `jachwi-sunbae`로 두고 태그·S3 폴더명·설정 경로에 일관되게 쓴다.
 
 | 항목 | 값 |
 | --- | --- |
@@ -69,7 +69,7 @@
                      Spring Boot, prod 프로필
                         ├─ JDBC ─ RDS MySQL(project-storage 서브넷)
                         ├─ S3 API ─ techcourse-project-2026 버킷(사진)  ← EC2 ec2-project role
-                        ├─ SSM ─ Parameter Store(운영 비밀)             ← EC2 ec2-project role
+                        ├─ /etc/jachwi-sunbae/app.env (운영 비밀, 0600)
                         └─ HTTPS ─ Google token endpoint·JWK
 ```
 
@@ -108,20 +108,36 @@ GitHub(main 병합)
 따라서 "3306을 `project-app`에서만 허용한다"는 원칙은 네트워크 계층에서 완전히 강제되지 않는다. 다음으로 방어한다.
 
 - RDS 퍼블릭 액세스를 끈다. VPC 밖에서는 도달할 수 없다.
-- 강한 마스터 암호를 쓰고 SSM SecureString에만 둔다.
+- 강한 마스터 암호를 쓰고 EC2의 `0600` 설정 파일에만 둔다.
 - 애플리케이션은 마스터 계정이 아니라 필요한 권한만 가진 전용 DB 사용자로 접속한다.
 
 **인터넷 egress는 확인했다(2026-08-13).** `project-app-a`(`subnet-0e693cde6a836c0b8`, `10.0.20.0/24`, `ap-northeast-2a`)에 라우팅 테이블 `rtb-project-private-a`(`rtb-03226c586ffce1d86`)가 명시적으로 연결되어 있고, `0.0.0.0/0`이 NAT 게이트웨이 `nat-0198ce7cbc3e952...`로 향한다. 상태는 활성이며 블랙홀이 아니다. 따라서 EC2는 사설 서브넷 `project-app`에 둔다. `project-public` + 퍼블릭 IP 대안은 채택하지 않는다.
 
-**같은 VPC의 기본 라우팅 테이블 `rtb-project-default`에는 `0.0.0.0/0` 경로가 없다.** `10.0.0.0/16 → local`뿐이다. 라우팅 테이블이 명시적으로 연결되지 않은 서브넷에 EC2를 올리면 이 기본 테이블을 따르게 되어 인터넷으로 나가지 못한다. 이때 애플리케이션은 기동하지만 Google 토큰 엔드포인트와 SSM에 나가지 못해 **로그인만 실패한다.** 원인을 찾기 어려운 종류의 실패이므로, EC2를 만들 때 선택한 서브넷의 라우팅 테이블 연결을 반드시 확인한다.
+**같은 VPC의 기본 라우팅 테이블 `rtb-project-default`에는 `0.0.0.0/0` 경로가 없다.** `10.0.0.0/16 → local`뿐이다. 라우팅 테이블이 명시적으로 연결되지 않은 서브넷에 EC2를 올리면 이 기본 테이블을 따르게 되어 인터넷으로 나가지 못한다. 이때 애플리케이션은 기동하지만 Google 토큰 엔드포인트에 나가지 못해 **로그인만 실패한다.** 원인을 찾기 어려운 종류의 실패이므로, EC2를 만들 때 선택한 서브넷의 라우팅 테이블 연결을 반드시 확인한다.
 
 NAT 게이트웨이를 새로 만드는 선택지는 월 약 $32로 예산을 초과하므로 두지 않는다. 기존 NAT를 쓴다.
 
 ### 4.2 컴퓨트 (EC2)
 
-- 타입 `t4g.small`(ARM, 2GB RAM)로 시작한다. `t4g.micro`(1GB)는 JVM에 빠듯해 최후의 축소 카드로만 둔다.
-- **AMI는 Ubuntu Server 24.04 LTS의 arm64 이미지를 사용한다.** `t4g`는 ARM이므로 x86 AMI를 고르면 기동하지 않거나 CodeDeploy 에이전트가 붙지 않는다. 아키텍처는 인스턴스를 다시 만들지 않으면 바꿀 수 없다.
-- 인스턴스에 IAM role `ec2-project`를 연결한다. 이 role로 S3(사진)·SSM(비밀)·CloudWatch(로그)·CodeDeploy 산출물 접근을 액세스 키 없이 수행한다.
+2026-08-14에 생성했다.
+
+| 항목 | 값 |
+| --- | --- |
+| 이름 | `jachwi-sunbae-prod` |
+| AMI | Ubuntu Server 26.04 LTS **arm64** (`ami-019e063f3fff5d27f`) |
+| 타입 | `t4g.small` (2 vCPU / 2GiB) |
+| 서브넷 | `project-app-a` (`subnet-0e693cde6a836c0b8`), 퍼블릭 IP 없음 |
+| 보안 그룹 | `project-app` (`sg-034df39fb4edbf0e6`) |
+| IAM 프로파일 | `ec2-project` |
+| 루트 볼륨 | 20GiB |
+| 키 페어 | **없음** |
+
+- 타입은 `t4g.small`(ARM, 2GB RAM)로 시작한다. `t4g.micro`(1GB)는 JVM에 빠듯해 최후의 축소 카드로만 둔다.
+- **AMI는 arm64여야 한다.** `t4g`는 ARM이므로 x86 AMI를 고르면 기동하지 않거나 CodeDeploy 에이전트가 붙지 않는다. 아키텍처는 인스턴스를 다시 만들지 않으면 바꿀 수 없다.
+- 계획은 Ubuntu 24.04 LTS였으나 빠른 시작 목록에 26.04만 있어 26.04로 만들었다. **CodeDeploy 에이전트가 26.04를 지원하는지 확인해야 한다.** AWS가 지원 목록에 올린 배포판에서만 검증되며, 설치가 실패하면 배포 파이프라인 전체가 막힌다. 그 경우 24.04 이미지로 다시 만든다.
+- 인스턴스에 IAM role `ec2-project`를 연결한다. 이 role로 S3(사진)·CloudWatch(로그)·CodeDeploy 산출물 접근을 액세스 키 없이 수행한다.
+- **접속 수단을 먼저 확보한 뒤에 만든다.** `project-app`은 퍼블릭 IP가 없는 사설 서브넷이므로 SSH로 직접 닿을 수 없다. 세션 관리자가 동작하지 않는데 키 페어도 없으면 인스턴스에 들어갈 방법이 없고, 서브넷과 키 페어는 둘 다 재생성 없이 바꿀 수 없다. 운영 비밀을 로컬 설정 파일에 두기로 했으므로([4.8 비밀·환경변수](#48-비밀환경변수)) 셸 접속은 선택이 아니라 필수다.
+- 세션 관리자 가용 여부는 Systems Manager → Fleet Manager의 관리형 노드 목록에 인스턴스가 나타나는지로 판별한다. 나타나지 않으면 `ec2-project` role에 SSM 권한이 없는 것이므로 `project-public` + 퍼블릭 IP + 키 페어 구성으로 다시 만든다.
 - CodeDeploy 에이전트와 애플리케이션 실행 런타임(JDK 21)을 설치한다. CodeDeploy 에이전트는 Ruby로 동작하므로 `ruby-full`이 함께 필요하다. 접속 수단이 확정되기 전이라도 준비되도록 사용자 데이터로 설치한다.
 
 ```bash
@@ -142,13 +158,13 @@ apt-get install -y openjdk-21-jdk ruby-full wget
 | 엔진 | MySQL Community 8.4.9 |
 | 인스턴스 | `db.t4g.micro`, gp3 20GB, 단일 AZ(`ap-northeast-2c`) |
 | 엔드포인트 | `jachwi-sunbae-db.cqsc6pyqhwww.ap-northeast-2.rds.amazonaws.com:3306` |
-| 마스터 사용자 | `jachwi_admin` (암호는 SSM SecureString에만 둔다) |
+| 마스터 사용자 | `jachwi_admin` (암호는 EC2의 `0600` 설정 파일에만 둔다) |
 | 자동 백업 | 7일 |
 | 파라미터 그룹 | `default.mysql8.4` |
 
 - 자동 백업과 수동 스냅샷을 사용한다. 이는 [롤백](../../backend/docs/operations/rollback.md)이 요구하는 "검증된 백업을 격리된 대상에 복구"를 실제로 가능하게 하는 근거다.
 - 퍼블릭 액세스를 껐고 `project-storage` 서브넷에 있다.
-- 자격 증명은 Secrets Manager가 아니라 자체 관리로 둔다. 비밀은 SSM Parameter Store로 일원화하고([4.8 비밀·환경변수](#48-비밀환경변수)), Secrets Manager는 시크릿당 월 요금이 붙는다.
+- 자격 증명은 Secrets Manager가 아니라 자체 관리로 둔다. 비밀은 한 곳에 모으고([4.8 비밀·환경변수](#48-비밀환경변수)), Secrets Manager는 시크릿당 월 요금이 붙는다.
 - **커스텀 파라미터 그룹을 만들지 않는다.** 기본 그룹의 `character_set_*`은 엔진 기본값(`-`)으로 보이지만, 마이그레이션이 테이블마다 `DEFAULT CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci`를 명시하므로 서버 기본값과 무관하게 `utf8mb4`로 만들어진다. 서버 설정에 의존하는 부분이 없다.
 - 시간대는 UTC로 둔다([시스템 개요](../../backend/docs/architecture/system-overview.md)의 UTC 기준과 일치).
 
@@ -165,7 +181,7 @@ apt-get install -y openjdk-21-jdk ruby-full wget
 - CloudFront OAC는 인프라 안내가 지정한 `techcourse-project-2026.s3.ap-northeast-2.amazonaws.com`을 origin으로 사용한다.
 - 캐시는 안내에 따라 Policy를 새로 만들지 않고 **레거시 캐시 설정(Legacy Cache Settings)** 을 사용한다.
 - **SPA 폴백**: react-router 클라이언트 라우팅이므로 CloudFront에서 403·404 응답을 `/index.html`(200)로 매핑해 새로고침·딥링크가 깨지지 않게 한다. Google 콜백 경로 `/oauth/google/callback`도 프론트 라우트다.
-- **환경변수는 빌드 타임에 주입된다.** `webpack.config.js`의 `DefinePlugin`이 `API_BASE_URL`·`GOOGLE_CLIENT_ID`·`GOOGLE_REDIRECT_URI`를 번들에 박아넣는다. 런타임 설정이 아니므로 운영 배포는 CodeBuild가 운영 값(`API_BASE_URL=https://api.<도메인>`, `GOOGLE_REDIRECT_URI=https://www.<도메인>/oauth/google/callback`)으로 **다시 빌드**해야 한다. 이 값들은 SSM Parameter Store 또는 파이프라인 환경변수로 CodeBuild에 전달한다.
+- **환경변수는 빌드 타임에 주입된다.** `webpack.config.js`의 `DefinePlugin`이 `API_BASE_URL`·`GOOGLE_CLIENT_ID`·`GOOGLE_REDIRECT_URI`를 번들에 박아넣는다. 런타임 설정이 아니므로 운영 배포는 CodeBuild가 운영 값(`API_BASE_URL=https://api.<도메인>`, `GOOGLE_REDIRECT_URI=https://www.<도메인>/oauth/google/callback`)으로 **다시 빌드**해야 한다. 이 값들은 CodeBuild 프로젝트의 환경변수로 전달한다. 어차피 번들에 박혀 공개되는 값이므로 비밀이 아니다.
 - 현재 `webpack.config.js`의 `output`에 `[contenthash]` 파일명이 없어 캐시 무효화가 파일명 기반으로 동작하지 않는다. 배포 자동화 시 `contenthash`를 도입하거나 매 배포 CloudFront 무효화를 거는 방식 중 하나를 택한다.
 
 ### 4.6 진입 계층 (ALB + WAF + ACM)
@@ -198,16 +214,29 @@ apt-get install -y openjdk-21-jdk ruby-full wget
 ### 4.8 비밀·환경변수
 
 - 운영 프로필 `prod`를 신설한다. 로컬 기본값([환경변수](../../backend/docs/guides/environment-variables.md))과 분리한다.
-- 운영 값은 SSM Parameter Store에 `/jachwi-sunbae/prod/<환경변수명>` 경로로 둔다. 비밀은 `SecureString`, 나머지는 `String`이다. EC2 `ec2-project` role로 기동 시 읽어 주입하며 액세스 키를 EC2에 두지 않는다.
-- `SecureString`의 KMS 키는 계정 기본값 `alias/aws/ssm`을 쓴다. 팀은 KMS 키를 새로 만들 수 없고, 고객 관리형 키를 쓰면 `ec2-project` role에 `kms:Decrypt`가 따로 필요하다.
+- **SSM Parameter Store는 쓰지 않는다.** 사용 가능한 서비스 목록에 Systems Manager가 없고, 실제로 접근하면 IAM 사용자에게 권한이 없다는 오류가 난다. 우테코 건물 네트워크에서 다시 시도해도 같았으므로 접속 위치 조건이 아니라 제공되지 않는 서비스로 판단한다.
+
+```
+User: arn:aws:iam::843255971531:user/softmoca is not authorized to perform:
+ssm:DescribeParameters on resource: arn:aws:ssm:ap-northeast-2:843255971531:*
+because no identity-based policy allows the ssm:DescribeParameters action
+```
+
+- 대신 **EC2 로컬 설정 파일**에 운영 값을 둔다. `/etc/jachwi-sunbae/app.env`를 소유자 `root`, 권한 `0600`으로 한 번 만든다. CodeDeploy 배포 훅이 이 파일을 읽어 애플리케이션에 환경변수로 전달한다.
+- 이 파일은 **배포 산출물에 포함하지 않는다.** CodeDeploy가 덮어쓰는 경로 밖에 두어 배포마다 값이 사라지지 않게 한다.
 - 실제 비밀은 저장소·문서·`.env.example`에 커밋하지 않는다는 원칙을 그대로 유지한다.
+- **사용자 데이터에 비밀을 넣지 않는다.** 사용자 데이터는 인스턴스 메타데이터로 노출되어 인스턴스 안의 무엇이든 읽을 수 있다.
 
-| 유형 | 파라미터 |
+| 구분 | 환경변수 |
 | --- | --- |
-| `SecureString` | `DB_PASSWORD`, `JWT_SECRET_BASE64`, `GOOGLE_OAUTH_CLIENT_SECRET` |
-| `String` | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS`, `CORS_ALLOWED_ORIGINS`, `PHOTO_STORAGE_REGION`, `PHOTO_STORAGE_BUCKET` |
+| 비밀 | `DB_PASSWORD`, `JWT_SECRET_BASE64`, `GOOGLE_OAUTH_CLIENT_SECRET` |
+| 비밀 아님 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS`, `CORS_ALLOWED_ORIGINS`, `PHOTO_STORAGE_REGION`, `PHOTO_STORAGE_BUCKET` |
 
-**사진 저장소 자격증명은 그대로 옮길 수 없다.** 현재 `application.yml`은 `PHOTO_STORAGE_ACCESS_KEY`·`PHOTO_STORAGE_SECRET_KEY`를 필수로 요구하지만, 운영에서는 정적 키를 두지 않고 EC2 인스턴스 role로 접근한다([4.4 사진 저장소](#44-사진-저장소-s3)). `prod` 프로필에서는 이 두 값을 SSM에 두지 말고, 기본 자격증명 공급자 체인을 쓰도록 설정을 분기한다. `PHOTO_STORAGE_ENDPOINT`도 MinIO 주소가 아니라 실제 S3 엔드포인트여야 한다.
+이 방식의 대가를 분명히 해둔다. 값을 바꾸려면 사람이 서버에 접속해야 하고, 비밀이 서버 디스크에 평문으로 남으며, 인스턴스를 다시 만들면 파일을 다시 만들어야 한다. 이력도 남지 않는다. 액세스 키와 Parameter Store를 모두 쓸 수 없는 제약에서 나온 선택이므로, 제약이 풀리면 다시 판단한다.
+
+**셸 접속이 전제 조건이다.** 이 파일을 두려면 인스턴스에 들어가야 한다. 사설 서브넷에 키 페어 없이 만든 인스턴스는 세션 관리자가 동작하지 않으면 접속 경로가 없다([4.2 컴퓨트](#42-컴퓨트-ec2)).
+
+**사진 저장소 자격증명은 그대로 옮길 수 없다.** 현재 `application.yml`은 `PHOTO_STORAGE_ACCESS_KEY`·`PHOTO_STORAGE_SECRET_KEY`를 필수로 요구하지만, 운영에서는 정적 키를 두지 않고 EC2 인스턴스 role로 접근한다([4.4 사진 저장소](#44-사진-저장소-s3)). `prod` 프로필에서는 이 두 값을 설정 파일에 두지 말고, 기본 자격증명 공급자 체인을 쓰도록 설정을 분기한다. `PHOTO_STORAGE_ENDPOINT`도 MinIO 주소가 아니라 실제 S3 엔드포인트여야 한다.
 
 ## 5. 배포 자동화 파이프라인
 
@@ -257,9 +286,10 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 
 | 항목 | 상태 | 필요한 확인 |
 | --- | --- | --- |
-| 보안 그룹 존재 | 확인 필요 | `project-lb`·`project-public`·`project-app`·`project-db`가 실제로 있는지 리소스 생성 전에 확인한다 |
+| EC2 셸 접속 수단 | **확인 필요. 다른 작업을 막는다** | 세션 관리자가 되는지 Fleet Manager 관리형 노드 목록으로 판별한다. 안 되면 `project-public` + 퍼블릭 IP + 키 페어로 다시 만든다 |
+| Ubuntu 26.04와 CodeDeploy 에이전트 | 확인 필요 | AWS가 지원 목록에 올린 배포판인지 확인한다. 에이전트 설치가 실패하면 24.04로 내린다 |
 | apex 도메인 처리 | 결정 필요 | 가비아 웹 포워딩으로 `www`에 리다이렉트할지, `www`만 안내할지 택1 |
-| 제공 role 권한 범위 | 확인 필요 | `codebuild-project`·`codedeploy-project`·`ec2-project`가 S3·CloudFront·SSM에 필요한 권한을 포함하는지 확인. 부족하면 `#8기-기술-검토` 문의 |
+| 제공 role 권한 범위 | 확인 필요 | `codebuild-project`·`codedeploy-project`·`ec2-project`가 S3·CloudFront에 필요한 권한을 포함하는지 확인. 부족하면 `#8기-기술-검토` 문의 |
 | 프론트 운영 env·재빌드 | 반영 필요 | 빌드 타임 주입이므로 CodeBuild에 운영 `API_BASE_URL`·`GOOGLE_REDIRECT_URI` 전달. Google OAuth 콘솔·백엔드 허용 목록에도 운영 redirect URI 등록 |
 | 프론트 캐시 무효화 | 결정 필요 | `contenthash` 도입 또는 매 배포 CloudFront 무효화 중 택1 |
 | 시스템 개요 문서 | 갱신 필요 | "프론트 개발 예정" 표기를 실제 상태로 수정 |
@@ -270,6 +300,7 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 | --- | --- | --- | --- |
 | 배포 자동화 | CodePipeline+CodeBuild+CodeDeploy | GitHub Actions self-hosted runner를 EC2에 설치 | 셋업은 더 단순하나, 팀이 AWS 네이티브 CI/CD 학습을 자율 요구사항으로 가져갈 수 있어 학습 가치가 큰 쪽을 택함. 러너 방식은 축소 대안으로 유지 |
 | 데이터베이스 | RDS MySQL | EC2에 MySQL 직접 설치 | 비용은 낮으나 백업·복구·운영 부담이 크고, 롤백 절차의 백업 복구 전제와 맞지 않음 |
-| EC2 운영체제 | Ubuntu Server 24.04 LTS (arm64) | Amazon Linux 2023 (arm64) | AWS CLI v2가 기본 설치되고 AWS 공식 문서와 잘 맞는 장점이 있으나, 팀이 익숙한 쪽을 택함. 배포는 잘될 때가 아니라 막혔을 때가 문제이며 그때 손에 익은 환경과 참고 자료의 양이 복구 속도를 좌우한다. SSM 에이전트는 양쪽 공식 AMI에 모두 들어 있어 차이가 없다 |
+| 비밀 관리 | EC2 로컬 설정 파일 | SSM Parameter Store(SecureString), AWS Secrets Manager | Parameter Store는 사용 가능한 서비스 목록에 없고 실제 접근도 거부됐다. Secrets Manager는 시크릿당 월 요금이 붙어 예산에 부담이 된다. 둘 다 쓸 수 없어 남은 방법을 택했다 |
+| EC2 운영체제 | Ubuntu (arm64) | Amazon Linux 2023 (arm64) | AWS CLI v2가 기본 설치되고 AWS 공식 문서와 잘 맞는 장점이 있으나, 팀이 익숙한 쪽을 택함. 배포는 잘될 때가 아니라 막혔을 때가 문제이며 그때 손에 익은 환경과 참고 자료의 양이 복구 속도를 좌우한다. SSM 에이전트는 양쪽 공식 AMI에 모두 들어 있어 차이가 없다 |
 | 프론트 서빙 | S3+CloudFront | EC2에 nginx로 함께 서빙 | 정적 SPA에 CDN 캐싱 이점이 크고 백엔드와 장애가 분리됨. 프론트엔드 캐시 요구사항과도 맞음 |
 | 진입 계층 | ALB+WAF+ACM | EC2에 직접 도메인·HTTPS(certbot) | ACM·WAF는 EC2에 직접 붙지 않고, "요청 수신에 WAF 필요" 요건을 EC2 단독으로 충족할 수 없음. 비용 압박 시 CloudFront 앞단으로 대체 검토 |
