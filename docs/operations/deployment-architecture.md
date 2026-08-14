@@ -88,10 +88,20 @@ GitHub(main 병합)
 ### 4.1 네트워크
 
 - **VPC**: `TECHCOURSE-PROJECT`(`vpc-004e154d9f1f3f5cd`).
-- **EC2 서브넷**: LB 뒤에 두므로 `project-app-a`, `project-app-b`. 보안 그룹 `project-app`.
-- **ALB 서브넷**: `project-lb-a`, `project-lb-b`. 보안 그룹 `project-lb`.
-- **RDS 서브넷**: 서브넷 그룹 `project-rds-subnet-group`(`project-storage-a/b`). 보안 그룹 `project-db`.
-- 보안 그룹 원칙: ALB는 외부에서 443만 받고, EC2 애플리케이션 포트는 `project-lb`에서 오는 트래픽만 허용한다. RDS 3306은 `project-app`에서 오는 트래픽만 허용한다.
+- **EC2 서브넷**: LB 뒤에 두므로 `project-app-a`, `project-app-b`.
+- **ALB 서브넷**: `project-lb-a`, `project-lb-b`.
+- **RDS 서브넷**: 서브넷 그룹 `project-rds-subnet-group`(`project-storage-a/b`).
+
+보안 그룹은 이미 만들어진 것을 지정해 쓴다. 4종 모두 위 VPC에 있는 것을 확인했다(2026-08-14).
+
+| 이름 | ID | 용도 |
+| --- | --- | --- |
+| `project-lb` | `sg-00be6776ff3c3aea2` | ALB |
+| `project-app` | `sg-034df39fb4edbf0e6` | EC2 |
+| `project-db` | `sg-0ce905a3e798a6a78` | RDS |
+| `project-public` | `sg-017bc5d8159ac557e` | 이번 구성에서는 쓰지 않는다 |
+
+보안 그룹 원칙: ALB는 외부에서 443만 받고, EC2 애플리케이션 포트는 `project-lb`에서 오는 트래픽만 허용한다. RDS 3306은 `project-app`에서 오는 트래픽만 허용한다.
 
 **인터넷 egress는 확인했다(2026-08-13).** `project-app-a`(`subnet-0e693cde6a836c0b8`, `10.0.20.0/24`, `ap-northeast-2a`)에 라우팅 테이블 `rtb-project-private-a`(`rtb-03226c586ffce1d86`)가 명시적으로 연결되어 있고, `0.0.0.0/0`이 NAT 게이트웨이 `nat-0198ce7cbc3e952...`로 향한다. 상태는 활성이며 블랙홀이 아니다. 따라서 EC2는 사설 서브넷 `project-app`에 둔다. `project-public` + 퍼블릭 IP 대안은 채택하지 않는다.
 
