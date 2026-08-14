@@ -2,7 +2,8 @@
 set -euo pipefail
 
 SERVICE=jachwi-sunbae.service
-HEALTH_URL=http://127.0.0.1:8080/actuator/health
+# 포트는 application-prod.yml 의 server.port 와 같아야 한다.
+HEALTH_URL=http://127.0.0.1:80/actuator/health
 ATTEMPTS=48
 INTERVAL=5
 
