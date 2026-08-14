@@ -59,7 +59,7 @@ set +a
 
 ## 운영 프로필
 
-운영은 `prod` 프로필로 기동하며 값은 EC2의 `/etc/jachwi-sunbae/app.env`(`0600`)에서 주입한다. 구성은 `docs/operations/deployment-architecture.md`를 따른다.
+운영은 `prod` 프로필로 기동하며 값은 EC2의 `/etc/jachwi-sunbae/app.env`(`0600`)에서 주입한다. 구성은 [배포 아키텍처 설계](../../../docs/operations/deployment-architecture.md)를 따르고, 주입 절차는 [배포](../operations/deployment.md)에 있다.
 
 로컬과 달라지는 부분은 다음과 같다.
 
