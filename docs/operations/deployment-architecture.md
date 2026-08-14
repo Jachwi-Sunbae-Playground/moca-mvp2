@@ -103,6 +103,8 @@ GitHub(main 병합)
 
 보안 그룹 원칙: ALB는 외부에서 443만 받고, EC2 애플리케이션 포트는 `project-lb`에서 오는 트래픽만 허용한다. RDS 3306은 `project-app`에서 들어올 수 있어야 한다.
 
+**`project-app`의 인바운드는 80·443(← `project-lb`)과 22(← `project-public`)뿐이다. 8080은 열려 있지 않다.** 이 그룹도 공용이라 규칙을 추가하면 다른 팀 인스턴스에도 열리므로 바꾸지 않는다. 대신 애플리케이션이 80을 직접 듣는다([4.2 컴퓨트](#42-컴퓨트-ec2)).
+
 **`project-db`는 여러 팀이 공유하는 공용 보안 그룹이다.** 규칙이 9개 있고 3306이 `project-app` 외에 `project-public`에서도 열려 있다. 필요한 규칙(3306 ← `project-app`)은 이미 있으므로 추가할 것은 없다. 불필요한 규칙을 지우면 같은 그룹을 쓰는 다른 팀 DB가 끊기므로 **팀 임의로 수정하지 않는다.**
 
 따라서 "3306을 `project-app`에서만 허용한다"는 원칙은 네트워크 계층에서 완전히 강제되지 않는다. 다음으로 방어한다.
@@ -146,6 +148,7 @@ dnf install -y java-21-amazon-corretto ruby wget
 
 - SSM 에이전트와 AWS CLI v2는 Amazon Linux 2023에 기본 설치되어 있어 따로 넣지 않는다.
 - 태그 3종을 설정한다.
+- **애플리케이션은 8080이 아니라 80을 듣는다.** 보안 그룹이 8080을 허용하지 않기 때문이다. 비루트 계정이 1024 미만 포트에 바인딩하도록 systemd 유닛에서 `AmbientCapabilities=CAP_NET_BIND_SERVICE`를 준다.
 
 생성 후 다음을 확인했다.
 
@@ -196,6 +199,7 @@ dnf install -y java-21-amazon-corretto ruby wget
 ### 4.6 진입 계층 (ALB + WAF + ACM)
 
 - ALB를 `project-lb` 서브넷에 두고 443 HTTPS 리스너에 ACM 인증서를 붙인다. 80은 443으로 리다이렉트한다.
+- 대상 그룹은 HTTP **80**으로 만든다. 헬스체크 경로는 `/actuator/health`다. **대상 그룹은 만든 뒤 포트를 바꿀 수 없다.**
 - **WAF 연결은 필수다.** 공용 WAF `techcourse-project-waf`를 ALB에 연결한다. 연결하지 않으면 요청을 받지 못한다. 이 WAF 요금은 팀 예산에서 제외된다.
 - **ACM 인증서는 리전에 주의한다.** ALB용 인증서는 서울(`ap-northeast-2`), CloudFront용 인증서는 **버지니아 북부(`us-east-1`)** 다. 리전을 잘못 고르면 나중에 붙지 않는다. 두 인증서 모두 DNS 검증을 가비아 DNS에 CNAME으로 추가했고 2026-08-13에 발급됐다.
 

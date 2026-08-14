@@ -12,6 +12,10 @@ Group=jachwi
 # 애플리케이션 계정에 읽기 권한을 주지 않는다. 운영 비밀이 들어 있다.
 EnvironmentFile=/etc/jachwi-sunbae/app.env
 
+# 애플리케이션이 80 을 듣는다. 비루트 계정이 1024 미만 포트에 바인딩하려면 이 권한이 필요하다.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
 ExecStart=/usr/bin/java -XX:MaxRAMPercentage=50.0 -jar /opt/jachwi-sunbae/app.jar
 WorkingDirectory=/opt/jachwi-sunbae
 
