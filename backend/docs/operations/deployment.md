@@ -1,7 +1,7 @@
 # 배포
 
 - 상태: 동작 중
-- 현재 배포 환경: EC2(`project-app` 서브넷) + RDS MySQL. 진입 계층(ALB)은 구성 중이다
+- 현재 배포 환경: `https://api.jachwi-sunbae.kr`
 - 문서 성격: 파생
 - 대조 대상: `backend/deploy/`, 실제 AWS 파이프라인 구성
 
@@ -103,10 +103,6 @@ sudo systemctl status jachwi-sunbae.service
 ```
 
 배포 자체가 실패했다면 EC2의 `/opt/codedeploy-agent/deployment-root/deployment-logs/`를 함께 본다.
-
-## 아직 구성하지 않은 것
-
-- ALB와 `api.jachwi-sunbae.kr` DNS는 첫 배포 뒤에 만든다. 앱이 없는 상태로 대상 그룹을 만들면 헬스체크가 실패하는데, 설정 문제인지 앱이 없어서인지 구분할 수 없다.
 
 배포 결과와 사용자 관찰은 [지정 요구사항 2](../requirements/02-deploy-and-observe.md)에 증거와 함께 기록한다.
 

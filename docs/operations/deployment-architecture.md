@@ -1,13 +1,13 @@
 # 배포 아키텍처 설계
 
-- 상태: 제안
+- 상태: 구성 완료(백엔드)
 - 최초 작성일: 2026-08-13
 - 참여자: 자취선배 백엔드 팀
 - 문서 성격: 파생
 - 대조 대상: 우테코 인프라 안내(Notion), 실제 AWS 리소스 구성, [배포](../../backend/docs/operations/deployment.md)
 - 갱신 정책: 리소스를 실제로 구성하면 이 문서의 값을 실구성과 맞춘다. 팀이 승인하면 중심 결정은 ADR로 승격하고 이 문서는 구성 참조로 남긴다
 
-이 문서는 [배포](../../backend/docs/operations/deployment.md)와 [롤백](../../backend/docs/operations/rollback.md)이 `미정`으로 비워 둔 배포 대상과 플랫폼을 채우기 위한 설계 초안이다. 아직 리소스를 만들지 않았으므로 계획 문서로 두고, 실제 구성 뒤 값을 실구성과 맞춘다.
+이 문서는 [배포](../../backend/docs/operations/deployment.md)와 [롤백](../../backend/docs/operations/rollback.md)이 `미정`으로 비워 둔 배포 대상과 플랫폼을 채우기 위해 시작했다. 백엔드는 2026-08-14에 실제로 구성했고 `https://api.jachwi-sunbae.kr`에서 동작한다. 프론트엔드는 아직 구성하지 않았다. 값은 실구성과 맞춰 유지한다.
 
 실행 체크리스트는 이 문서에 두지 않는다. 단계별 작업과 확인 항목은 배포 환경 구축 이슈와 그 하위 이슈에서 관리한다.
 
@@ -293,6 +293,7 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 
 | 항목 | 상태 | 필요한 확인 |
 | --- | --- | --- |
+| WAF 연결 확인 | 확인 불가 | IAM 사용자에게 `wafv2:ListResourcesForWebACL`·`wafv2:GetWebACLForResource` 권한이 없어 콘솔에서 연결 여부를 볼 수 없다. 연결 작업은 오류 없이 끝났고 요청도 통과한다 |
 | EC2 셸 접속 수단 | **확인 필요. 다른 작업을 막는다** | 세션 관리자가 되는지 Fleet Manager 관리형 노드 목록으로 판별한다. 안 되면 `project-public` + 퍼블릭 IP + 키 페어로 다시 만든다 |
 | apex 도메인 처리 | 결정 필요 | 가비아 웹 포워딩으로 `www`에 리다이렉트할지, `www`만 안내할지 택1 |
 | 제공 role 권한 범위 | 확인 필요 | `codebuild-project`·`codedeploy-project`·`ec2-project`가 S3·CloudFront에 필요한 권한을 포함하는지 확인. 부족하면 `#8기-기술-검토` 문의 |
