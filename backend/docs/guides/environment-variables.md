@@ -25,11 +25,12 @@
 | `GOOGLE_OAUTH_CLIENT_SECRET` | `replace-with-google-oauth-client-secret` | Google Web OAuth Client Secret |
 | `GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS` | `http://localhost:3000/oauth/google/callback` | 쉼표로 구분한 허용 callback URI 목록 |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:3000` | 쉼표로 구분한 프론트엔드 Origin 허용 목록 |
-| `PHOTO_STORAGE_ENDPOINT` | `http://localhost:9000` | S3 호환 객체 저장소 API endpoint |
+| `PHOTO_STORAGE_ENDPOINT` | `http://localhost:9000` | S3 호환 객체 저장소 API endpoint. 정적 자격증명으로 접속하는 환경에서만 쓴다 |
 | `PHOTO_STORAGE_REGION` | `us-east-1` | S3 서명에 사용하는 region |
 | `PHOTO_STORAGE_BUCKET` | `jachwi-sunbae-photos` | 비공개 사진 객체 bucket |
-| `PHOTO_STORAGE_ACCESS_KEY` | 로컬 전용 예시 값 | 객체 저장소 access key |
-| `PHOTO_STORAGE_SECRET_KEY` | 로컬 전용 예시 값 | 객체 저장소 secret key |
+| `PHOTO_STORAGE_KEY_PREFIX` | 비움 | 객체 key 앞에 붙일 경로. 버킷을 다른 팀과 공유할 때 사용하며 로컬은 전용 버킷이라 비운다 |
+| `PHOTO_STORAGE_ACCESS_KEY` | 로컬 전용 예시 값 | 객체 저장소 access key. 정적 자격증명으로 접속하는 환경에서만 쓴다 |
+| `PHOTO_STORAGE_SECRET_KEY` | 로컬 전용 예시 값 | 객체 저장소 secret key. 정적 자격증명으로 접속하는 환경에서만 쓴다 |
 | `PHOTO_STORAGE_PORT` | `9000` | 로컬 MinIO API 포트 |
 | `PHOTO_STORAGE_CONSOLE_PORT` | `9001` | 로컬 MinIO 관리 화면 포트 |
 
@@ -56,6 +57,18 @@ set +a
 ./gradlew bootRun
 ```
 
-운영 환경의 비밀 관리 방식은 배포 환경을 선택할 때 별도로 결정한다.
+## 운영 프로필
+
+운영은 `prod` 프로필로 기동하며 값은 EC2의 `/etc/jachwi-sunbae/app.env`(`0600`)에서 주입한다. 구성은 `docs/operations/deployment-architecture.md`를 따른다.
+
+로컬과 달라지는 부분은 다음과 같다.
+
+| 환경변수 | 운영에서의 차이 |
+| --- | --- |
+| `DB_*` | 기본값이 없다. 비어 있으면 기동에 실패한다 |
+| `PHOTO_STORAGE_ENDPOINT`·`PHOTO_STORAGE_ACCESS_KEY`·`PHOTO_STORAGE_SECRET_KEY` | **설정하지 않는다.** EC2 인스턴스 role로 접속하므로 정적 자격증명을 두지 않는다 |
+| `PHOTO_STORAGE_KEY_PREFIX` | 버킷을 다른 팀과 공유하므로 팀 폴더를 지정한다 |
+
+`prod`에서 정적 자격증명을 설정해도 무시된다. 자격증명 방식은 프로필로 갈리며 값의 유무로 갈리지 않는다.
 
 실제 JWT 비밀키, Google 인증정보와 운영 객체 저장소 자격증명은 `.env.example`, 애플리케이션 설정, 문서와 Git에 커밋하지 않는다. 목록형 환경변수에는 정확한 Origin과 redirect URI만 입력하며 wildcard를 사용하지 않는다.

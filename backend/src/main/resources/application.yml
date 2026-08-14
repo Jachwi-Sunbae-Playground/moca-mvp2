@@ -40,11 +40,9 @@ app:
 
 photo:
   storage:
-    endpoint: ${PHOTO_STORAGE_ENDPOINT}
     region: ${PHOTO_STORAGE_REGION}
     bucket: ${PHOTO_STORAGE_BUCKET}
-    access-key: ${PHOTO_STORAGE_ACCESS_KEY}
-    secret-key: ${PHOTO_STORAGE_SECRET_KEY}
+    key-prefix: ${PHOTO_STORAGE_KEY_PREFIX:}
 
 management:
   endpoints:

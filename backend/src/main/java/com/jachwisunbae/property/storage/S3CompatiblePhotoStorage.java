@@ -19,6 +19,7 @@ public class S3CompatiblePhotoStorage implements PhotoStorage {
 
     private final S3Client s3Client;
     private final String bucket;
+    private final PhotoStorageProperties properties;
 
     public S3CompatiblePhotoStorage(
             final S3Client photoS3Client,
@@ -26,6 +27,7 @@ public class S3CompatiblePhotoStorage implements PhotoStorage {
     ) {
         this.s3Client = photoS3Client;
         this.bucket = properties.bucket();
+        this.properties = properties;
     }
 
     @Override
@@ -33,7 +35,7 @@ public class S3CompatiblePhotoStorage implements PhotoStorage {
         try {
             final PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucket)
-                    .key(storageKey)
+                    .key(properties.objectKey(storageKey))
                     .contentType(contentType)
                     .contentLength((long) content.length)
                     .build();
@@ -48,7 +50,7 @@ public class S3CompatiblePhotoStorage implements PhotoStorage {
         try {
             final ResponseInputStream<GetObjectResponse> response = s3Client.getObject(GetObjectRequest.builder()
                     .bucket(bucket)
-                    .key(storageKey)
+                    .key(properties.objectKey(storageKey))
                     .build());
             return response;
         } catch (NoSuchKeyException exception) {
@@ -68,7 +70,7 @@ public class S3CompatiblePhotoStorage implements PhotoStorage {
         try {
             s3Client.deleteObject(DeleteObjectRequest.builder()
                     .bucket(bucket)
-                    .key(storageKey)
+                    .key(properties.objectKey(storageKey))
                     .build());
         } catch (RuntimeException exception) {
             throw new PhotoStorageException(exception);

@@ -4,3 +4,9 @@ spring:
     username: ${DB_USERNAME:jachwi_sunbae}
     password: ${DB_PASSWORD:local_password}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+photo:
+  storage:
+    endpoint: ${PHOTO_STORAGE_ENDPOINT}
+    access-key: ${PHOTO_STORAGE_ACCESS_KEY}
+    secret-key: ${PHOTO_STORAGE_SECRET_KEY}
