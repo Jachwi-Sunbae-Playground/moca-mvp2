@@ -27,7 +27,7 @@
 - **IAM Role·액세스 키 생성 불가**: 보안 정책상 팀이 IAM Role이나 액세스 키를 새로 만들 수 없다. 따라서 GitHub Actions가 액세스 키로 AWS에 직접 배포하는 흔한 방식을 쓰지 않고, 제공된 service role과 EC2 인스턴스 role만 사용한다.
 - **네트워크 고정**: VPC·서브넷·보안 그룹은 이미 만들어진 것을 지정해 사용한다.
 - **삭제 권한 제한**: 대부분의 삭제 권한이 없다. 리소스 정리가 필요하면 `#8기-기술-검토`에 문의한다.
-- **태그 필수**: 모든 리소스에 `Service=techcourse`, `Role=techcourse-etc`, `ProjectTeam=<팀 서비스 영문명>`을 설정한다. 없으면 리소스를 종료·삭제한다.
+- **태그 필수**: 모든 리소스에 `Service=techcourse`, `Role=techcourse-etc`, `ProjectTeam=jachwi-sunbae`를 설정한다. 없으면 리소스를 종료·삭제한다. 비용이 $0인 리소스(ACM 인증서 등)도 예외가 아니다.
 - **EC2 타입 상한**: `t4g.medium` 이하.
 
 ## 2. 확정한 결정 요약
@@ -38,12 +38,20 @@
 | 데이터베이스 | RDS MySQL, `db.t4g.micro`, `project-storage` 서브넷 | 자동 백업·스냅샷이 Flyway 롤백 절차의 "검증된 백업 복구" 전제와 맞음 |
 | 사진 저장소 | S3 `techcourse-project-2026` 팀 폴더 | 로컬 MinIO와 같은 S3 API 경계([ADR-0006](../../backend/docs/adr/0006-use-private-s3-compatible-photo-storage.md)). EC2 인스턴스 role로 접근 |
 | 프론트 서빙 | S3 + CloudFront | 정적 SPA(React 19/Webpack). CDN 캐싱·백엔드와 분리. 환경변수는 빌드 타임 주입이라 운영 값으로 재빌드 필요 |
-| 진입·HTTPS | ALB + WAF(`techcourse-project-waf`) + ACM | LB에 WAF 연결이 필수. ACM 퍼블릭 인증서는 무료 |
-| 도메인 | 가비아에서 구매 | DNS 검증과 레코드는 가비아 DNS에서 설정 |
+| 진입·HTTPS | ALB + WAF(`techcourse-project-waf`) + ACM | LB에 WAF 연결이 필수. WAF 요금은 팀 예산에서 제외되고 ACM 퍼블릭 인증서는 무료 |
+| 도메인 | 가비아에서 구매한 `jachwi-sunbae.kr` | DNS 검증과 레코드는 가비아 DNS에서 설정 |
 | 배포 자동화 | CodePipeline + CodeBuild + CodeDeploy | 액세스 키 없이 제공된 service role로 배포 |
 | 비밀 관리 | SSM Parameter Store(SecureString) + EC2 `ec2-project` role | 액세스 키 없이 운영 비밀을 주입 |
 
-EC2 배치 서브넷은 `project-app`의 인터넷 egress 여부에 따라 달라진다. [4.1 네트워크](#41-네트워크)를 참고한다.
+확정된 식별자는 다음과 같다. 팀 서비스 영문명은 도메인과 맞춰 `jachwi-sunbae`로 두고 태그·S3 폴더명·SSM 경로에 일관되게 쓴다.
+
+| 항목 | 값 |
+| --- | --- |
+| AWS 계정 | `843255971531` |
+| 팀 서비스 영문명 | `jachwi-sunbae` |
+| 도메인 | `jachwi-sunbae.kr` |
+| 백엔드 | `api.jachwi-sunbae.kr` |
+| 프론트엔드 | `www.jachwi-sunbae.kr` |
 
 ## 3. 전체 구성
 
@@ -52,9 +60,9 @@ EC2 배치 서브넷은 `project-app`의 인터넷 egress 여부에 따라 달�
   │
   ├─ (가비아 도메인 DNS)
   │
-  ├─ www.<도메인>  → CloudFront ─ S3(프론트 정적 파일, React 19 SPA)
+  ├─ www.jachwi-sunbae.kr  → CloudFront ─ S3(프론트 정적 파일, React 19 SPA)
   │
-  └─ api.<도메인>  → ALB(project-lb 서브넷) ─ WAF(techcourse-project-waf) ─ ACM(HTTPS)
+  └─ api.jachwi-sunbae.kr  → ALB(project-lb 서브넷) ─ WAF(techcourse-project-waf) ─ ACM(HTTPS)
                         │
                         ↓ HTTP
                      EC2(project-app 서브넷, t4g.small)
@@ -85,14 +93,11 @@ GitHub(main 병합)
 - **RDS 서브넷**: 서브넷 그룹 `project-rds-subnet-group`(`project-storage-a/b`). 보안 그룹 `project-db`.
 - 보안 그룹 원칙: ALB는 외부에서 443만 받고, EC2 애플리케이션 포트는 `project-lb`에서 오는 트래픽만 허용한다. RDS 3306은 `project-app`에서 오는 트래픽만 허용한다.
 
-**EC2 배치는 인터넷 egress 확인 결과에 달려 있다.** 리소스를 만들기 전에 `project-app` 서브넷의 라우트 테이블에서 `0.0.0.0/0` 라우트를 확인한다.
+**인터넷 egress는 확인했다(2026-08-13).** `project-app-a`(`subnet-0e693cde6a836c0b8`, `10.0.20.0/24`, `ap-northeast-2a`)에 라우팅 테이블 `rtb-project-private-a`(`rtb-03226c586ffce1d86`)가 명시적으로 연결되어 있고, `0.0.0.0/0`이 NAT 게이트웨이 `nat-0198ce7cbc3e952...`로 향한다. 상태는 활성이며 블랙홀이 아니다. 따라서 EC2는 사설 서브넷 `project-app`에 둔다. `project-public` + 퍼블릭 IP 대안은 채택하지 않는다.
 
-| 확인 결과 | EC2 배치 |
-| --- | --- |
-| `nat-...`(NAT 게이트웨이)가 있다 | `project-app`(사설)에 둔다 |
-| NAT가 없다 | `project-public` 서브넷 + 퍼블릭 IP로 띄우고 보안 그룹으로 잠근다 |
+**같은 VPC의 기본 라우팅 테이블 `rtb-project-default`에는 `0.0.0.0/0` 경로가 없다.** `10.0.0.0/16 → local`뿐이다. 라우팅 테이블이 명시적으로 연결되지 않은 서브넷에 EC2를 올리면 이 기본 테이블을 따르게 되어 인터넷으로 나가지 못한다. 이때 애플리케이션은 기동하지만 Google 토큰 엔드포인트와 SSM에 나가지 못해 **로그인만 실패한다.** 원인을 찾기 어려운 종류의 실패이므로, EC2를 만들 때 선택한 서브넷의 라우팅 테이블 연결을 반드시 확인한다.
 
-NAT 게이트웨이를 새로 만드는 선택지는 월 약 $32로 예산을 초과하므로 두지 않는다. 이 확인을 건너뛰고 사설 서브넷에 EC2를 만들면 애플리케이션은 기동하지만 Google 토큰 엔드포인트와 SSM에 나가지 못해 **로그인만 실패한다.** 원인을 찾기 어려운 종류의 실패다.
+NAT 게이트웨이를 새로 만드는 선택지는 월 약 $32로 예산을 초과하므로 두지 않는다. 기존 NAT를 쓴다.
 
 ### 4.2 컴퓨트 (EC2)
 
@@ -128,16 +133,29 @@ NAT 게이트웨이를 새로 만드는 선택지는 월 약 $32로 예산을 �
 ### 4.6 진입 계층 (ALB + WAF + ACM)
 
 - ALB를 `project-lb` 서브넷에 두고 443 HTTPS 리스너에 ACM 인증서를 붙인다. 80은 443으로 리다이렉트한다.
-- **WAF 연결은 필수다.** 공용 WAF `techcourse-project-waf`를 ALB에 연결한다. 연결하지 않으면 요청을 받지 못한다.
-- **ACM 인증서는 리전에 주의한다.** ALB용 인증서는 서울(`ap-northeast-2`)에서 발급한다. CloudFront용 인증서는 **버지니아 북부(`us-east-1`)에서 발급해야** 한다. 두 인증서 모두 DNS 검증을 가비아 DNS에 CNAME으로 추가한다.
+- **WAF 연결은 필수다.** 공용 WAF `techcourse-project-waf`를 ALB에 연결한다. 연결하지 않으면 요청을 받지 못한다. 이 WAF 요금은 팀 예산에서 제외된다.
+- **ACM 인증서는 리전에 주의한다.** ALB용 인증서는 서울(`ap-northeast-2`), CloudFront용 인증서는 **버지니아 북부(`us-east-1`)** 다. 리전을 잘못 고르면 나중에 붙지 않는다. 두 인증서 모두 DNS 검증을 가비아 DNS에 CNAME으로 추가했고 2026-08-13에 발급됐다.
+
+| 용도 | 리전 | 도메인 | ARN |
+| --- | --- | --- | --- |
+| ALB | `ap-northeast-2` | `api.jachwi-sunbae.kr` | `arn:aws:acm:ap-northeast-2:843255971531:certificate/8a41c55b-5ed8-49de-8113-1fb632cb2391` |
+| CloudFront | `us-east-1` | `www.jachwi-sunbae.kr` | `arn:aws:acm:us-east-1:843255971531:certificate/b7e879e2-578a-4f4d-ab70-59408bd95451` |
+
+- 만료는 2027-02-27이다. **DNS 검증 CNAME 2개를 지우지 않는다.** ACM은 이 레코드로 자동 갱신하므로, 지우면 갱신에 실패해 HTTPS가 끊긴다.
 
 ### 4.7 도메인·DNS (가비아)
 
-- 가비아에서 도메인을 구매하고, 가비아 DNS에서 레코드를 관리한다.
-- `api.<도메인>` → ALB DNS 이름으로 향하는 레코드, `www.<도메인>` → CloudFront 배포 도메인으로 향하는 레코드를 둔다.
-- 가비아는 apex(`@`)에 CNAME을 넣을 수 없으므로 서브도메인을 사용한다.
+- 가비아에서 `jachwi-sunbae.kr`을 구매했고(2026-08-13 ~ 2027-08-13) 가비아 DNS에서 레코드를 관리한다.
+- `api.jachwi-sunbae.kr` → ALB DNS 이름, `www.jachwi-sunbae.kr` → CloudFront 배포 도메인으로 향하는 CNAME을 둔다. ALB·CloudFront를 만든 뒤 추가한다.
 - ACM DNS 검증용 CNAME과 서비스 레코드를 함께 관리한다.
-- 운영 도메인이 정해지면 애플리케이션의 `CORS_ALLOWED_ORIGINS`와 `GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS`를 운영 값으로 바꾸고, Google OAuth 콘솔의 허용 redirect URI에도 등록한다. wildcard는 쓰지 않는다.
+- **가비아는 apex(`@`)에 CNAME을 넣을 수 없다.** 서브도메인만 사용하므로 `jachwi-sunbae.kr`을 그대로 입력한 사용자는 아무 곳에도 닿지 않는다. 가비아 웹 포워딩으로 apex를 `https://www.jachwi-sunbae.kr`에 리다이렉트할지, `www`만 안내할지는 아직 정하지 않았다. apex를 서비스하기로 하면 CloudFront 대체 도메인 이름과 ACM 인증서에 `jachwi-sunbae.kr`도 포함해야 한다.
+- ACM 검증 CNAME 등록 시 가비아는 입력한 호스트에 도메인을 자동으로 붙인다. ACM이 준 이름에서 도메인 접미사를 뺀 부분만 넣고, 등록 뒤 공개 조회로 실제 값을 확인한다.
+- 운영 값은 다음과 같다. wildcard는 쓰지 않는다. Google OAuth 콘솔의 허용 redirect URI에도 같은 값을 등록한다.
+
+| 환경변수 | 값 |
+| --- | --- |
+| `CORS_ALLOWED_ORIGINS` | `https://www.jachwi-sunbae.kr` |
+| `GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS` | `https://www.jachwi-sunbae.kr/oauth/google/callback` |
 
 ### 4.8 비밀·환경변수
 
@@ -180,22 +198,21 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 | EC2 | `t4g.small` 1대 | ~$15 |
 | RDS | `db.t4g.micro` + gp3 20GB | ~$15 |
 | ALB | 기동 시간요금 + 소량 LCU | ~$17 |
-| WAF | 공용 `techcourse-project-waf` | $0 또는 ~$6~10(주체 확인 중) |
+| WAF | 공용 `techcourse-project-waf` | $0 (팀 예산 제외) |
 | ACM | 퍼블릭 인증서 | $0 |
 | S3·CloudFront·전송량 | 소량 | ~$2 |
-| **합계** | | **~$49(WAF 팀 부담 시 ~$55~59)** |
+| **합계** | | **~$49** |
 
-- ACM은 무료다.
-- WAF가 우테코 공용 부담이면 8월·9월 모두 여유가 있다. 팀 부담이면 9월($60 한도)부터 CloudFront 앞단으로 WAF를 옮기는 변형이나 EC2 축소를 검토한다.
-- 8월은 남은 일수(약 15일)만 과금되므로 한도 초과 위험이 낮다. 예산 판단의 기준 달은 처음으로 한 달을 꽉 채우는 9월이다.
-- **WAF 비용 주체를 확인하기 전에는 ALB를 만들지 않는다.** 팀 부담이면 9월 한도에 여유가 거의 없어 진입 계층 구성을 다시 판단해야 한다.
+- ACM은 무료다. WAF 요금은 팀 예산에서 제외한다는 답변을 받았으므로(2026-08-14) 설계를 바꾸지 않고 ALB + WAF를 그대로 간다.
+- 8월은 남은 일수(약 15일)만 과금되므로 한도 초과 위험이 낮다. 예산 판단의 기준 달은 처음으로 한 달을 꽉 채우는 9월이다. $60 한도에 약 $11 여유가 있다.
+- 여유가 줄면 축소 순서는 ALB 제거(EC2에 직접 HTTPS) → EC2 `t4g.micro` 축소다. 다만 WAF 연결이 필수라 ALB 제거는 인프라 안내와 충돌하므로 먼저 `#8기-기술-검토`에 문의한다.
 
 ## 9. 미결 사항
 
 | 항목 | 상태 | 필요한 확인 |
 | --- | --- | --- |
-| `project-app` 인터넷 egress | 확인 필요 | NAT 게이트웨이 유무에 따라 EC2 배치 서브넷이 갈린다. 리소스 생성 전에 확인한다 |
-| WAF 비용 주체 | 확인 중 | `#8기-기술-검토`에 공용 WAF 연결 시 비용 주체 문의 |
+| 보안 그룹 존재 | 확인 필요 | `project-lb`·`project-public`·`project-app`·`project-db`가 실제로 있는지 리소스 생성 전에 확인한다 |
+| apex 도메인 처리 | 결정 필요 | 가비아 웹 포워딩으로 `www`에 리다이렉트할지, `www`만 안내할지 택1 |
 | 제공 role 권한 범위 | 확인 필요 | `codebuild-project`·`codedeploy-project`·`ec2-project`가 S3·CloudFront·SSM에 필요한 권한을 포함하는지 확인. 부족하면 `#8기-기술-검토` 문의 |
 | 프론트 운영 env·재빌드 | 반영 필요 | 빌드 타임 주입이므로 CodeBuild에 운영 `API_BASE_URL`·`GOOGLE_REDIRECT_URI` 전달. Google OAuth 콘솔·백엔드 허용 목록에도 운영 redirect URI 등록 |
 | 프론트 캐시 무효화 | 결정 필요 | `contenthash` 도입 또는 매 배포 CloudFront 무효화 중 택1 |
