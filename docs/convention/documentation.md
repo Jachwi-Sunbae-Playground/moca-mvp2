@@ -42,7 +42,7 @@
 
 | 문서 | 이유 |
 | --- | --- |
-| [ADR](../../backend/docs/adr/README.md) `0001`~`0005` | 그때의 결정 맥락을 보존한다 |
+| [ADR](../../backend/docs/adr/README.md) `0001`~`0008` | 그때의 결정 맥락을 보존한다 |
 | [지정 요구사항 1·2](../../backend/docs/requirements/01-development-environment.md) | 수행 과정과 증거의 기록이다 |
 | [실험 기록](../experiments/) | 실험 설계와 결과의 기록이다 |
 | [피벗 히스토리](../learnings/pivot-history.md) | 이전 검증에서 현재까지의 학습 기록이다 |
@@ -76,6 +76,8 @@ ADR은 전체를 동결하지 않는다. [ADR 작성 규칙](../../backend/docs/
 | [테스트와 빌드](../../backend/docs/guides/test-and-build.md) | `build.gradle`의 테스트 태스크 | 사람 |
 | [백엔드 패키지 구조](../../backend/docs/architecture/backend-package-structure.md) | `build.gradle`의 `group`, `backend/src` 구조 | 사람 |
 | [시스템 개요](../../backend/docs/architecture/system-overview.md) | 실제 구성 요소 | 사람 |
+| [배포](../../backend/docs/operations/deployment.md) | `backend/deploy/`, 실제 AWS 파이프라인 구성 | 사람 |
+| [롤백](../../backend/docs/operations/rollback.md) | 실제 CodeDeploy 배포 그룹 설정 | 사람 |
 | [배포 아키텍처 설계](../operations/deployment-architecture.md) | 실제 AWS 리소스 구성 | 사람 |
 | [API 명세](../../backend/docs/api/api-specification.md) | 구현된 Controller와 Swagger | 사람 |
 | [데이터베이스 모델](../../backend/docs/architecture/database-model.md) | 실제 테이블 스키마 | 사람 |
