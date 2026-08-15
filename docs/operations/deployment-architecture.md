@@ -9,10 +9,10 @@
 
 이 문서는 [배포](../../backend/docs/operations/deployment.md)와 [롤백](../../backend/docs/operations/rollback.md)이 `미정`으로 비워 둔 배포 대상과 플랫폼을 채우기 위해 시작했다. 2026-08-13부터 08-15까지 실제로 구성했고 아래 주소에서 동작한다.
 
-| 대상 | 주소 |
-| --- | --- |
-| 프론트엔드 | `https://www.jachwi-sunbae.kr` |
-| 백엔드 | `https://api.jachwi-sunbae.kr` |
+| 환경 | 브랜치 | 프론트엔드 | 백엔드 |
+| --- | --- | --- | --- |
+| prod | `main` | `https://www.jachwi-sunbae.kr` | `https://api.jachwi-sunbae.kr` |
+| dev | `develop` | `https://dev.jachwi-sunbae.kr` | `https://dev-api.jachwi-sunbae.kr` |
 
 **왜 이렇게 구성했는지는 [ADR-0008](../../backend/docs/adr/0008-deploy-with-aws-native-pipeline.md)에 있다.** 이 문서는 구성 값과 절차를 담고, ADR은 결정의 맥락과 검토한 대안을 담는다. 절차는 [배포](../../backend/docs/operations/deployment.md)와 [프론트엔드 배포](../../frontend/docs/deployment.md)를 따른다.
 
@@ -294,22 +294,26 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 
 | 항목 | 사양 | 월 환산(대략) |
 | --- | --- | --- |
-| EC2 | `t4g.small` 1대 | ~$15 |
+| EC2 (prod) | `t4g.small` 1대 | ~$15 |
+| EC2 (dev) | `t4g.micro` 1대 | ~$8 |
 | RDS | `db.t4g.micro` + gp3 20GB | ~$15 |
 | ALB | 기동 시간요금 + 소량 LCU | ~$17 |
 | WAF | 공용 `techcourse-project-waf` | $0 (팀 예산 제외) |
 | ACM | 퍼블릭 인증서 | $0 |
 | S3·CloudFront·전송량 | 소량 | ~$2 |
-| **합계** | | **~$49** |
+| **합계** | | **~$57** |
 
 - ACM은 무료다. WAF 요금은 팀 예산에서 제외한다는 답변을 받았으므로(2026-08-14) 설계를 바꾸지 않고 ALB + WAF를 그대로 간다.
-- 8월은 남은 일수(약 15일)만 과금되므로 한도 초과 위험이 낮다. 예산 판단의 기준 달은 처음으로 한 달을 꽉 채우는 9월이다. $60 한도에 약 $11 여유가 있다.
+- **dev 환경은 EC2 한 대만 추가한다.** RDS·ALB·WAF·S3는 prod와 공유한다. 따로 만들면 RDS +$15, ALB +$17이 더 든다.
+- 8월은 남은 일수만 과금되므로 한도 초과 위험이 낮다. 예산 판단의 기준 달은 처음으로 한 달을 꽉 채우는 9월이다. **$60 한도에 여유가 약 $3뿐이므로** 전송량과 ALB LCU를 주시한다.
+- dev EC2를 `t4g.small`로 올리면 ~$64로 한도를 넘는다. 업무 시간만 켜는 방식이 더 싸지만 자동화에 IAM Role이 필요하고 팀은 role을 만들 수 없다. 사람이 잊으면 그 달 예산이 넘으므로 채택하지 않았다.
 - 여유가 줄면 축소 순서는 ALB 제거(EC2에 직접 HTTPS) → EC2 `t4g.micro` 축소다. 다만 WAF 연결이 필수라 ALB 제거는 인프라 안내와 충돌하므로 먼저 `#8기-기술-검토`에 문의한다.
 
 ## 9. 미결 사항
 
 | 항목 | 상태 | 필요한 확인 |
 | --- | --- | --- |
+| RDS를 두 환경이 공유 | 감수함 | dev 부하가 prod 성능에 영향을 줄 수 있다. `db.t4g.micro`는 1GB에 vCPU 2개다. 문제가 되면 dev용 RDS를 분리한다 |
 | WAF 연결 확인 | 확인 불가 | IAM 사용자에게 `wafv2:ListResourcesForWebACL`·`wafv2:GetWebACLForResource` 권한이 없어 콘솔에서 연결 여부를 볼 수 없다. 연결 작업은 오류 없이 끝났고 요청도 통과한다 |
 | 운영 모니터링 | 미구성 | 배포 성공 여부는 확인하지만 운영 중 지표는 수집하지 않는다 |
 
