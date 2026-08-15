@@ -191,7 +191,7 @@ dnf install -y java-21-amazon-corretto ruby wget
 - 실제 구성은 React 19 + TypeScript + Webpack 5, Node 22.23.1(`.nvmrc`), 라우팅은 react-router v7이다. 빌드는 `npm run build`(`webpack --mode production`)로 `dist/`를 만든다.
 - 정적 SPA이므로 EC2가 아니라 S3에 올리고 CloudFront로 서빙한다. 프론트엔드 자율 요구사항의 `Cache Busting`·`CDN Cache Invalidation`·`contenthash`가 이 구조를 전제로 한다.
 - CloudFront OAC는 인프라 안내가 지정한 `techcourse-project-2026.s3.ap-northeast-2.amazonaws.com`을 origin으로 사용한다.
-- 캐시는 안내에 따라 Policy를 새로 만들지 않고 **레거시 캐시 설정(Legacy Cache Settings)** 을 사용한다.
+- 캐시는 Policy를 새로 만들지 않는다. 새 콘솔에는 레거시 캐시 설정 항목이 없어 관리형 정책 `CachingOptimized`를 쓴다. 관리형이므로 새 정책을 만들지 않는다는 안내의 의도에 맞는다. 기본 TTL이 24시간이라 이름이 고정인 `index.html`은 배포마다 무효화한다.
 - **SPA 폴백**: react-router 클라이언트 라우팅이므로 CloudFront에서 403·404 응답을 `/index.html`(200)로 매핑해 새로고침·딥링크가 깨지지 않게 한다. Google 콜백 경로 `/oauth/google/callback`도 프론트 라우트다.
 - **환경변수는 빌드 타임에 주입된다.** `webpack.config.js`의 `DefinePlugin`이 `API_BASE_URL`·`GOOGLE_CLIENT_ID`·`GOOGLE_REDIRECT_URI`를 번들에 박아넣는다. 런타임 설정이 아니므로 운영 배포는 CodeBuild가 운영 값(`API_BASE_URL=https://api.<도메인>`, `GOOGLE_REDIRECT_URI=https://www.<도메인>/oauth/google/callback`)으로 **다시 빌드**해야 한다. 이 값들은 CodeBuild 프로젝트의 환경변수로 전달한다. 어차피 번들에 박혀 공개되는 값이므로 비밀이 아니다.
 - **캐시 무효화는 `contenthash`로 한다.** 운영 빌드의 파일명에 해시를 붙여 내용이 바뀌면 파일명이 바뀌게 한다. 배포마다 전체 무효화(`/*`)를 걸 필요가 없고, 이름이 고정인 `index.html`만 무효화하면 나머지는 자동으로 새 파일을 가리킨다. 개발 빌드에는 붙이지 않는다.
@@ -217,7 +217,11 @@ dnf install -y java-21-amazon-corretto ruby wget
 - 가비아에서 `jachwi-sunbae.kr`을 구매했고(2026-08-13 ~ 2027-08-13) 가비아 DNS에서 레코드를 관리한다.
 - `api.jachwi-sunbae.kr` → ALB DNS 이름, `www.jachwi-sunbae.kr` → CloudFront 배포 도메인으로 향하는 CNAME을 둔다. ALB·CloudFront를 만든 뒤 추가한다.
 - ACM DNS 검증용 CNAME과 서비스 레코드를 함께 관리한다.
-- **가비아는 apex(`@`)에 CNAME을 넣을 수 없다.** 서브도메인만 쓰므로 `jachwi-sunbae.kr`을 그대로 입력한 사용자는 아무 곳에도 닿지 않는다. 가비아 웹 포워딩으로 apex를 `https://www.jachwi-sunbae.kr`에 리다이렉트한다. CloudFront가 apex를 직접 서비스하려면 대체 도메인 이름과 ACM(`us-east-1`) 인증서에 `jachwi-sunbae.kr`을 포함해 다시 발급해야 하므로 택하지 않았다.
+- **apex(`jachwi-sunbae.kr`)는 서비스하지 않는다.** 가비아는 apex에 CNAME을 넣을 수 없으므로 서브도메인만 쓴다. 도메인을 그대로 입력한 사용자는 아무 곳에도 닿지 않는다.
+
+  가비아 웹 포워딩을 검토했으나 **채택하지 않았다.** 이 기능은 `@`뿐 아니라 `www`에도 가비아 포워딩 서버를 가리키는 A 레코드를 만든다. 한 호스트에 CNAME과 A는 공존할 수 없으므로 `www`의 CloudFront CNAME이 밀려나 사이트 전체가 뜨지 않게 된다.
+
+  AWS로 처리하려면 리다이렉트 전용 S3 버킷과 CloudFront 배포, apex를 포함한 `us-east-1` 인증서가 더 필요하다. 비용은 거의 0이지만 **만든 뒤 지울 수 없는 리소스가 둘 늘어난다.** 팀에 삭제 권한이 대부분 없고 태그 없는 리소스는 종료 대상이다. 사용자는 안내받은 `https://www.jachwi-sunbae.kr`로 들어오므로 얻는 것에 비해 대가가 크다고 판단했다. apex 유입이 실제로 문제가 되면 그때 만든다.
 - ACM 검증 CNAME 등록 시 가비아는 입력한 호스트에 도메인을 자동으로 붙인다. ACM이 준 이름에서 도메인 접미사를 뺀 부분만 넣고, 등록 뒤 공개 조회로 실제 값을 확인한다.
 - 운영 값은 다음과 같다. wildcard는 쓰지 않는다. Google OAuth 콘솔의 허용 redirect URI에도 같은 값을 등록한다.
 
@@ -297,7 +301,6 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 | --- | --- | --- |
 | WAF 연결 확인 | 확인 불가 | IAM 사용자에게 `wafv2:ListResourcesForWebACL`·`wafv2:GetWebACLForResource` 권한이 없어 콘솔에서 연결 여부를 볼 수 없다. 연결 작업은 오류 없이 끝났고 요청도 통과한다 |
 | EC2 셸 접속 수단 | **확인 필요. 다른 작업을 막는다** | 세션 관리자가 되는지 Fleet Manager 관리형 노드 목록으로 판별한다. 안 되면 `project-public` + 퍼블릭 IP + 키 페어로 다시 만든다 |
-| apex 도메인 처리 | 결정함 | 가비아 웹 포워딩으로 `https://www.jachwi-sunbae.kr`에 리다이렉트한다. 인증서를 다시 발급하지 않아도 되고 추가 비용이 없다. 설정만 남았다 |
 | 제공 role 권한 범위 | 확인 필요 | `codebuild-project`·`codedeploy-project`·`ec2-project`가 S3·CloudFront에 필요한 권한을 포함하는지 확인. 부족하면 `#8기-기술-검토` 문의 |
 | 프론트 운영 env·재빌드 | 반영 필요 | 빌드 타임 주입이므로 CodeBuild에 운영 `API_BASE_URL`·`GOOGLE_REDIRECT_URI` 전달. Google OAuth 콘솔·백엔드 허용 목록에도 운영 redirect URI 등록 |
 | 시스템 개요 문서 | 갱신 필요 | "프론트 개발 예정" 표기를 실제 상태로 수정 |
