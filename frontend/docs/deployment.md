@@ -1,6 +1,6 @@
 # 프론트엔드 배포
 
-- 상태: 구성 중
+- 상태: 동작 중
 - 현재 배포 환경: `https://www.jachwi-sunbae.kr`
 - 문서 성격: 파생
 - 대조 대상: `frontend/webpack.config.js`, 실제 CloudFront·S3·파이프라인 구성
@@ -72,7 +72,58 @@ curl -I https://www.jachwi-sunbae.kr/properties
 
 둘 다 200이어야 한다. 두 번째가 404면 SPA 폴백이 빠진 것이다.
 
-## 아직 구성하지 않은 것
+## 실제 구성
 
-- CloudFront 배포와 프론트 파이프라인은 콘솔에서 만든다.
-- apex(`jachwi-sunbae.kr`)는 가비아 웹 포워딩으로 `https://www.jachwi-sunbae.kr`에 리다이렉트한다. 가비아는 apex에 CNAME을 넣을 수 없다.
+| 항목            | 값                                                                                        |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| CloudFront 배포 | `E3LI41UZ24V9WD` (`d3ajy5jwv266im.cloudfront.net`)                                        |
+| 요금제          | Pay as you go                                                                             |
+| 원본            | `techcourse-project-2026.s3.ap-northeast-2.amazonaws.com`, 원본 경로 `/jachwi-sunbae/web` |
+| 캐시 정책       | 관리형 `CachingOptimized`                                                                 |
+| 파이프라인      | `jachwi-sunbae-web-line`                                                                  |
+
+## apex 도메인은 서비스하지 않는다
+
+`jachwi-sunbae.kr`을 그대로 입력한 사용자는 아무 곳에도 닿지 않는다. 가비아는 apex에 CNAME을 넣을 수 없다.
+
+**가비아 웹 포워딩을 쓰면 안 된다.** 이 기능은 `@`뿐 아니라 `www`에도 가비아 포워딩 서버를 가리키는 A 레코드를 만든다. 한 호스트에 CNAME과 A는 공존할 수 없으므로 `www`의 CloudFront CNAME이 밀려나 **사이트 전체가 뜨지 않게 된다.**
+
+AWS로 리다이렉트를 만들려면 리다이렉트 전용 S3 버킷과 CloudFront 배포, apex를 포함한 인증서가 더 필요하다. 지울 수 없는 리소스가 둘 늘어나므로 지금은 두지 않는다.
+
+## JSX 런타임은 빌드 모드에 따라 갈린다
+
+`webpack.config.js`에서 `@babel/preset-react`에 `development`를 **명시한다.**
+
+```js
+['@babel/preset-react', { runtime: 'automatic', development: !isProduction }],
+```
+
+명시하지 않으면 babel이 개발 모드로 판단해 `jsxDEV`를 내보낸다. webpack의 `--mode production`은 번들 안의 `NODE_ENV`만 바꾸고 빌드 프로세스의 `NODE_ENV`는 건드리지 않기 때문이다.
+
+React 19의 운영 JSX 런타임에는 `jsxDEV`가 없다. 그래서 **빌드는 성공하고 브라우저에서만 터진다.**
+
+```
+Uncaught TypeError: (0 , u.jsxDEV) is not a function
+```
+
+빌드·타입·린트·테스트가 모두 통과하므로 CI로는 걸러지지 않는다. 운영 번들을 실제 브라우저에서 열어봐야 드러난다.
+
+## 빌드 환경의 Node 버전
+
+파이프라인은 `.nvmrc`의 버전을 공식 tarball로 내려받아 **절대 경로로 실행한다.**
+
+```bash
+NODE_VERSION="$(tr -d '[:space:]' < frontend/.nvmrc | sed 's/^v//')"
+...
+PATH="/opt/node/bin:$PATH" /opt/node/bin/npm --prefix frontend run build
+```
+
+관리형 빌드 환경에는 Node 18이 이미 설치되어 있고 PATH에서 앞선다. `yum install nodejs`로 22를 설치해도 실행되는 것은 18이다. `@babel/core` 8은 ESM 전용이라 `require(esm)`을 지원하지 않는 Node 18에서는 빌드가 실패한다.
+
+```
+Error [ERR_REQUIRE_ESM]: require() of ES Module @babel/core/lib/index.js not supported
+```
+
+`export PATH`도 안전하지 않다. 빌드 명령이 줄 단위로 실행되므로 앞 줄의 `export`가 다음 줄까지 살아 있다고 가정하지 않는다. 같은 줄에 `PATH=`를 앞세우고 npm도 절대 경로로 부른다.
+
+여러 줄에 걸친 `case`·`if`·`for` 구문도 쓰지 않는다. 줄마다 쪼개져 깨진다.

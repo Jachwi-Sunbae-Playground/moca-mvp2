@@ -48,7 +48,10 @@ module.exports = (_env, argv) => {
               options: {
                 presets: [
                   '@babel/preset-env',
-                  ['@babel/preset-react', { runtime: 'automatic' }],
+                  // development 를 명시한다. webpack 의 --mode production 은 번들 안의 NODE_ENV 만 바꾸고
+                  // 빌드 프로세스의 NODE_ENV 는 건드리지 않는다. babel 이 그걸 기본값 development 로 보고
+                  // jsxDEV 를 내보내면, React 19 의 운영 런타임에 그 함수가 없어 화면이 뜨지 않는다.
+                  ['@babel/preset-react', { runtime: 'automatic', development: !isProduction }],
                   '@babel/preset-typescript',
                 ],
               },
