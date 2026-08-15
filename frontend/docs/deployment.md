@@ -1,7 +1,7 @@
 # 프론트엔드 배포
 
 - 상태: 동작 중
-- 현재 배포 환경: `https://www.jachwi-sunbae.kr`
+- 현재 배포 환경: prod `https://www.jachwi-sunbae.kr`, dev `https://dev.jachwi-sunbae.kr`
 - 문서 성격: 파생
 - 대조 대상: `frontend/webpack.config.js`, 실제 CloudFront·S3·파이프라인 구성
 
@@ -10,26 +10,51 @@
 ## 배포 경로
 
 ```text
-main 병합
-  → CodePipeline(codepipeline-project)
-    → Commands 액션
-        npm ci && npm run build
-        aws s3 sync dist/ s3://techcourse-project-2026/jachwi-sunbae/web/ --delete
-        aws cloudfront create-invalidation --paths "/index.html"
-  → CloudFront(OAC) → S3
+develop 병합                          main 병합
+  → jachwi-sunbae-dev-web-line          → jachwi-sunbae-web-line
+    → Commands 액션                       → Commands 액션
+        npm ci && npm run build               npm ci && npm run build
+        s3 sync → jachwi-sunbae/web-dev/      s3 sync → jachwi-sunbae/web/
+        무효화 → ETE1HH7V9K0PO                무효화 → E3LI41UZ24V9WD
+  → dev CloudFront                      → prod CloudFront
 ```
 
-백엔드와 **별도 파이프라인**이다. 한쪽 실패가 다른 쪽 배포를 막지 않는다.
+백엔드와 **별도 파이프라인**이다. 한쪽 실패가 다른 쪽 배포를 막지 않는다. 환경끼리도 별도다.
+
+두 파이프라인은 같은 명령을 쓰고 **마지막 두 줄만 다르다.** 배포 대상 경로와 CloudFront 배포 ID다.
+
+**`s3 sync`의 대상 경로를 틀리면 상대 환경을 덮어쓴다.** `--delete`가 붙어 있어 dev 빌드가 prod 사이트를 통째로 바꿔버린다. 이 한 줄이 가장 위험한 지점이다.
+
+## 환경별 구성
+
+| 항목              | prod                     | dev                          |
+| ----------------- | ------------------------ | ---------------------------- |
+| 도메인            | `www.jachwi-sunbae.kr`   | `dev.jachwi-sunbae.kr`       |
+| CloudFront        | `E3LI41UZ24V9WD`         | `ETE1HH7V9K0PO`              |
+| origin path       | `/jachwi-sunbae/web`     | `/jachwi-sunbae/web-dev`     |
+| S3 경로           | `jachwi-sunbae/web/`     | `jachwi-sunbae/web-dev/`     |
+| 파이프라인        | `jachwi-sunbae-web-line` | `jachwi-sunbae-dev-web-line` |
+| 소스 브랜치       | `main`                   | `develop`                    |
+| ACM (`us-east-1`) | `.../b7e879e2-...`       | `.../0206679e-...`           |
+
+S3 버킷과 ACM 발급 리전은 같다. 나머지가 전부 갈린다.
+
+두 환경이 실제로 갈렸는지는 번들 해시로 확인한다.
+
+```
+dev  → /main.246e7100080c6647405f.js
+prod → /main.8a49163cbe52bf996d07.js
+```
 
 ## 환경변수는 빌드 타임에 박힌다
 
 `webpack.config.js`의 `DefinePlugin`이 `API_BASE_URL`·`GOOGLE_CLIENT_ID`·`GOOGLE_REDIRECT_URI`를 번들에 박아넣는다. 런타임 설정이 아니므로 **값을 바꾸면 재빌드·재배포해야 한다.**
 
-| 환경변수              | 운영 값                                              |
-| --------------------- | ---------------------------------------------------- |
-| `API_BASE_URL`        | `https://api.jachwi-sunbae.kr`                       |
-| `GOOGLE_CLIENT_ID`    | Google Cloud 콘솔의 웹 클라이언트 ID                 |
-| `GOOGLE_REDIRECT_URI` | `https://www.jachwi-sunbae.kr/oauth/google/callback` |
+| 환경변수              | prod                                                 | dev                                                  |
+| --------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
+| `API_BASE_URL`        | `https://api.jachwi-sunbae.kr`                       | `https://dev-api.jachwi-sunbae.kr`                   |
+| `GOOGLE_CLIENT_ID`    | 같은 값                                              | 같은 값                                              |
+| `GOOGLE_REDIRECT_URI` | `https://www.jachwi-sunbae.kr/oauth/google/callback` | `https://dev.jachwi-sunbae.kr/oauth/google/callback` |
 
 값은 CodePipeline 빌드 액션의 환경변수로 전달한다. 번들에 박혀 브라우저에 그대로 노출되므로 비밀이 아니다. 클라이언트 시크릿은 여기 두지 않는다.
 
@@ -59,7 +84,7 @@ react-router의 클라이언트 라우팅을 쓴다. `/properties/1` 같은 경�
 
 ## CloudFront origin path
 
-**origin path를 `/jachwi-sunbae/web`으로 지정한다.**
+**origin path를 반드시 지정한다.** prod는 `/jachwi-sunbae/web`, dev는 `/jachwi-sunbae/web-dev`다.
 
 버킷 `techcourse-project-2026`은 여러 팀이 공유하고, 같은 버킷의 `jachwi-sunbae/` 아래에 **비공개 사진 객체**도 있다([ADR-0006](../../backend/docs/adr/0006-use-private-s3-compatible-photo-storage.md)). origin path를 비워 두면 CloudFront가 버킷 전체를 공개하게 되어 사진이 인증 없이 노출된다.
 

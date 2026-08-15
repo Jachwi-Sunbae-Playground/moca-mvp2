@@ -1,7 +1,7 @@
 # 배포
 
 - 상태: 동작 중
-- 현재 배포 환경: `https://api.jachwi-sunbae.kr`
+- 현재 배포 환경: prod `https://api.jachwi-sunbae.kr`, dev `https://dev-api.jachwi-sunbae.kr`
 - 문서 성격: 파생
 - 대조 대상: `backend/deploy/`, 실제 AWS 파이프라인 구성
 
@@ -9,17 +9,45 @@
 
 ## 배포 경로
 
-`main` 병합이 트리거다. 액세스 키를 만들 수 없으므로 GitHub Actions가 AWS에 직접 배포하지 않고, 제공된 service role로 동작하는 AWS 네이티브 파이프라인을 쓴다.
+브랜치 병합이 트리거다. 액세스 키를 만들 수 없으므로 GitHub Actions가 AWS에 직접 배포하지 않고, 제공된 service role로 동작하는 AWS 네이티브 파이프라인을 쓴다.
 
 ```text
-main 병합
-  → CodePipeline(codepipeline-project)  jachwi-sunbae-line
-    → Commands 액션 ─ 관리형 환경에서 jar 빌드 ─ BuildArtifact
-    → CodeDeploy(codedeploy-project) ─ backend/deploy/appspec.yml
-      → EC2 (ec2-project role, CodeDeploy 에이전트)
+develop 병합                       main 병합
+  → jachwi-sunbae-dev-line           → jachwi-sunbae-line
+    → Commands ─ jar 빌드              → Commands ─ jar 빌드
+    → CodeDeploy                       → CodeDeploy
+        jachwi-sunbae-dev-group            jachwi-sunbae-codeDeploy-group
+        DeployTarget=jachwi-sunbae-dev     DeployTarget=jachwi-sunbae-prod
+      → dev EC2                          → prod EC2
 ```
 
-아티팩트 저장소는 `techcourse-project-2026-artifacts`다.
+두 파이프라인은 **같은 빌드 명령과 같은 배포 훅**을 쓴다. 다른 것은 소스 브랜치와 배포 그룹뿐이다.
+
+아티팩트 저장소는 두 파이프라인 모두 `techcourse-project-2026-artifacts`다.
+
+### 배포 대상을 가르는 것
+
+CodeDeploy 배포 그룹이 **EC2 태그**로 대상을 고른다.
+
+| 환경 | 태그 | EC2 |
+| --- | --- | --- |
+| prod | `DeployTarget=jachwi-sunbae-prod` | `i-0f602d10ed2ace6c7` `t4g.small` |
+| dev | `DeployTarget=jachwi-sunbae-dev` | `i-068617b197557da19` `t4g.micro` |
+
+**인스턴스를 새로 만들 때 이 태그를 틀리면 배포가 두 환경으로 나간다.** 태그 값이 배포 격리의 유일한 기준이다.
+
+### 요청을 가르는 것
+
+**ALB는 하나다.** 443 리스너의 호스트 기반 규칙이 요청을 나눈다.
+
+| 우선순위 | 조건 | 대상 그룹 |
+| --- | --- | --- |
+| 1 | `Host = dev-api.jachwi-sunbae.kr` | `jachwi-sunbae-dev-tg` |
+| 기본 | 그 외 전부 | `jachwi-sunbe-tg` (prod) |
+
+**기본 작업을 바꾸지 않는다.** 조건에 걸리지 않는 요청은 prod로 간다. 기본 작업을 dev로 바꾸면 prod가 끊긴다.
+
+인증서는 SNI로 두 장을 함께 붙인다.
 
 ## 저장소에 있는 것
 
@@ -71,7 +99,7 @@ main 병합
 
 | 대상 | 내용 |
 | --- | --- |
-| `/etc/jachwi-sunbae/app.env` | 운영 환경변수. `0600`, 소유자 `root:root` |
+| `/etc/jachwi-sunbae/app.env` | 운영 환경변수. `0600`, 소유자 `root:root`. **환경마다 값이 다르다** |
 | 사용자 `jachwi` | 애플리케이션 실행 계정. 로그인 셸이 없다 |
 | 디렉터리 `/opt/jachwi-sunbae` | 배포 대상 |
 | CodeDeploy 에이전트 | `systemctl status codedeploy-agent`가 `active` |
@@ -79,6 +107,17 @@ main 병합
 **환경변수 파일은 배포 산출물에 넣지 않는다.** CodeDeploy가 덮어쓰는 경로 밖에 두어 배포마다 값이 사라지지 않게 한다. systemd가 `EnvironmentFile`로 root 권한에서 읽은 뒤 `jachwi`로 내려가므로 애플리케이션 계정에 읽기 권한을 주지 않는다.
 
 값의 목록과 운영에서 달라지는 부분은 [환경변수](../guides/environment-variables.md)에 있다.
+
+dev와 prod에서 달라지는 값은 여섯이다. 나머지는 같다.
+
+| 키 | 이유 |
+| --- | --- |
+| `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` | 같은 RDS 인스턴스의 다른 스키마를 쓴다 |
+| `JWT_SECRET_BASE64` | 같으면 dev에서 발급한 토큰이 prod에서도 통한다 |
+| `GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS`, `CORS_ALLOWED_ORIGINS` | 도메인이 다르다 |
+| `PHOTO_STORAGE_KEY_PREFIX` | 같으면 dev 테스트 사진이 prod 사진과 섞인다 |
+
+`SPRING_PROFILES_ACTIVE`는 **dev에서도 `prod`다.** 이 값은 환경 이름이 아니라 정적 자격증명을 쓰지 않는 운영 프로필을 뜻한다.
 
 ## 빌드를 CodeBuild가 아니라 Commands로 하는 이유
 
