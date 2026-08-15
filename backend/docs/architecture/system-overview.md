@@ -2,19 +2,23 @@
 
 - 상태: 초안
 - 갱신 조건: 외부 시스템, 인증, 배포 환경 또는 주요 데이터 흐름이 추가될 때
+- 문서 성격: 파생
+- 대조 대상: 실제 구성 요소, [배포 아키텍처 설계](../../../docs/operations/deployment-architecture.md)
 
 ## 현재 경계
 
 ```text
 사용자
   ↓
-프론트엔드(개발 예정)
+프론트엔드(React SPA) ─ CloudFront ─ S3
   ├─ Google OAuth 2.0 Authorization Code + PKCE + nonce
   ↓ HTTPS/JSON + Authorization: Bearer
-백엔드(Spring Boot)
+진입 계층 ─ WAF ─ ALB(HTTPS 종료)
+  ↓ HTTP
+백엔드(Spring Boot, EC2)
   ├─ HTTPS ─ Google token endpoint·JWK
-  ├─ JDBC ─ MySQL
-  └─ S3 API ─ 비공개 S3 호환 객체 저장소
+  ├─ JDBC ─ MySQL(RDS)
+  └─ S3 API ─ S3 호환 객체 저장소
 ```
 
 - 백엔드는 사용자 요청을 처리하고 비즈니스 규칙과 데이터 저장을 담당한다.
@@ -41,6 +45,9 @@
 - Google 통신 실패는 로그인에만 영향을 주며 이미 발급된 자취선배 Access Token 검증은 Google에 의존하지 않는다.
 - JVM, JDBC 세션과 MySQL 컨테이너는 UTC를 사용하고 API 시간 모델은 `Instant`를 기준으로 한다.
 - 매물 상세는 현재 활성 체크리스트의 단계·ID·최신 이름·항목 수, 최근 방문 요약과 전체 방문 수를 반환한다.
-- 배포 환경과 외부 모니터링의 구체적인 구성은 아직 결정하지 않았다.
+- 프론트엔드는 정적 SPA이므로 S3에 올리고 CloudFront로 서빙한다. 백엔드와 별도 파이프라인으로 배포해 한쪽 실패가 다른 쪽을 막지 않게 한다.
+- 백엔드는 EC2에서 systemd로 실행하며 ALB가 HTTPS를 종료하고 HTTP로 전달한다. 배포는 `main` 병합에서 자동으로 이어진다([ADR-0008](../adr/0008-deploy-with-aws-native-pipeline.md), [배포](../operations/deployment.md)).
+- 사진 저장소는 여러 팀이 공유하는 S3 버킷의 팀 접두사를 사용한다. 이 버킷은 정책상 공개 읽기이므로 [ADR-0006](../adr/0006-use-private-s3-compatible-photo-storage.md)이 전제한 비공개 저장소가 실제로는 성립하지 않는다. 소유권 확인과 URL 비노출은 애플리케이션 계층에서 유지한다.
+- 외부 모니터링의 구체적인 구성은 아직 결정하지 않았다.
 
 새 구성 요소를 추가할 때 책임, 통신 방식, 실패 영향과 소유 팀을 함께 기록한다.

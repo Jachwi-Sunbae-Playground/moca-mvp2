@@ -1,13 +1,20 @@
 # 배포 아키텍처 설계
 
-- 상태: 구성 완료(백엔드)
+- 상태: 구성 완료
 - 최초 작성일: 2026-08-13
 - 참여자: 자취선배 백엔드 팀
 - 문서 성격: 파생
 - 대조 대상: 우테코 인프라 안내(Notion), 실제 AWS 리소스 구성, [배포](../../backend/docs/operations/deployment.md)
-- 갱신 정책: 리소스를 실제로 구성하면 이 문서의 값을 실구성과 맞춘다. 팀이 승인하면 중심 결정은 ADR로 승격하고 이 문서는 구성 참조로 남긴다
+- 갱신 정책: 이 문서의 값을 실구성과 맞춰 유지한다. 중심 결정은 [ADR-0008](../../backend/docs/adr/0008-deploy-with-aws-native-pipeline.md)로 승격했고 이 문서는 구성 참조로 남는다
 
-이 문서는 [배포](../../backend/docs/operations/deployment.md)와 [롤백](../../backend/docs/operations/rollback.md)이 `미정`으로 비워 둔 배포 대상과 플랫폼을 채우기 위해 시작했다. 백엔드는 2026-08-14에 실제로 구성했고 `https://api.jachwi-sunbae.kr`에서 동작한다. 프론트엔드는 아직 구성하지 않았다. 값은 실구성과 맞춰 유지한다.
+이 문서는 [배포](../../backend/docs/operations/deployment.md)와 [롤백](../../backend/docs/operations/rollback.md)이 `미정`으로 비워 둔 배포 대상과 플랫폼을 채우기 위해 시작했다. 2026-08-13부터 08-15까지 실제로 구성했고 아래 주소에서 동작한다.
+
+| 대상 | 주소 |
+| --- | --- |
+| 프론트엔드 | `https://www.jachwi-sunbae.kr` |
+| 백엔드 | `https://api.jachwi-sunbae.kr` |
+
+**왜 이렇게 구성했는지는 [ADR-0008](../../backend/docs/adr/0008-deploy-with-aws-native-pipeline.md)에 있다.** 이 문서는 구성 값과 절차를 담고, ADR은 결정의 맥락과 검토한 대안을 담는다. 절차는 [배포](../../backend/docs/operations/deployment.md)와 [프론트엔드 배포](../../frontend/docs/deployment.md)를 따른다.
 
 실행 체크리스트는 이 문서에 두지 않는다. 단계별 작업과 확인 항목은 배포 환경 구축 이슈와 그 하위 이슈에서 관리한다.
 
@@ -184,7 +191,11 @@ dnf install -y java-21-amazon-corretto ruby wget
 
 - 운영 버킷 `techcourse-project-2026`의 **팀 폴더** 아래에 사진 객체를 둔다. 접두사를 틀려도 버킷 이름만 맞으면 오류 없이 통과해 다른 팀 폴더에 쌓이므로, 설정한 접두사를 실제 업로드로 확인한다. 빌드 산출물은 별도 버킷(`techcourse-project-2026-artifacts`)을 사용한다.
 - 로컬 MinIO와 운영 S3는 같은 애플리케이션 경계(`PhotoStorage`)를 쓴다([ADR-0006](../../backend/docs/adr/0006-use-private-s3-compatible-photo-storage.md)). 운영 전환에서 바뀌는 것은 **자격증명 주입 방식**이다. 로컬은 정적 키(MinIO 예시 값)를 쓰지만 운영은 정적 키를 두지 않고 EC2 `ec2-project` role로 접근한다.
-- 버킷은 비공개를 유지하고, 사진 본문은 지금처럼 인증 백엔드가 스트리밍한다.
+- **이 버킷은 정책상 공개 읽기다.** `PublicReadGetObject` 문장이 `Principal: *`로 `s3:GetObject`를 허용하고 퍼블릭 액세스 차단도 꺼져 있다. 여러 팀이 공유하므로 팀 임의로 바꾸지 않는다.
+
+  따라서 [ADR-0006](../../backend/docs/adr/0006-use-private-s3-compatible-photo-storage.md)이 전제한 비공개 저장소는 이 환경에서 성립하지 않는다. 사진 본문은 지금처럼 인증 백엔드가 소유권을 확인한 뒤 스트리밍하고 저장소 URL을 노출하지 않지만, 이는 애플리케이션 계층의 통제이고 저장소 자체는 URL을 아는 사람에게 열려 있다. 객체 키가 `members/{memberId}/properties/{propertyId}/{UUID}` 형태라 추측은 사실상 불가능하고 `s3:ListBucket`도 허용되어 있지 않다.
+
+  서비스 동작에는 영향이 없어 현재 구성을 그대로 둔다. 팀 단위 비공개 정책을 쓸 수 있게 되면 다시 판단한다.
 
 ### 4.5 프론트엔드 (S3 + CloudFront)
 
@@ -300,10 +311,7 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 | 항목 | 상태 | 필요한 확인 |
 | --- | --- | --- |
 | WAF 연결 확인 | 확인 불가 | IAM 사용자에게 `wafv2:ListResourcesForWebACL`·`wafv2:GetWebACLForResource` 권한이 없어 콘솔에서 연결 여부를 볼 수 없다. 연결 작업은 오류 없이 끝났고 요청도 통과한다 |
-| EC2 셸 접속 수단 | **확인 필요. 다른 작업을 막는다** | 세션 관리자가 되는지 Fleet Manager 관리형 노드 목록으로 판별한다. 안 되면 `project-public` + 퍼블릭 IP + 키 페어로 다시 만든다 |
-| 제공 role 권한 범위 | 확인 필요 | `codebuild-project`·`codedeploy-project`·`ec2-project`가 S3·CloudFront에 필요한 권한을 포함하는지 확인. 부족하면 `#8기-기술-검토` 문의 |
-| 프론트 운영 env·재빌드 | 반영 필요 | 빌드 타임 주입이므로 CodeBuild에 운영 `API_BASE_URL`·`GOOGLE_REDIRECT_URI` 전달. Google OAuth 콘솔·백엔드 허용 목록에도 운영 redirect URI 등록 |
-| 시스템 개요 문서 | 갱신 필요 | "프론트 개발 예정" 표기를 실제 상태로 수정 |
+| 운영 모니터링 | 미구성 | 배포 성공 여부는 확인하지만 운영 중 지표는 수집하지 않는다 |
 
 ## 10. 검토한 대안
 
