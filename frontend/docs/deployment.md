@@ -90,6 +90,24 @@ curl -I https://www.jachwi-sunbae.kr/properties
 
 AWS로 리다이렉트를 만들려면 리다이렉트 전용 S3 버킷과 CloudFront 배포, apex를 포함한 인증서가 더 필요하다. 지울 수 없는 리소스가 둘 늘어나므로 지금은 두지 않는다.
 
+## JSX 런타임은 빌드 모드에 따라 갈린다
+
+`webpack.config.js`에서 `@babel/preset-react`에 `development`를 **명시한다.**
+
+```js
+['@babel/preset-react', { runtime: 'automatic', development: !isProduction }],
+```
+
+명시하지 않으면 babel이 개발 모드로 판단해 `jsxDEV`를 내보낸다. webpack의 `--mode production`은 번들 안의 `NODE_ENV`만 바꾸고 빌드 프로세스의 `NODE_ENV`는 건드리지 않기 때문이다.
+
+React 19의 운영 JSX 런타임에는 `jsxDEV`가 없다. 그래서 **빌드는 성공하고 브라우저에서만 터진다.**
+
+```
+Uncaught TypeError: (0 , u.jsxDEV) is not a function
+```
+
+빌드·타입·린트·테스트가 모두 통과하므로 CI로는 걸러지지 않는다. 운영 번들을 실제 브라우저에서 열어봐야 드러난다.
+
 ## 빌드 환경의 Node 버전
 
 파이프라인은 `.nvmrc`의 버전을 공식 tarball로 내려받아 **절대 경로로 실행한다.**
