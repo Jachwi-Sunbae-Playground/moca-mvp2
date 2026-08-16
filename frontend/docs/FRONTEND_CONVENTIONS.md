@@ -97,7 +97,10 @@ export default PostCard;
 
 ## 6. CSS
 
-- 클래스 이름은 `kebab-case`를 사용합니다.
+- 새로 작성하거나 수정하는 화면·컴포넌트의 종속 스타일은 같은 위치의 `*.module.css`에 두고 CSS Modules로 가져옵니다.
+- CSS Modules의 클래스 이름은 TypeScript에서 바로 읽을 수 있도록 `camelCase`를 사용합니다.
+- 디자인 토큰은 `src/styles/tokens.css`, 요소 기본값은 `src/styles/global.css`, 여러 화면에서 재사용하는 유틸리티 클래스는 `src/styles/utilities.css`에 둡니다.
+- 전역 클래스는 실제로 여러 화면에서 같은 의미와 형태로 재사용할 때만 추가합니다.
 - 스타일 목적으로 ID 선택자를 사용하지 않습니다.
 - 컴포넌트 스타일은 해당 컴포넌트와 가까운 위치에 둡니다.
 - `rem`: 폰트 크기와 주요 간격
@@ -111,6 +114,12 @@ export default PostCard;
   --space-md: 1rem;
   --radius-md: 0.5rem;
 }
+```
+
+```tsx
+import styles from './PostCard.module.css';
+
+const PostCard = () => <article className={styles.card}>...</article>;
 ```
 
 ## 7. API와 상태 처리

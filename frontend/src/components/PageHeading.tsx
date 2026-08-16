@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import styles from './PageHeading.module.css';
 
 type PageHeadingProps = {
   title: string;
@@ -17,9 +18,9 @@ const PageHeading = ({ title, description, backTo, backLabel = '뒤로', focusOn
   }, [focusOnMount]);
 
   return (
-    <header className="page-heading">
+    <header className={styles.heading}>
       {backTo !== undefined && (
-        <Link className="back-link" to={backTo}>
+        <Link className={styles.backLink} to={backTo}>
           ← {backLabel}
         </Link>
       )}

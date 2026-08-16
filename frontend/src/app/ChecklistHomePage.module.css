@@ -1,0 +1,52 @@
+.container {
+  max-width: 760px;
+}
+
+.cardList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 7rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.number {
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  place-items: center;
+  background: var(--color-surface-muted);
+  color: var(--color-primary-dark);
+  font-weight: 900;
+}
+
+.card strong,
+.card small {
+  display: block;
+}
+
+.card strong {
+  font-size: 1.15rem;
+}
+
+.card small {
+  margin-top: 0.35rem;
+  color: var(--color-ink-soft);
+  line-height: 1.45;
+}

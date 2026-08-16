@@ -1,0 +1,52 @@
+.form {
+  display: grid;
+  gap: 1.15rem;
+  padding: clamp(1rem, 4vw, 1.5rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.form input,
+.form textarea {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.8rem 0.9rem;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.form [aria-invalid='true'] {
+  border-color: var(--color-error);
+  background: var(--color-error-surface);
+}
+
+.moneyInput {
+  position: relative;
+}
+
+.moneyInput input {
+  padding-right: 2.75rem;
+}
+
+.moneyInput span {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  color: var(--color-muted);
+  transform: translateY(-50%);
+}
+
+.form :global(.form-error),
+.form :global(.form-notice) {
+  margin: 0;
+}
+
+.submit {
+  width: 100%;
+}

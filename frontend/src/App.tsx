@@ -3,6 +3,9 @@ import AppRoutes from './app/AppRoutes';
 import { getPublicConfig } from './app/publicConfig';
 import StatusPanel from './components/StatusPanel';
 import type { PublicConfig } from './types/PublicConfig';
+import './styles/tokens.css';
+import './styles/global.css';
+import './styles/utilities.css';
 import './style.css';
 
 type AppProps = {

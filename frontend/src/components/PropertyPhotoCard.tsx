@@ -5,6 +5,7 @@ import type { PropertyPhoto } from '../types/Property';
 import type { PublicConfig } from '../types/PublicConfig';
 import AuthenticatedPhoto from './AuthenticatedPhoto';
 import ConfirmDialog from './ConfirmDialog';
+import dialogStyles from './ConfirmDialog.module.css';
 
 type PropertyPhotoCardProps = {
   config: PublicConfig;
@@ -64,7 +65,7 @@ const PropertyPhotoCard = ({ config, propertyId, photo, position }: PropertyPhot
             photoId={photo.photoId}
             contentUrl={photo.contentUrl}
             alt={`삭제할 ${accessibleName}`}
-            className="confirm-dialog__photo"
+            className={dialogStyles.photo}
           />
         )}
         {removeMutation.isError && (

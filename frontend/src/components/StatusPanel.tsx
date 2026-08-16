@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import styles from './StatusPanel.module.css';
 
 type StatusPanelProps = {
   title: string;
@@ -8,19 +9,25 @@ type StatusPanelProps = {
   action?: ReactNode;
 };
 
+const toneClassNames: Record<NonNullable<StatusPanelProps['tone']>, string> = {
+  neutral: '',
+  error: styles.error,
+  success: styles.success,
+};
+
 const StatusPanel = ({ title, description, tone = 'neutral', isBusy = false, action }: StatusPanelProps) => (
-  <main className="status-page">
+  <main className={styles.page}>
     <section
-      className={`status-panel status-panel--${tone}`}
+      className={`${styles.panel} ${toneClassNames[tone]}`}
       aria-live={isBusy ? 'polite' : undefined}
       aria-busy={isBusy || undefined}
     >
-      <div className="status-panel__mark" aria-hidden="true">
-        {isBusy ? <span className="spinner" /> : tone === 'success' ? '✓' : tone === 'error' ? '!' : '·'}
+      <div className={styles.mark} aria-hidden="true">
+        {isBusy ? <span className={styles.spinner} /> : tone === 'success' ? '✓' : tone === 'error' ? '!' : '·'}
       </div>
       <h1>{title}</h1>
       <p>{description}</p>
-      {action === undefined ? null : <div className="status-panel__action">{action}</div>}
+      {action === undefined ? null : <div className={styles.action}>{action}</div>}
     </section>
   </main>
 );

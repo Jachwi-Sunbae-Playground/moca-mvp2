@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react';
 import type { ReactNode, RefObject } from 'react';
+import styles from './ConfirmDialog.module.css';
 
 type ConfirmDialogProps = {
   isOpen: boolean;
@@ -56,7 +57,7 @@ const ConfirmDialog = ({
   return (
     <dialog
       ref={dialogRef}
-      className="confirm-dialog"
+      className={styles.dialog}
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       onCancel={(event) => {
@@ -74,11 +75,11 @@ const ConfirmDialog = ({
       }}
     >
       <h2 id={titleId}>{title}</h2>
-      <div id={descriptionId} className="confirm-dialog__description">
+      <div id={descriptionId} className={styles.description}>
         {description}
       </div>
       {children}
-      <div className="confirm-dialog__actions">
+      <div className={styles.actions}>
         <button
           ref={cancelButtonRef}
           className="secondary-button"

@@ -1,0 +1,213 @@
+.page {
+  display: grid;
+  min-height: 100svh;
+  place-items: start center;
+}
+
+.card {
+  width: min(100%, 430px);
+  min-height: 100svh;
+  padding: clamp(1rem, 4vw, 1.5rem) clamp(1rem, 5vw, 1.35rem) 1.5rem;
+}
+
+.brandHeader {
+  text-align: left;
+}
+
+.brandLogo {
+  display: block;
+  width: calc(100% + 1rem);
+  max-width: none;
+  height: auto;
+  margin: -0.3rem -0.5rem 0;
+}
+
+.brandMessage {
+  margin: -0.2rem 0 1.15rem;
+  color: var(--color-ink);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.guideSection h1 {
+  margin: 0 0 0.85rem;
+  font-size: clamp(1.35rem, 6vw, 1.65rem);
+  letter-spacing: -0.04em;
+}
+
+.guideSummary {
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: rgb(255 255 255 / 82%);
+  box-shadow: 0 0.25rem 0.7rem rgb(80 62 25 / 6%);
+  color: #39412f;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.featureList {
+  display: grid;
+  gap: 0.9rem;
+  margin: 1rem 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.featureList li {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.featureList strong,
+.featureDescription {
+  display: block;
+}
+
+.featureList strong {
+  font-size: 1rem;
+  letter-spacing: -0.025em;
+}
+
+.featureDescription {
+  margin-top: 0.12rem;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.featureIcon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  place-items: center;
+  background: var(--color-surface-muted);
+  color: var(--color-primary);
+}
+
+.featureIcon svg {
+  width: 1.45rem;
+  height: 1.45rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.actions {
+  text-align: center;
+}
+
+.googleLoginButton {
+  display: flex;
+  width: 100%;
+  min-height: 4.25rem;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  border: 1px solid #dfc894;
+  border-radius: 999px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-button);
+  color: #2f312c;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.googleLoginButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #fff;
+  box-shadow: 0 0.5rem 1.1rem rgb(66 49 18 / 18%);
+}
+
+.googleLoginButton:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.googleIcon {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
+}
+
+.sessionNote,
+.legalNote,
+.notice,
+.error {
+  margin: 0.85rem 0 0;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.sessionNote,
+.legalNote {
+  color: var(--color-muted);
+}
+
+.legalNote span {
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.notice,
+.error {
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.notice {
+  background: #eef3e7;
+  color: var(--color-primary-dark);
+}
+
+.error {
+  background: var(--color-error-surface);
+  color: var(--color-error);
+}
+
+@media (min-width: 700px) {
+  .page {
+    padding: 2rem 1rem;
+    place-items: center;
+  }
+
+  .card {
+    min-height: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 2rem;
+    background: rgb(248 243 232 / 94%);
+    box-shadow: var(--shadow-soft);
+  }
+}
+
+@media (max-width: 340px) {
+  .card {
+    padding-right: 0.85rem;
+    padding-left: 0.85rem;
+  }
+
+  .brandMessage {
+    font-size: 0.9rem;
+  }
+
+  .featureDescription {
+    font-size: 0.72rem;
+  }
+
+  .googleLoginButton {
+    font-size: 0.98rem;
+  }
+}

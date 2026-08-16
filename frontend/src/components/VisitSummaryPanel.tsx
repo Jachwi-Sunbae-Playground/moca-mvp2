@@ -1,5 +1,6 @@
 import type { RecentVisit } from '../types/Property';
 import { formatDateTime, getVisitStatusLabel } from '../utils/propertyFormat';
+import styles from './VisitSummaryPanel.module.css';
 
 type VisitSummaryPanelProps = {
   recentVisit: RecentVisit | null;
@@ -8,13 +9,13 @@ type VisitSummaryPanelProps = {
 
 const VisitSummaryPanel = ({ recentVisit, compact = false }: VisitSummaryPanelProps) => {
   if (recentVisit === null) {
-    return <p className="visit-empty">아직 방문 확인 기록이 없어요.</p>;
+    return <p className={styles.empty}>아직 방문 확인 기록이 없어요.</p>;
   }
 
   const { summary } = recentVisit;
   return (
-    <div className={`visit-summary ${compact ? 'visit-summary--compact' : ''}`}>
-      <div className="visit-summary__heading">
+    <div className={`${styles.summary} ${compact ? styles.compact : ''}`}>
+      <div className={styles.heading}>
         <strong>{getVisitStatusLabel(recentVisit.status)}</strong>
         <span>{formatDateTime(recentVisit.startedAt)}</span>
       </div>

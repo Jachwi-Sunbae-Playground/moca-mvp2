@@ -1,17 +1,18 @@
 import { Link, useOutletContext } from 'react-router-dom';
 import { clearAuthentication } from './authStore';
 import type { Member } from '../types/Member';
+import styles from './MyPage.module.css';
 
 const MyPage = () => {
   const member = useOutletContext<Member>();
   return (
-    <main className="property-page my-page">
+    <main className={`property-page ${styles.page}`}>
       <div className="page-container page-container--form">
         <p className="section-eyebrow">내 정보</p>
         <h1>마이페이지</h1>
         <section className="detail-section" aria-labelledby="member-heading">
           <h2 id="member-heading">회원 정보</h2>
-          <dl className="member-summary">
+          <dl className={styles.memberSummary}>
             <div>
               <dt>이름</dt>
               <dd>{member.displayName}</dd>
@@ -26,7 +27,7 @@ const MyPage = () => {
             </div>
           </dl>
         </section>
-        <nav className="my-page__links" aria-label="내 기록 바로가기">
+        <nav className={styles.links} aria-label="내 기록 바로가기">
           <Link to="/properties">
             <strong>내 매물</strong>
             <span>매물과 방문 기록을 확인해요.</span>
@@ -39,7 +40,7 @@ const MyPage = () => {
         <section className="detail-section" aria-labelledby="upcoming-heading">
           <h2 id="upcoming-heading">준비 중인 기능</h2>
           <p className="section-note">1차 MVP에서는 안내 화면만 제공하며 실제 기능은 다음 범위에서 만나요.</p>
-          <nav className="my-page__links my-page__links--compact" aria-label="준비 중인 기능">
+          <nav className={`${styles.links} ${styles.compactLinks}`} aria-label="준비 중인 기능">
             <Link to="/compare">
               <strong>비교표</strong>
               <span>여러 매물을 한눈에 비교해요.</span>

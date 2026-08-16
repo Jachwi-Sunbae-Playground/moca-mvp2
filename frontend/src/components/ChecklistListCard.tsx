@@ -5,6 +5,7 @@ import { useRemoveChecklist } from '../hooks/query/useChecklistMutations';
 import type { ChecklistSummary } from '../types/Checklist';
 import type { PublicConfig } from '../types/PublicConfig';
 import ConfirmDialog from './ConfirmDialog';
+import styles from './ChecklistListCard.module.css';
 
 const ChecklistListCard = ({ config, checklist }: { config: PublicConfig; checklist: ChecklistSummary }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,14 +22,14 @@ const ChecklistListCard = ({ config, checklist }: { config: PublicConfig; checkl
   };
 
   return (
-    <li className="checklist-list-card">
-      <Link className="checklist-list-card__main" to={`/checklists/${checklist.checklistId}`}>
+    <li className={styles.card}>
+      <Link className={styles.main} to={`/checklists/${checklist.checklistId}`}>
         <strong>{checklist.name}</strong>
         <span>
           {checklist.itemCount}개 항목 · 매물 {checklist.assignedPropertyCount}곳에서 사용
         </span>
       </Link>
-      <div className="checklist-list-card__actions">
+      <div className={styles.actions}>
         <Link className="inline-link" to={`/checklists/${checklist.checklistId}`}>
           편집
         </Link>

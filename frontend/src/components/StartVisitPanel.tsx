@@ -7,6 +7,7 @@ import { CHECKLIST_STAGES } from '../types/Checklist';
 import type { PublicConfig } from '../types/PublicConfig';
 import type { PropertyDetail } from '../types/Property';
 import ConfirmDialog from './ConfirmDialog';
+import styles from './StartVisitPanel.module.css';
 
 const StartVisitPanel = ({ config, property }: { config: PublicConfig; property: PropertyDetail }) => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const StartVisitPanel = ({ config, property }: { config: PublicConfig; property:
 
   if (property.activeChecklists.length === 0) {
     return (
-      <div className="start-visit-empty">
+      <div className={styles.empty}>
         <strong>활성 체크리스트를 먼저 연결해 주세요.</strong>
         <p>방문을 시작하면 연결된 단계의 현재 질문을 독립된 스냅샷으로 보관합니다.</p>
         <ul>
@@ -43,7 +44,7 @@ const StartVisitPanel = ({ config, property }: { config: PublicConfig; property:
   }
 
   return (
-    <div className="start-visit-panel">
+    <div className={styles.panel}>
       <button ref={buttonRef} className="primary-button" type="button" onClick={() => setIsOpen(true)}>
         새 방문 시작
       </button>

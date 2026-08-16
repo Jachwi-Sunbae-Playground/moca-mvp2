@@ -2,15 +2,16 @@ import { Link } from 'react-router-dom';
 import PageHeading from '../components/PageHeading';
 import { checklistStageMeta } from '../constants/checklist';
 import { CHECKLIST_STAGES } from '../types/Checklist';
+import styles from './ChecklistHomePage.module.css';
 
 const ChecklistHomePage = () => (
-  <main className="property-page checklist-page">
-    <div className="page-container checklist-page__narrow">
+  <main className="property-page">
+    <div className={`page-container ${styles.container}`}>
       <PageHeading title="체크리스트" description="상황에 맞는 확인 목록을 만들고 여러 매물에서 다시 사용해 보세요." />
-      <div className="stage-card-list">
+      <div className={styles.cardList}>
         {CHECKLIST_STAGES.map((stage, index) => (
-          <Link key={stage} className="stage-card" to={`/checklists/${stage}`}>
-            <span className="stage-card__number">{index + 1}</span>
+          <Link key={stage} className={styles.card} to={`/checklists/${stage}`}>
+            <span className={styles.number}>{index + 1}</span>
             <span>
               <strong>{checklistStageMeta[stage].label}</strong>
               <small>{checklistStageMeta[stage].description}</small>

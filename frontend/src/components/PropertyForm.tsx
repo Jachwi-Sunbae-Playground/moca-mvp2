@@ -10,6 +10,7 @@ import {
   validatePropertyForm,
 } from '../utils/propertyForm';
 import type { PropertyFormErrors, PropertyFormField, PropertyFormValues } from '../utils/propertyForm';
+import styles from './PropertyForm.module.css';
 
 type PropertyFormProps = {
   initialValues: PropertyFormValues;
@@ -64,7 +65,7 @@ const PropertyForm = ({
   };
 
   return (
-    <form className="property-form" noValidate onSubmit={handleSubmit}>
+    <form className={styles.form} noValidate onSubmit={handleSubmit}>
       <div className="form-field">
         <label htmlFor="property-name">이름</label>
         <input
@@ -86,7 +87,7 @@ const PropertyForm = ({
 
       <div className="form-field">
         <label htmlFor="property-deposit">보증금</label>
-        <div className="money-input">
+        <div className={styles.moneyInput}>
           <input
             id="property-deposit"
             name="depositAmount"
@@ -108,7 +109,7 @@ const PropertyForm = ({
 
       <div className="form-field">
         <label htmlFor="property-rent">월세</label>
-        <div className="money-input">
+        <div className={styles.moneyInput}>
           <input
             id="property-rent"
             name="monthlyRentAmount"
@@ -163,7 +164,7 @@ const PropertyForm = ({
         </p>
       )}
 
-      <button className="primary-button property-form__submit" type="submit" disabled={isSubmitting}>
+      <button className={`primary-button ${styles.submit}`} type="submit" disabled={isSubmitting}>
         {isSubmitting ? '저장 중…' : submitLabel}
       </button>
     </form>

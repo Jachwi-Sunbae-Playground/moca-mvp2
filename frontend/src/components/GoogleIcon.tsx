@@ -1,5 +1,9 @@
-const GoogleIcon = () => (
-  <svg className="google-icon" viewBox="0 0 24 24" aria-hidden="true">
+type GoogleIconProps = {
+  className?: string;
+};
+
+const GoogleIcon = ({ className }: GoogleIconProps) => (
+  <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
     <path
       fill="#4285f4"
       d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.7 4.7 0 0 1-2 3v2.6h3.3c1.9-1.8 2.9-4.4 2.9-7.5Z"

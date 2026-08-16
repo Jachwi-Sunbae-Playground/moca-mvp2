@@ -6,6 +6,7 @@ import PageHeading from '../components/PageHeading';
 import PropertyCard from '../components/PropertyCard';
 import { usePropertyList } from '../hooks/query/useProperties';
 import type { PublicConfig } from '../types/PublicConfig';
+import styles from './PropertyListPage.module.css';
 
 type PropertyListPageProps = { config: PublicConfig };
 
@@ -22,7 +23,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
   };
 
   return (
-    <main className="property-page property-list-page">
+    <main className="property-page">
       <div className="page-container">
         <PageHeading
           title="내 매물"
@@ -34,7 +35,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
             + 새 매물 등록
           </Link>
         </div>
-        <form className="property-search" role="search" onSubmit={search}>
+        <form className={styles.search} role="search" onSubmit={search}>
           <label className="sr-only" htmlFor="property-search-input">
             매물 이름 검색
           </label>
@@ -72,7 +73,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
           </div>
         )}
         {items.length > 0 && (
-          <section className="property-card-list" aria-label="매물 목록">
+          <section className={styles.cardList} aria-label="매물 목록">
             {items.map((property) => (
               <PropertyCard key={property.propertyId} property={property} />
             ))}
