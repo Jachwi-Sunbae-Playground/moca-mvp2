@@ -1,0 +1,13 @@
+.link {
+  min-height: 2.75rem;
+  border: 1px dashed var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-ink-soft);
+  font-size: 0.8rem;
+}
+
+.link:hover {
+  border-color: var(--color-muted);
+  background: var(--color-surface-neutral);
+  color: var(--color-ink);
+}

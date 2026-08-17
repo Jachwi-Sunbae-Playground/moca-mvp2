@@ -38,6 +38,17 @@ nvm use
 npm ci
 ```
 
+asdf를 사용한다면 `frontend/`에서 같은 버전을 설치하고 실행합니다. IDE나 자동화의 비대화형 셸에서 `npm: command not found`가 발생하면 전역 Node.js를 다시 설치하거나 다른 패키지 매니저로 바꾸지 않고 `asdf exec`로 프로젝트 버전을 직접 실행합니다.
+
+```bash
+asdf install nodejs 22.23.1
+asdf current nodejs
+asdf exec npm ci
+asdf exec npm run dev
+```
+
+`asdf current nodejs`가 `22.23.1`이 아니면 셸 초기화보다 먼저 현재 작업 디렉터리가 `frontend/`인지와 asdf의 legacy version file 지원 설정을 확인합니다. 이후 검사 명령도 `asdf exec npm run typecheck`처럼 같은 방식으로 실행할 수 있습니다.
+
 [`.env.example`](./.env.example)을 복사하고 공개 환경값을 로컬 값으로 변경합니다. Webpack은 `.env` 파일을 자동으로 읽지 않으므로 실행할 셸에 값을 내보내야 합니다.
 
 ```bash

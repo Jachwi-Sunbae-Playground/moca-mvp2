@@ -170,6 +170,65 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     expect(screen.queryByRole('button', { name: '시작 방식 변경 (항목 초기화)' })).not.toBeInTheDocument();
   });
 
+  it('연결 화면에서 선택한 시작 방식으로 생성 편집기를 바로 연다', async () => {
+    useCatalogHandlers();
+    renderAuthenticated('/checklists/new?stage=ONLINE_PHONE&start=ONE_ROOM');
+
+    expect(await screen.findByLabelText('체크리스트 이름')).toHaveValue('원룸 온라인·전화 체크리스트');
+    expect(screen.queryByRole('heading', { name: '항목 구성 선택' })).not.toBeInTheDocument();
+  });
+
+  it('빈 목록 시작은 이전 프리셋 오류 상태와 무관하게 편집기를 연다', async () => {
+    let presetCalls = 0;
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/check-items`, () =>
+        HttpResponse.json(successEnvelope(checkItemPageFixture([onlineItemFixture]))),
+      ),
+      http.get(`${config.apiBaseUrl}/api/checklist-presets`, () => {
+        presetCalls += 1;
+        return HttpResponse.json(errorEnvelope('INTERNAL_SERVER_ERROR'), { status: 500 });
+      }),
+    );
+
+    renderAuthenticated('/checklists/new?stage=ONLINE_PHONE&start=EMPTY');
+
+    expect(await screen.findByLabelText('체크리스트 이름')).toHaveValue('온라인·전화 체크리스트');
+    expect(screen.queryByText('프리셋을 불러오지 못했어요.')).not.toBeInTheDocument();
+    expect(presetCalls).toBe(0);
+  });
+
+  it('프리셋 조회 실패 뒤 빈 목록으로 전환하면 오류 대신 편집기를 연다', async () => {
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/check-items`, () =>
+        HttpResponse.json(successEnvelope(checkItemPageFixture([onlineItemFixture]))),
+      ),
+      http.get(`${config.apiBaseUrl}/api/checklist-presets`, () =>
+        HttpResponse.json(errorEnvelope('INTERNAL_SERVER_ERROR'), { status: 500 }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderAuthenticated('/checklists/new?stage=ONLINE_PHONE');
+
+    await user.click(await screen.findByRole('button', { name: '원룸 제공 항목으로 시작' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('프리셋을 불러오지 못했어요.');
+
+    await user.click(screen.getByRole('button', { name: '빈 목록으로 시작' }));
+    expect(await screen.findByLabelText('체크리스트 이름')).toHaveValue('온라인·전화 체크리스트');
+    expect(screen.queryByText('프리셋을 불러오지 못했어요.')).not.toBeInTheDocument();
+  });
+
+  it('제공 항목 조회 실패는 편집 화면 안에서 재시도 동작을 제공한다', async () => {
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/check-items`, () =>
+        HttpResponse.json(errorEnvelope('INTERNAL_SERVER_ERROR'), { status: 500 }),
+      ),
+    );
+    renderAuthenticated('/checklists/new?stage=ON_SITE&start=EMPTY&mode=add-items');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('요청을 처리하지 못했습니다');
+    expect(screen.getByRole('button', { name: '다시 시도' })).toBeInTheDocument();
+  });
+
   it('CUSTOM 항목만으로 생성하며 신규 항목에 checklistItemId를 만들지 않는다', async () => {
     useCatalogHandlers();
     let requestBody: unknown;
@@ -655,6 +714,33 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
 });
 
 describe('FE-3 매물 활성 체크리스트', () => {
+  it('연결할 목록이 없으면 연결 화면에서 시작 구성을 바로 선택한다', async () => {
+    useCatalogHandlers();
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
+        HttpResponse.json(
+          successEnvelope({
+            ...propertyDetailFixture,
+            activeChecklists: [],
+            photoPreview: { totalCount: 0, photos: [] },
+          }),
+        ),
+      ),
+      http.get(`${config.apiBaseUrl}/api/checklists`, () =>
+        HttpResponse.json(successEnvelope(checklistPageFixture([]))),
+      ),
+    );
+    const user = userEvent.setup();
+    renderAuthenticated('/properties/10/active-checklists/ONLINE_PHONE');
+
+    expect(await screen.findByRole('button', { name: '빈 목록으로 시작' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '원룸 제공 항목으로 시작' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: '새로 만들기' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '원룸 제공 항목으로 시작' }));
+    expect(await screen.findByLabelText('체크리스트 이름')).toHaveValue('원룸 온라인·전화 체크리스트');
+  });
+
   it('진행 중 방문이 있으면 연결된 단계에서 해당 체크 화면으로 바로 이동한다', async () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>

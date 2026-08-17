@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import ChecklistEditor from '../components/ChecklistEditor';
+import ChecklistStartOptions from '../components/ChecklistStartOptions';
+import type { ChecklistStartMode } from '../components/ChecklistStartOptions';
 import ChecklistStageTabs from '../components/ChecklistStageTabs';
+import { Button } from '../components/ui/Button';
 import TopNavigation from '../components/ui/TopNavigation';
 import { checklistStageMeta, isChecklistStage } from '../constants/checklist';
 import { useCreateChecklist } from '../hooks/query/useChecklistMutations';
@@ -18,8 +21,19 @@ const CreateChecklistPage = ({ config }: { config: PublicConfig }) => {
   const [searchParams] = useSearchParams();
   const stageParam = searchParams.get('stage');
   if (!isChecklistStage(stageParam)) return <InvalidCreateStage />;
-  return <ResolvedCreateChecklistPage config={config} stage={stageParam} returnTo={searchParams.get('returnTo')} />;
+  return (
+    <ResolvedCreateChecklistPage
+      key={stageParam}
+      config={config}
+      stage={stageParam}
+      returnTo={searchParams.get('returnTo')}
+      requestedStartMode={parseStartMode(searchParams.get('start'))}
+    />
+  );
 };
+
+const parseStartMode = (value: string | null): ChecklistStartMode | null =>
+  value === 'EMPTY' || value === 'ONE_ROOM' ? value : null;
 
 const InvalidCreateStage = () => (
   <main className="property-page">
@@ -36,16 +50,24 @@ const ResolvedCreateChecklistPage = ({
   config,
   stage,
   returnTo,
+  requestedStartMode,
 }: {
   config: PublicConfig;
   stage: ChecklistStage;
   returnTo: string | null;
+  requestedStartMode: ChecklistStartMode | null;
 }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const safeReturn = parseChecklistReturnTo(returnTo);
-  const [startMode, setStartMode] = useState<'EMPTY' | 'ONE_ROOM' | null>(null);
-  const [editorInitialName, setEditorInitialName] = useState('');
+  const [startMode, setStartMode] = useState<ChecklistStartMode | null>(requestedStartMode);
+  const [editorInitialName, setEditorInitialName] = useState(() =>
+    requestedStartMode === null
+      ? ''
+      : requestedStartMode === 'ONE_ROOM'
+        ? `원룸 ${checklistStageMeta[stage].label} 체크리스트`
+        : `${checklistStageMeta[stage].label} 체크리스트`,
+  );
   const preset = useChecklistPreset(config, stage, 'ONE_ROOM', startMode === 'ONE_ROOM');
   const create = useCreateChecklist(config);
   const isAddingItems = searchParams.get('mode') === 'add-items';
@@ -77,50 +99,41 @@ const ResolvedCreateChecklistPage = ({
           <section className={styles.presetSection} aria-labelledby="preset-heading">
             <h2 id="preset-heading">항목 구성 선택</h2>
             <p>빈 목록이나 원룸 제공 항목으로 시작한 뒤 직접 질문을 섞고 순서를 바꿀 수 있어요.</p>
-            <div className={styles.presetOptions}>
-              <button
-                type="button"
-                aria-label="빈 목록으로 시작"
-                onClick={() => {
+            <ChecklistStartOptions
+              onSelect={(mode) => {
+                if (mode === 'EMPTY') {
                   setEditorInitialName(`${checklistStageMeta[stage].label} 체크리스트`);
-                  setStartMode('EMPTY');
-                }}
-              >
-                <strong>빈 목록</strong>
-                <span className={styles.chevron} aria-hidden="true">
-                  &gt;
-                </span>
-              </button>
-              <button
-                type="button"
-                aria-label="원룸 제공 항목으로 시작"
-                onClick={() => {
+                } else {
                   setEditorInitialName(`원룸 ${checklistStageMeta[stage].label} 체크리스트`);
-                  setStartMode('ONE_ROOM');
-                }}
-              >
-                <strong>원룸 제공 항목</strong>
-                <span className={styles.chevron} aria-hidden="true">
-                  &gt;
-                </span>
-              </button>
-            </div>
+                }
+                setStartMode(mode);
+              }}
+            />
           </section>
         ) : startMode === 'ONE_ROOM' && preset.isPending ? (
-          <div className="content-state" role="status">
+          <div className={styles.presetStatus} role="status">
             <span className="spinner" />
             프리셋을 불러오는 중이에요.
           </div>
-        ) : preset.isError ? (
-          <div className="content-state content-state--error" role="alert">
-            <strong>프리셋을 불러오지 못했어요.</strong>
-            <span>{getChecklistErrorMessage(preset.error)}</span>
-            <button type="button" className="inline-button" onClick={() => void preset.refetch()}>
+        ) : startMode === 'ONE_ROOM' && preset.isError ? (
+          <div className={styles.presetError} role="alert">
+            <div>
+              <strong>프리셋을 불러오지 못했어요.</strong>
+              <span>{getChecklistErrorMessage(preset.error)}</span>
+            </div>
+            <Button variant="text" type="button" onClick={() => void preset.refetch()}>
               다시 시도
-            </button>
-            <button type="button" className="inline-button" onClick={() => setStartMode(null)}>
-              다른 시작 방식 선택
-            </button>
+            </Button>
+            <Button
+              variant="text"
+              type="button"
+              onClick={() => {
+                setEditorInitialName(`${checklistStageMeta[stage].label} 체크리스트`);
+                setStartMode('EMPTY');
+              }}
+            >
+              빈 목록으로 시작
+            </Button>
           </div>
         ) : (
           <ChecklistEditor

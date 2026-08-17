@@ -27,7 +27,7 @@ const PropertyCard = ({ property, thumbnailUrl }: PropertyCardProps) => {
           <div className={styles.details}>
             <h2>{property.name}</h2>
             <p className={styles.price}>
-              보증금 {formatWon(property.depositAmount)} · 월세 {formatWon(property.monthlyRentAmount)}
+              보증금 {formatWon(property.depositAmount)} / 월세 {formatWon(property.monthlyRentAmount)}
             </p>
           </div>
         </div>

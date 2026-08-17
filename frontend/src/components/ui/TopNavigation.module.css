@@ -9,7 +9,6 @@
 
 .root[data-has-back='true'] {
   position: relative;
-  min-height: var(--app-bar-height);
 }
 
 .root[data-has-back='true'] .title {

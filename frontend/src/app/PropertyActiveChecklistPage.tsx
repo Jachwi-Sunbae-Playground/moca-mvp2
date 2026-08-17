@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
 import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
+import ChecklistStartOptions from '../components/ChecklistStartOptions';
+import type { ChecklistStartMode } from '../components/ChecklistStartOptions';
 import ChecklistStageTabs from '../components/ChecklistStageTabs';
 import BottomActionArea from '../components/ui/BottomActionArea';
 import { Button, ButtonLink } from '../components/ui/Button';
@@ -111,7 +113,11 @@ const ResolvedPropertyActiveChecklist = ({
   }
 
   const returnPath = `/properties/${propertyId}/active-checklists/${stage}`;
-  const createPath = `/checklists/new?stage=${stage}&returnTo=${encodeURIComponent(returnPath)}`;
+  const createPath = (startMode?: ChecklistStartMode) => {
+    const query = new URLSearchParams({ stage, returnTo: returnPath });
+    if (startMode !== undefined) query.set('start', startMode);
+    return `/checklists/new?${query.toString()}`;
+  };
   const selectionChanged = selectedId !== null && selectedId !== current?.checklistId;
 
   const saveSelection = async () => {
@@ -158,9 +164,11 @@ const ResolvedPropertyActiveChecklist = ({
           backTo={`/properties/${propertyId}`}
           backLabel="매물 상세로 돌아가기"
           endSlot={
-            <ButtonLink className={styles.createLink} variant="text" to={createPath}>
-              새로 만들기
-            </ButtonLink>
+            items.length > 0 ? (
+              <ButtonLink className={styles.createLink} variant="text" to={createPath()}>
+                새로 만들기
+              </ButtonLink>
+            ) : undefined
           }
         />
         <h1 className="sr-only">{property.data.name} 체크리스트 연결</h1>
@@ -175,12 +183,10 @@ const ResolvedPropertyActiveChecklist = ({
         </div>
 
         {items.length === 0 ? (
-          <div className="content-state">
-            <strong>선택할 체크리스트가 없어요.</strong>
-            <ButtonLink variant="secondary" to={createPath}>
-              이 단계 체크리스트 만들기
-            </ButtonLink>
-          </div>
+          <section className={styles.startOptions} aria-label="새 체크리스트 시작 방식">
+            <p>바로 사용할 구성을 선택해 체크리스트를 만들어 주세요.</p>
+            <ChecklistStartOptions onSelect={(mode) => navigate(createPath(mode))} />
+          </section>
         ) : (
           <fieldset className="active-checklist-options">
             <legend className="sr-only">연결할 체크리스트</legend>

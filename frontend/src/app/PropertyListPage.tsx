@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getPropertyErrorMessage } from '../apis/propertyErrorMessages';
 import PropertyCard from '../components/PropertyCard';
+import AddItemLink from '../components/ui/AddItemLink';
 import { Button, ButtonLink } from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import Icon from '../components/ui/Icon';
@@ -185,9 +186,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
 
         {!hasInitialError && items.length > 0 && (
           <div className={styles.bottomAdd}>
-            <ButtonLink to="/properties/new" variant="secondary" fullWidth>
-              <Icon name="plus" size={16} /> 매물 추가
-            </ButtonLink>
+            <AddItemLink to="/properties/new">매물 추가</AddItemLink>
           </div>
         )}
       </div>

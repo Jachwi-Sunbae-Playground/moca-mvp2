@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import ChecklistListCard from '../components/ChecklistListCard';
 import ChecklistStageTabs from '../components/ChecklistStageTabs';
+import AddItemLink from '../components/ui/AddItemLink';
 import { ButtonLink } from '../components/ui/Button';
 import Icon from '../components/ui/Icon';
 import TopNavigation from '../components/ui/TopNavigation';
@@ -68,9 +69,7 @@ const ResolvedChecklistListPage = ({ config, stage }: { config: PublicConfig; st
           </div>
         ) : items.length === 0 ? (
           <div className={styles.emptyAction}>
-            <ButtonLink fullWidth to={`/checklists/new?stage=${stage}`}>
-              체크리스트 추가
-            </ButtonLink>
+            <AddItemLink to={`/checklists/new?stage=${stage}`}>체크리스트 추가</AddItemLink>
           </div>
         ) : (
           <ul className={styles.list}>

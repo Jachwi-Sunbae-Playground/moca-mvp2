@@ -68,9 +68,15 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onAdd }: 
           <span className="spinner" /> 항목을 불러오는 중이에요.
         </div>
       ) : result.isError ? (
-        <div className="compact-state compact-state--error" role="alert">
+        <div className="item-picker__error" role="alert">
           <span>{getChecklistErrorMessage(result.error)}</span>
-          <Button type="button" variant="text" disabled={disabled} onClick={() => void result.refetch()}>
+          <Button
+            className="item-picker__retry"
+            type="button"
+            variant="text"
+            disabled={disabled}
+            onClick={() => void result.refetch()}
+          >
             다시 시도
           </Button>
         </div>
