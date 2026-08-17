@@ -1,0 +1,40 @@
+.appBar {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) 3rem;
+  min-height: var(--app-bar-height);
+  align-items: center;
+  background: var(--color-surface-translucent);
+  backdrop-filter: blur(12px);
+}
+
+.side {
+  display: flex;
+  min-width: 3rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.action {
+  justify-content: flex-end;
+}
+
+.iconLink {
+  display: inline-grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--color-ink);
+  place-items: center;
+  text-decoration: none;
+}
+
+.title {
+  overflow: hidden;
+  font-size: 0.95rem;
+  letter-spacing: -0.025em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
