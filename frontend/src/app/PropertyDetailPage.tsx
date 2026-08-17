@@ -26,8 +26,7 @@ import styles from './PropertyDetailPage.module.css';
 
 type PropertyDetailPageProps = { config: PublicConfig };
 
-const getStageMarkerY = (tabs: HTMLElement | null) =>
-  Math.max((tabs?.getBoundingClientRect().bottom ?? 48) + 1, window.innerHeight * 0.65);
+const getStageMarkerY = (tabs: HTMLElement | null) => (tabs?.getBoundingClientRect().bottom ?? 48) + 1;
 
 const PropertyDetailPage = ({ config }: PropertyDetailPageProps) => {
   const { propertyId: propertyIdParam } = useParams();

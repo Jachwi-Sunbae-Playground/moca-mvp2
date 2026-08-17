@@ -25,6 +25,7 @@ type ChecklistEditorProps = {
   submitLabel: string;
   isSubmitting: boolean;
   serverError?: string;
+  actionDivider?: boolean;
   viewMode?: 'EDIT' | 'ADD_ITEMS';
   onViewModeChange?: (mode: 'EDIT' | 'ADD_ITEMS') => void;
   onNameChange?: (name: string) => void;
@@ -40,6 +41,7 @@ const ChecklistEditor = ({
   submitLabel,
   isSubmitting,
   serverError,
+  actionDivider = true,
   viewMode = 'EDIT',
   onViewModeChange,
   onNameChange,
@@ -185,7 +187,6 @@ const ChecklistEditor = ({
           stage={stage}
           existingSourceIds={items.flatMap((item) => (item.origin === 'PROVIDED' ? [item.sourceCheckItemId] : []))}
           disabled={isSubmitting}
-          onCancel={() => onViewModeChange?.('EDIT')}
           onAdd={addProvidedItems}
         />
       </div>
@@ -454,7 +455,7 @@ const ChecklistEditor = ({
         </p>
       )}
       <div className="checklist-editor__actions">
-        <BottomActionArea>
+        <BottomActionArea divider={actionDivider}>
           <Button type="submit" variant="soft" fullWidth isLoading={isSubmitting} loadingLabel="저장 중…">
             {submitLabel}
           </Button>

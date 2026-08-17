@@ -59,7 +59,7 @@ const ResolvedCreateChecklistPage = ({
           className={styles.topNavigation}
           title={isAddingItems ? '체크 항목 편집' : '새 체크리스트'}
           backLabel={isAddingItems ? '새 체크리스트로 돌아가기' : '새 체크리스트 닫기'}
-          navigationIcon={isAddingItems ? 'arrow-left' : 'close'}
+          navigationIcon="close"
           {...(isAddingItems
             ? {
                 onBack: () => {
@@ -131,6 +131,7 @@ const ResolvedCreateChecklistPage = ({
             initialItems={startMode === 'ONE_ROOM' ? (preset.data?.items ?? []).map(checkItemToEditorItem) : []}
             submitLabel="체크리스트 만들기"
             isSubmitting={create.isPending}
+            actionDivider={false}
             serverError={create.isError ? getChecklistErrorMessage(create.error) : undefined}
             viewMode={isAddingItems ? 'ADD_ITEMS' : 'EDIT'}
             onViewModeChange={(mode) => {

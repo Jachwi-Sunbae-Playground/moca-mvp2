@@ -67,9 +67,10 @@ const ResolvedChecklistListPage = ({ config, stage }: { config: PublicConfig; st
             </button>
           </div>
         ) : items.length === 0 ? (
-          <div className="content-state">
-            <strong>이 단계에 만든 체크리스트가 없어요.</strong>
-            <span>프리셋으로 빠르게 시작해 보세요.</span>
+          <div className={styles.emptyAction}>
+            <ButtonLink fullWidth to={`/checklists/new?stage=${stage}`}>
+              체크리스트 추가
+            </ButtonLink>
           </div>
         ) : (
           <ul className={styles.list}>

@@ -130,7 +130,7 @@ const PropertyForm = ({
           maxLength={500}
           rows={3}
           placeholder="URL, 앱 이름 또는 중개사 정보를 입력해 주세요."
-          fieldClassName={styles.detailField}
+          fieldClassName={`${styles.detailField} ${styles.lastDetailField}`}
           className={styles.detailInput}
           error={displayedErrors.discoverySource}
           onChange={(event) => setValue('discoverySource', event.target.value)}

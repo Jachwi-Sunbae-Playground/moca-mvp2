@@ -16,16 +16,10 @@
   font-size: 0.9rem;
 }
 
-.heading span {
-  color: var(--color-muted);
-  font-size: 0.72rem;
-  font-weight: 750;
-}
-
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
 }
 
 .photoList {
@@ -75,7 +69,7 @@
 
 .empty {
   display: grid;
-  grid-column: span 2;
+  grid-column: span 3;
   align-content: center;
   gap: 0.25rem;
   min-height: 6rem;

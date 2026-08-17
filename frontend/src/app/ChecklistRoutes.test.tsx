@@ -64,6 +64,21 @@ const useCatalogHandlers = () => {
 };
 
 describe('FE-3 체크리스트 탐색과 편집', () => {
+  it('빈 단계에서는 안내 카드 대신 체크리스트 추가 동작을 제공한다', async () => {
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/checklists`, () =>
+        HttpResponse.json(successEnvelope(checklistPageFixture([]))),
+      ),
+    );
+    renderAuthenticated('/checklists/ONLINE_PHONE');
+
+    expect(await screen.findByRole('link', { name: '체크리스트 추가' })).toHaveAttribute(
+      'href',
+      '/checklists/new?stage=ONLINE_PHONE',
+    );
+    expect(screen.queryByText('이 단계에 만든 체크리스트가 없어요.')).not.toBeInTheDocument();
+  });
+
   it('체크리스트 진입 시 첫 단계 목록과 세 단계 탭을 표시하고 카탈로그를 미리 조회하지 않는다', async () => {
     let catalogCalls = 0;
     server.use(
@@ -357,7 +372,8 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
 
     await user.click(screen.getByRole('button', { name: '+ 체크 항목 추가' }));
     expect(screen.getByText('체크 항목 편집')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: '전체 제공 항목 보기' }));
+    expect(screen.getByRole('button', { name: '새 체크리스트로 돌아가기' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '취소' })).not.toBeInTheDocument();
     const providedCheckbox = await screen.findByRole('checkbox', { name: new RegExp(onlineItemFixture.question) });
     expect(providedCheckbox).toBeChecked();
     expect(providedCheckbox).toBeDisabled();
@@ -738,7 +754,9 @@ describe('FE-3 매물 활성 체크리스트', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/properties/10/active-checklists/ONLINE_PHONE');
-    await user.click(await screen.findByRole('checkbox', { name: /직방 매물 문의 목록/ }));
+    const checklist = await screen.findByRole('checkbox', { name: /직방 매물 문의 목록/ });
+    expect(screen.queryByRole('button', { name: '이 체크리스트 연결' })).not.toBeInTheDocument();
+    await user.click(checklist);
     expect(assignCalls).toBe(0);
     await user.click(screen.getByRole('button', { name: '이 체크리스트 연결' }));
     expect(

@@ -14,6 +14,7 @@ const PhotoUploadPanel = ({ config, propertyId, currentPhotoCount }: PhotoUpload
   const inputRef = useRef<HTMLInputElement>(null);
   const uploadQueue = usePhotoUploadQueue(config, propertyId, currentPhotoCount);
   const isLimitReached = currentPhotoCount >= MAX_PROPERTY_PHOTOS;
+  const uploadErrors = uploadQueue.items.filter((item) => item.status === 'error');
 
   return (
     <section className={styles.root} aria-labelledby="photo-upload-heading">
@@ -56,27 +57,11 @@ const PhotoUploadPanel = ({ config, propertyId, currentPhotoCount }: PhotoUpload
           사진 30장이 모두 등록되어 추가할 수 없어요.
         </p>
       )}
-      {uploadQueue.items.length > 0 && (
-        <div className={`${styles.feedback} upload-queue`} aria-live="polite">
-          <div className="upload-queue__heading">
-            <strong>업로드 결과</strong>
-            <button
-              type="button"
-              className="text-button"
-              disabled={uploadQueue.isUploading}
-              onClick={uploadQueue.clearItems}
-            >
-              결과 지우기
-            </button>
-          </div>
-          <ul>
-            {uploadQueue.items.map((item) => (
-              <li key={item.id} data-status={item.status}>
-                <span>{item.label}</span>
-                <strong>{item.message}</strong>
-              </li>
-            ))}
-          </ul>
+      {uploadErrors.length > 0 && (
+        <div className={`${styles.feedback} ${styles.errorList}`} role="alert">
+          {uploadErrors.map((item) => (
+            <p key={item.id}>{item.message}</p>
+          ))}
         </div>
       )}
     </section>

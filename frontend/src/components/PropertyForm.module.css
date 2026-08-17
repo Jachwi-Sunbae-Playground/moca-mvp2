@@ -58,6 +58,10 @@
   grid-column: 2;
 }
 
+.lastDetailField {
+  border-bottom: 0;
+}
+
 .detailForm .detailInput {
   min-height: 2.65rem;
   padding: 0.62rem 0.7rem;

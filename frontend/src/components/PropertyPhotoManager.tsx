@@ -43,7 +43,6 @@ const PropertyPhotoManager = ({ config, propertyId, showHeading = false }: Prope
         <h2 id="photo-gallery-heading" tabIndex={-1}>
           사진 관리
         </h2>
-        <span>{photos.data.totalCount}장</span>
       </div>
       <div className={styles.grid}>
         <PhotoUploadPanel config={config} propertyId={propertyId} currentPhotoCount={photos.data.totalCount} />

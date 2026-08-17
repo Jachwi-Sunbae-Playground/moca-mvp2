@@ -37,3 +37,17 @@
 .feedback {
   grid-column: 1 / -1;
 }
+
+.errorList {
+  color: var(--color-error);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.errorList p {
+  margin: 0;
+}
+
+.errorList p + p {
+  margin-top: 0.2rem;
+}

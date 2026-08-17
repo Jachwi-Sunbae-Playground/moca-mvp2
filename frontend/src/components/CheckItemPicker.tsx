@@ -12,22 +12,19 @@ type CheckItemPickerProps = {
   stage: ChecklistStage;
   existingSourceIds: number[];
   disabled: boolean;
-  onCancel: () => void;
   onAdd: (items: CheckItem[]) => void;
 };
 
-const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel, onAdd }: CheckItemPickerProps) => {
+const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onAdd }: CheckItemPickerProps) => {
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
-  const [hasSearched, setHasSearched] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
-  const result = useCheckItemSearch(config, stage, query, hasSearched);
+  const result = useCheckItemSearch(config, stage, query);
   const items = useMemo(() => result.data?.pages.flatMap((page) => page.content) ?? [], [result.data]);
   const existingIds = useMemo(() => new Set(existingSourceIds), [existingSourceIds]);
 
   const search = (nextQuery: string) => {
     setQuery(nextQuery.trim());
-    setHasSearched(true);
     setSelectedIds(new Set());
   };
 
@@ -59,21 +56,14 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
           onValueChange={setInput}
           onSubmit={() => search(input)}
           onClear={() => {
+            setInput('');
             setQuery('');
-            setHasSearched(false);
             setSelectedIds(new Set());
           }}
         />
       </div>
 
-      {!hasSearched ? (
-        <div className="compact-state compact-state--column">
-          <span>검색어를 입력하거나 현재 단계의 전체 제공 항목을 확인해 보세요.</span>
-          <Button type="button" variant="text" disabled={disabled} onClick={() => search('')}>
-            전체 제공 항목 보기
-          </Button>
-        </div>
-      ) : result.isPending ? (
+      {result.isPending ? (
         <div className="compact-state" role="status">
           <span className="spinner" /> 항목을 불러오는 중이에요.
         </div>
@@ -117,7 +107,7 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
         </ul>
       )}
 
-      {hasSearched && result.hasNextPage && (
+      {result.hasNextPage && (
         <Button
           variant="secondary"
           fullWidth
@@ -130,21 +120,16 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
         </Button>
       )}
       <div className="item-picker__bottom-actions">
-        <BottomActionArea sticky={false}>
-          <div className="item-picker__actions">
-            <Button variant="secondary" type="button" disabled={disabled} onClick={onCancel}>
-              취소
-            </Button>
-            <Button
-              fullWidth
-              className="item-picker__add"
-              type="button"
-              disabled={disabled || selectedIds.size === 0}
-              onClick={addSelected}
-            >
-              선택한 {selectedIds.size}개 항목 추가
-            </Button>
-          </div>
+        <BottomActionArea sticky={false} divider={false}>
+          <Button
+            fullWidth
+            className="item-picker__add"
+            type="button"
+            disabled={disabled || selectedIds.size === 0}
+            onClick={addSelected}
+          >
+            선택한 {selectedIds.size}개 항목 추가
+          </Button>
         </BottomActionArea>
       </div>
     </section>

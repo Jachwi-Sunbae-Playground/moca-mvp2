@@ -102,6 +102,7 @@ const ResolvedChecklistDetail = ({ config, checklistId }: { config: PublicConfig
           className={styles.topNavigation}
           title={isAddingItems ? '체크 항목 편집' : checklistStageMeta[checklist.stage].label}
           backLabel={isAddingItems ? '체크리스트 편집으로 돌아가기' : '체크리스트 목록으로 돌아가기'}
+          navigationIcon={isAddingItems ? 'close' : 'arrow-left'}
           {...(isAddingItems
             ? { onBack: () => setSearchParams({}, { replace: true }) }
             : { backTo: `/checklists/${checklist.stage}` })}

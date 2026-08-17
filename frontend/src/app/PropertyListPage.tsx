@@ -35,6 +35,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
     return statusFilter === 'COMPLETED' ? isCompleted : !isCompleted;
   });
   const totalElements = properties.data?.pages[0]?.totalElements ?? 0;
+  const hasInitialError = properties.isError && !properties.isFetchNextPageError;
   const shouldFocusHeading = (location.state as { focusHeading?: boolean } | null)?.focusHeading === true;
 
   useEffect(() => {
@@ -104,7 +105,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
           </div>
         )}
 
-        {properties.isError && !properties.isFetchNextPageError && (
+        {hasInitialError && (
           <div className={styles.errorState}>
             <InlineNotice tone="error">
               <strong>매물 목록을 불러오지 못했어요.</strong>
@@ -153,7 +154,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
           </>
         )}
 
-        {filteredItems.length > 0 && (
+        {!hasInitialError && filteredItems.length > 0 && (
           <section className={styles.cardList} aria-label="매물 목록">
             {filteredItems.map((property) => (
               <PropertyCard key={property.propertyId} property={property} />
@@ -165,7 +166,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
           <EmptyState title="해당 상태의 매물이 없어요." description="다른 상태를 선택해 보세요." />
         )}
 
-        {properties.hasNextPage && (
+        {!hasInitialError && properties.hasNextPage && (
           <div className={styles.loadMore}>
             {properties.isFetchNextPageError && (
               <InlineNotice tone="error">다음 매물을 불러오지 못했어요. 기존 목록은 그대로 유지됩니다.</InlineNotice>
@@ -182,7 +183,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
           </div>
         )}
 
-        {items.length > 0 && (
+        {!hasInitialError && items.length > 0 && (
           <div className={styles.bottomAdd}>
             <ButtonLink to="/properties/new" variant="secondary" fullWidth>
               <Icon name="plus" size={16} /> 매물 추가

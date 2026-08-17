@@ -576,7 +576,9 @@ describe('FE-2 사진과 삭제 확인', () => {
       input,
       [1, 2, 3].map((number) => new File([new Uint8Array([number])], `photo-${number}.jpg`, { type: 'image/jpeg' })),
     );
-    await waitFor(() => expect(screen.getAllByText('업로드 완료')).toHaveLength(2));
+    await waitFor(() => expect(uploadCalls).toBe(3));
+    expect(screen.queryByText('업로드 결과')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '결과 지우기' })).not.toBeInTheDocument();
     expect(screen.getByText('사진을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')).toBeInTheDocument();
     expect(uploadCalls).toBe(3);
     expect(maxActiveUploads).toBe(1);

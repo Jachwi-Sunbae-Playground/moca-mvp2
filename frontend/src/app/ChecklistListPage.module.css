@@ -36,6 +36,10 @@
   list-style: none;
 }
 
+.emptyAction {
+  margin: 1.25rem 1rem 0;
+}
+
 .container > :global(.content-state),
 .container > :global(.load-more) {
   margin-right: 1rem;

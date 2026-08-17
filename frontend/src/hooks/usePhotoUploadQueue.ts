@@ -91,5 +91,5 @@ export const usePhotoUploadQueue = (config: PublicConfig, propertyId: number, cu
     setIsUploading(false);
   };
 
-  return { items, isUploading, uploadFiles, clearItems: () => setItems([]) };
+  return { items, isUploading, uploadFiles };
 };

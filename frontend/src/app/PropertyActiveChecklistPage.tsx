@@ -177,7 +177,7 @@ const ResolvedPropertyActiveChecklist = ({
         {items.length === 0 ? (
           <div className="content-state">
             <strong>선택할 체크리스트가 없어요.</strong>
-            <ButtonLink variant="soft" to={createPath}>
+            <ButtonLink variant="secondary" to={createPath}>
               이 단계 체크리스트 만들기
             </ButtonLink>
           </div>
@@ -245,21 +245,23 @@ const ResolvedPropertyActiveChecklist = ({
             체크리스트는 연결했지만 체크 화면을 열지 못했어요. 매물 상세에서 다시 시작해 주세요.
           </p>
         )}
-        <div className={styles.bottomAction}>
-          <BottomActionArea divider={false}>
-            <Button
-              variant="soft"
-              fullWidth
-              isLoading={assign.isPending || startVisit.isPending}
-              loadingLabel={assign.isPending ? '연결 중…' : '체크 화면 여는 중…'}
-              type="button"
-              disabled={selectedId === null || !selectionChanged || assign.isPending || startVisit.isPending}
-              onClick={() => void saveSelection()}
-            >
-              {current === null ? '이 체크리스트 연결' : selectionChanged ? '선택한 체크리스트로 교체' : '연결됨'}
-            </Button>
-          </BottomActionArea>
-        </div>
+        {selectedId !== null && selectionChanged && (
+          <div className={styles.bottomAction}>
+            <BottomActionArea divider={false}>
+              <Button
+                variant="soft"
+                fullWidth
+                isLoading={assign.isPending || startVisit.isPending}
+                loadingLabel={assign.isPending ? '연결 중…' : '체크 화면 여는 중…'}
+                type="button"
+                disabled={assign.isPending || startVisit.isPending}
+                onClick={() => void saveSelection()}
+              >
+                {current === null ? '이 체크리스트 연결' : '선택한 체크리스트로 교체'}
+              </Button>
+            </BottomActionArea>
+          </div>
+        )}
       </div>
     </main>
   );
