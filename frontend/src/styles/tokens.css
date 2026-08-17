@@ -1,25 +1,84 @@
 :root {
-  --color-cream: #f8f3e8;
-  --color-surface: #fffdfa;
-  --color-surface-muted: #edf2e7;
-  --color-ink: #26321d;
-  --color-ink-soft: #526048;
-  --color-muted: #7a806f;
-  --color-primary: #647f3d;
-  --color-primary-dark: #3f5628;
-  --color-accent: #e1b84d;
-  --color-border: #e1d7c3;
+  /* Tea Green scale based on #CBEFB6 and its Coolors tints/shades. */
+  --color-brand-50: #f8fdf5;
+  --color-brand-100: #edf9e6;
+  --color-brand-200: #e2f6d6;
+  --color-brand-300: #cbefb6;
+  --color-brand-400: #a9e586;
+  --color-brand-500: #74d43c;
+  --color-brand-600: #58ae26;
+  --color-brand-700: #3f7c1b;
+  --color-brand-800: #326316;
+  --color-brand-900: #264a10;
+
+  /* Change this single accent to retheme selected tabs, progress indicators and soft actions together. */
+  --color-theme-accent: var(--color-brand-300);
+  --color-theme-accent-strong: color-mix(in srgb, var(--color-theme-accent) 84%, var(--color-ink));
+
+  /* Neutral surfaces and readable foregrounds. */
+  --color-canvas: var(--color-brand-50);
+  --color-cream: var(--color-brand-50);
+  --color-surface: #fff;
+  --color-surface-muted: #f4fcf0;
+  --color-surface-neutral: #f3f5f3;
+  --color-surface-disabled: #f1f2f0;
+  --color-surface-brand: var(--color-brand-100);
+  --color-surface-brand-strong: var(--color-theme-accent);
+  --color-ink: #171c18;
+  --color-ink-soft: #465148;
+  --color-muted: #69736b;
+  --color-placeholder: #9aa29c;
+  --color-border: #d3d8d0;
+  --color-border-strong: #b8c7b3;
+  --color-search-surface: #ecefeb;
+  --color-search-foreground: #303631;
+  --color-search-placeholder: #7c857e;
+  --color-on-brand-soft: #526057;
+
+  /* Form submit actions stay distinct from the lighter navigation accent. */
+  --color-action: #9ab973;
+  --color-action-hover: #82a754;
+  --color-on-action: #fff;
+
+  /* Interactive colors use darker shades so text keeps sufficient contrast. */
+  --color-primary: var(--color-brand-700);
+  --color-primary-strong: var(--color-brand-800);
+  --color-primary-dark: var(--color-brand-900);
+  --color-focus: var(--color-brand-700);
+  --color-on-primary: #fff;
+
+  /* Semantic colors stay separate from the brand palette. */
+  --color-accent: #efbd48;
+  --color-warning: #b37b06;
+  --color-warning-ink: #75520a;
+  --color-warning-surface: #fff7dc;
   --color-error: #a83b32;
   --color-error-surface: #fff1ee;
-  --color-success: #3f6d31;
-  --shadow-soft: 0 0.7rem 1.8rem rgb(55 44 20 / 10%);
-  --shadow-button: 0 0.35rem 0.8rem rgb(66 49 18 / 14%);
+  --color-success: var(--color-brand-700);
+  --color-success-surface: var(--color-brand-100);
+  --color-check-good: var(--color-brand-300);
+  --color-check-good-ink: var(--color-brand-700);
+  --color-check-caution: #f4d58d;
+  --color-check-caution-ink: #9a6b16;
+  --color-check-unconfirmed: #dfe4dc;
+  --color-check-unconfirmed-ink: #69736b;
+
+  --color-overlay: rgb(23 28 24 / 56%);
+  --color-overlay-strong: rgb(23 28 24 / 78%);
+  --color-surface-translucent: rgb(255 255 255 / 96%);
+  /* 기존 화면이 공용 토큰으로 이동하는 동안 유지하는 호환 토큰입니다. */
+  --shadow-soft: 0 0.7rem 1.8rem rgb(23 28 24 / 10%);
+  --shadow-button: 0 0.35rem 0.8rem rgb(23 28 24 / 12%);
+  --shadow-app-shell: 0 0 2.5rem rgb(23 28 24 / 12%);
   --radius-sm: 0.65rem;
-  --radius-md: 1rem;
-  --radius-lg: 1.65rem;
+  --radius-md: 0.9rem;
+  --radius-lg: 1.25rem;
   --space-xs: 0.4rem;
   --space-sm: 0.75rem;
   --space-md: 1rem;
   --space-lg: 1.5rem;
   --space-xl: 2rem;
+  --app-max-width: 24.375rem;
+  --app-bar-height: 3.5rem;
+  --bottom-navigation-height: 4.7rem;
 }

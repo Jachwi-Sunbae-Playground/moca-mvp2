@@ -16,14 +16,18 @@
 
 html {
   min-height: 100%;
-  background: var(--color-cream);
+  background: var(--color-surface);
 }
 
 body {
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
-  background: radial-gradient(circle at 50% -8rem, rgb(255 255 255 / 82%), transparent 28rem), var(--color-cream);
+  background: var(--color-surface);
+}
+
+#root {
+  min-height: 100vh;
 }
 
 button,
@@ -39,7 +43,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid #1859a9;
+  outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
 
@@ -51,5 +55,12 @@ textarea:focus-visible {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
+  }
+}
+
+@media (max-width: 430px) {
+  html,
+  body {
+    background: var(--color-surface);
   }
 }
