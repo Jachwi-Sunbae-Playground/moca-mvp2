@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { checklistStageMeta } from '../constants/checklist';
 import { useActiveCheckItems } from '../hooks/query/useChecklists';
 import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
-import type { ChecklistDetail, ChecklistStage } from '../types/Checklist';
+import type { CheckItem, ChecklistDetail, ChecklistStage } from '../types/Checklist';
 import { checkItemToEditorItem, checklistItemToEditorItem, type ChecklistEditorItem } from '../types/ChecklistEditor';
 import type { PublicConfig } from '../types/PublicConfig';
 import {
@@ -13,6 +12,10 @@ import {
 } from '../utils/checklistEditor';
 import { validateChecklistName } from '../utils/checklist';
 import CheckItemPicker from './CheckItemPicker';
+import BottomActionArea from './ui/BottomActionArea';
+import { Button } from './ui/Button';
+import TextAreaField from './ui/TextAreaField';
+import TextField from './ui/TextField';
 
 type ChecklistEditorProps = {
   config: PublicConfig;
@@ -22,6 +25,8 @@ type ChecklistEditorProps = {
   submitLabel: string;
   isSubmitting: boolean;
   serverError?: string;
+  viewMode?: 'EDIT' | 'ADD_ITEMS';
+  onViewModeChange?: (mode: 'EDIT' | 'ADD_ITEMS') => void;
   onNameChange?: (name: string) => void;
   onDirtyChange?: (isDirty: boolean) => void;
   onSubmit: (input: { name: string; items: ChecklistEditorItem[] }) => Promise<ChecklistDetail>;
@@ -35,6 +40,8 @@ const ChecklistEditor = ({
   submitLabel,
   isSubmitting,
   serverError,
+  viewMode = 'EDIT',
+  onViewModeChange,
   onNameChange,
   onDirtyChange,
   onSubmit,
@@ -49,7 +56,16 @@ const ChecklistEditor = ({
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const [pendingFocusKey, setPendingFocusKey] = useState<string | null>(null);
+  const [draggingKey, setDraggingKey] = useState<string | null>(null);
+  const [dragOverKey, setDragOverKey] = useState<string | null>(null);
   const nextCustomKey = useRef(0);
+  const pointerDragRef = useRef<{
+    sourceKey: string;
+    targetKey: string;
+    startX: number;
+    startY: number;
+    hasMoved: boolean;
+  } | null>(null);
   const customInputRef = useRef<HTMLTextAreaElement>(null);
   const itemFocusTargets = useRef(new Map<string, HTMLElement>());
   const submissionInFlight = useRef(false);
@@ -99,11 +115,24 @@ const ChecklistEditor = ({
   const customInputValidationMessage =
     customInputError ?? '입력 중인 직접 질문을 목록에 추가하거나 입력란을 비워 주세요.';
 
-  const move = (index: number, direction: -1 | 1) => {
+  const move = (index: number, direction: -1 | 1, focusContent = true) => {
     const item = items[index];
     setItems(moveEditorItem(items, index, direction));
-    setPendingFocusKey(item.clientKey);
+    if (focusContent) setPendingFocusKey(item.clientKey);
     setAnnouncement(`${item.question} 항목을 ${direction === -1 ? '위로' : '아래로'} 이동했어요.`);
+  };
+
+  const reorder = (sourceKey: string, targetKey: string) => {
+    const sourceIndex = items.findIndex((item) => item.clientKey === sourceKey);
+    const targetIndex = items.findIndex((item) => item.clientKey === targetKey);
+    if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return;
+
+    const nextItems = [...items];
+    const [movedItem] = nextItems.splice(sourceIndex, 1);
+    if (movedItem === undefined) return;
+    nextItems.splice(targetIndex, 0, movedItem);
+    setItems(nextItems);
+    setAnnouncement(`${movedItem.question} 항목을 ${targetIndex + 1}번째로 이동했어요.`);
   };
 
   const remove = (index: number) => {
@@ -138,6 +167,31 @@ const ChecklistEditor = ({
     setAnnouncement(`${question} 직접 추가 항목을 목록 끝에 추가했어요.`);
   };
 
+  const addProvidedItems = (newItems: CheckItem[]) => {
+    const existingIds = new Set(items.flatMap((item) => (item.origin === 'PROVIDED' ? [item.sourceCheckItemId] : [])));
+    const additions = newItems.filter((item) => !existingIds.has(item.checkItemId)).map(checkItemToEditorItem);
+    if (additions.length === 0) return;
+    setItems((current) => [...current, ...additions]);
+    setPendingFocusKey(additions[0].clientKey);
+    setAnnouncement(`${additions.length}개 제공 항목을 목록 끝에 추가했어요.`);
+    onViewModeChange?.('EDIT');
+  };
+
+  if (viewMode === 'ADD_ITEMS') {
+    return (
+      <div className="checklist-editor checklist-item-picker-view">
+        <CheckItemPicker
+          config={config}
+          stage={stage}
+          existingSourceIds={items.flatMap((item) => (item.origin === 'PROVIDED' ? [item.sourceCheckItemId] : []))}
+          disabled={isSubmitting}
+          onCancel={() => onViewModeChange?.('EDIT')}
+          onAdd={addProvidedItems}
+        />
+      </div>
+    );
+  }
+
   return (
     <form
       className="checklist-editor"
@@ -171,46 +225,34 @@ const ChecklistEditor = ({
       }}
     >
       <section className="editor-section">
-        <div className="form-field">
-          <label htmlFor="checklist-name">체크리스트 이름</label>
-          <input
-            id="checklist-name"
-            value={name}
-            maxLength={50}
-            disabled={isSubmitting}
-            aria-invalid={hasSubmitted && nameError !== null}
-            aria-describedby={hasSubmitted && nameError !== null ? 'checklist-name-error' : 'checklist-name-help'}
-            onChange={(event) => {
-              setName(event.target.value);
-              onNameChange?.(event.target.value);
-            }}
-          />
-          <p id="checklist-name-help" className="field-help">
-            같은 단계에서 같은 이름을 여러 번 사용할 수 있어요. {name.length}/50
-          </p>
-          {hasSubmitted && nameError !== null && (
-            <p id="checklist-name-error" className="field-error">
-              {nameError}
-            </p>
-          )}
-        </div>
-        <dl className="fixed-stage">
-          <dt>확인 단계</dt>
-          <dd>{checklistStageMeta[stage].label}</dd>
-        </dl>
+        <TextField
+          id="checklist-name"
+          fieldClassName="checklist-editor__name-field"
+          label="체크리스트 이름"
+          value={name}
+          maxLength={50}
+          disabled={isSubmitting}
+          helpText={`같은 단계에서 같은 이름을 여러 번 사용할 수 있어요. ${name.length}/50`}
+          error={hasSubmitted && nameError !== null ? nameError : undefined}
+          onChange={(event) => {
+            setName(event.target.value);
+            onNameChange?.(event.target.value);
+          }}
+        />
       </section>
 
       <section className="editor-section" aria-labelledby="selected-items-heading">
         <div className="section-heading-row">
           <div>
-            <p className="section-eyebrow">선택한 항목</p>
             <h2 id="selected-items-heading">확인 순서</h2>
           </div>
           <span className="selection-count">{items.length}개</span>
         </div>
         <p className="field-help">제공 항목과 직접 추가한 질문을 섞어 원하는 확인 순서로 저장할 수 있어요.</p>
         {items.length === 0 ? (
-          <p className="compact-state">아래에서 제공 항목이나 직접 만든 질문을 한 개 이상 추가해 주세요.</p>
+          <p className="compact-state checklist-editor__empty-items">
+            아래에서 제공 항목이나 직접 만든 질문을 한 개 이상 추가해 주세요.
+          </p>
         ) : (
           <ol className="selected-check-items">
             {items.map((item, index) => {
@@ -218,12 +260,78 @@ const ChecklistEditor = ({
               const isInactiveProvided =
                 item.origin === 'PROVIDED' && activeCatalog.isSuccess && !activeSourceIds.has(item.sourceCheckItemId);
               return (
-                <li key={item.clientKey}>
+                <li
+                  key={item.clientKey}
+                  data-editor-item-key={item.clientKey}
+                  data-dragging={draggingKey === item.clientKey || undefined}
+                  data-drag-over={dragOverKey === item.clientKey || undefined}
+                >
+                  <button
+                    type="button"
+                    className="selected-check-items__drag-handle"
+                    disabled={isSubmitting}
+                    aria-label={`${item.question || '빈 직접 추가 질문'} 순서 변경`}
+                    onKeyDown={(event) => {
+                      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+                      event.preventDefault();
+                      move(index, event.key === 'ArrowUp' ? -1 : 1, false);
+                    }}
+                    onPointerDown={(event) => {
+                      if (!event.isPrimary || event.button !== 0 || isSubmitting) return;
+                      if (event.pointerType !== 'mouse') event.preventDefault();
+                      event.currentTarget.setPointerCapture(event.pointerId);
+                      pointerDragRef.current = {
+                        sourceKey: item.clientKey,
+                        targetKey: item.clientKey,
+                        startX: event.clientX,
+                        startY: event.clientY,
+                        hasMoved: false,
+                      };
+                    }}
+                    onPointerMove={(event) => {
+                      const drag = pointerDragRef.current;
+                      if (drag === null) return;
+                      const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+                      if (!drag.hasMoved && distance < 5) return;
+                      drag.hasMoved = true;
+                      event.preventDefault();
+                      const targetKey = document
+                        .elementFromPoint(event.clientX, event.clientY)
+                        ?.closest<HTMLElement>('[data-editor-item-key]')?.dataset.editorItemKey;
+                      if (targetKey === undefined) return;
+                      drag.targetKey = targetKey;
+                      setDraggingKey(drag.sourceKey);
+                      setDragOverKey(targetKey === drag.sourceKey ? null : targetKey);
+                    }}
+                    onPointerUp={(event) => {
+                      const drag = pointerDragRef.current;
+                      if (drag === null) return;
+                      if (drag.hasMoved && drag.sourceKey !== drag.targetKey) {
+                        reorder(drag.sourceKey, drag.targetKey);
+                      }
+                      pointerDragRef.current = null;
+                      setDraggingKey(null);
+                      setDragOverKey(null);
+                      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                        event.currentTarget.releasePointerCapture(event.pointerId);
+                      }
+                    }}
+                    onPointerCancel={(event) => {
+                      pointerDragRef.current = null;
+                      setDraggingKey(null);
+                      setDragOverKey(null);
+                      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                        event.currentTarget.releasePointerCapture(event.pointerId);
+                      }
+                    }}
+                  >
+                    <span aria-hidden="true">≡</span>
+                  </button>
                   <span className="selected-check-items__number" aria-hidden="true">
-                    {index + 1}
+                    {String(index + 1).padStart(2, '0')}
                   </span>
                   <div className="selected-check-items__copy">
-                    <span className={`item-origin item-origin--${item.origin.toLowerCase()}`}>
+                    <span className={`sr-only item-origin item-origin--${item.origin.toLowerCase()}`}>
                       {item.origin === 'PROVIDED' ? '제공 항목' : '직접 추가'}
                     </span>
                     {item.origin === 'PROVIDED' ? (
@@ -283,28 +391,12 @@ const ChecklistEditor = ({
                   <span className="selected-check-items__actions">
                     <button
                       type="button"
-                      disabled={isSubmitting || index === 0}
-                      aria-label={`${item.question || '빈 직접 추가 질문'} 위로 이동`}
-                      onClick={() => move(index, -1)}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isSubmitting || index === items.length - 1}
-                      aria-label={`${item.question || '빈 직접 추가 질문'} 아래로 이동`}
-                      onClick={() => move(index, 1)}
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
                       className="remove-item-button"
                       disabled={isSubmitting}
                       aria-label={`${item.question || '빈 직접 추가 질문'} 제거`}
                       onClick={() => remove(index)}
                     >
-                      제거
+                      <span aria-hidden="true">×</span>
                     </button>
                   </span>
                 </li>
@@ -319,54 +411,39 @@ const ChecklistEditor = ({
         )}
       </section>
 
-      <section className="editor-section" aria-labelledby="custom-item-heading">
-        <p className="section-eyebrow">직접 추가</p>
+      <Button
+        type="button"
+        variant="neutral"
+        fullWidth
+        className="checklist-editor__open-picker"
+        disabled={isSubmitting}
+        onClick={() => onViewModeChange?.('ADD_ITEMS')}
+      >
+        + 체크 항목 추가
+      </Button>
+
+      <section
+        className="editor-section checklist-editor__custom-question-section"
+        aria-labelledby="custom-item-heading"
+      >
         <h2 id="custom-item-heading">나만의 질문 추가</h2>
-        <div className="form-field custom-question-adder">
-          <label htmlFor="new-custom-question">질문</label>
-          <textarea
+        <div className="custom-question-adder">
+          <TextAreaField
             id="new-custom-question"
             ref={customInputRef}
+            label="질문"
             value={customInput}
             rows={3}
             disabled={isSubmitting}
-            aria-invalid={hasAttemptedCustomAdd}
-            aria-describedby={
-              hasAttemptedCustomAdd ? 'new-custom-question-help new-custom-question-error' : 'new-custom-question-help'
-            }
+            helpText={`이 체크리스트에만 저장되며 같은 질문도 여러 번 추가할 수 있어요. ${unicodeCodePointLength(customInput.trim())}/200`}
+            error={hasAttemptedCustomAdd ? customInputValidationMessage : undefined}
             onChange={(event) => setCustomInput(event.target.value)}
           />
-          <p id="new-custom-question-help" className="field-help">
-            이 체크리스트에만 저장되며 같은 질문도 여러 번 추가할 수 있어요.{' '}
-            {unicodeCodePointLength(customInput.trim())}/200
-          </p>
-          {hasAttemptedCustomAdd && (
-            <p id="new-custom-question-error" className="field-error">
-              {customInputValidationMessage}
-            </p>
-          )}
-          <button type="button" className="secondary-button" disabled={isSubmitting} onClick={addCustomItem}>
+          <Button type="button" variant="neutral" fullWidth disabled={isSubmitting} onClick={addCustomItem}>
             직접 질문 추가
-          </button>
+          </Button>
         </div>
       </section>
-
-      <CheckItemPicker
-        config={config}
-        stage={stage}
-        existingSourceIds={items.flatMap((item) => (item.origin === 'PROVIDED' ? [item.sourceCheckItemId] : []))}
-        disabled={isSubmitting}
-        onAdd={(newItems) => {
-          const existingIds = new Set(
-            items.flatMap((item) => (item.origin === 'PROVIDED' ? [item.sourceCheckItemId] : [])),
-          );
-          const additions = newItems.filter((item) => !existingIds.has(item.checkItemId)).map(checkItemToEditorItem);
-          if (additions.length === 0) return;
-          setItems((current) => [...current, ...additions]);
-          setPendingFocusKey(additions[0].clientKey);
-          setAnnouncement(`${additions.length}개 제공 항목을 목록 끝에 추가했어요.`);
-        }}
-      />
 
       <p className="editor-save-status" role="status" aria-live="polite">
         {announcement}
@@ -376,10 +453,12 @@ const ChecklistEditor = ({
           {serverError} 작성한 내용은 그대로 유지됩니다. 같은 버튼으로 다시 시도할 수 있어요.
         </p>
       )}
-      <div className="sticky-form-action">
-        <button className="primary-button" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? '저장 중…' : submitLabel}
-        </button>
+      <div className="checklist-editor__actions">
+        <BottomActionArea>
+          <Button type="submit" variant="soft" fullWidth isLoading={isSubmitting} loadingLabel="저장 중…">
+            {submitLabel}
+          </Button>
+        </BottomActionArea>
       </div>
     </form>
   );

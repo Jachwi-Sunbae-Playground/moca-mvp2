@@ -2,11 +2,14 @@ import { Link, useParams } from 'react-router-dom';
 import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import ChecklistListCard from '../components/ChecklistListCard';
 import ChecklistStageTabs from '../components/ChecklistStageTabs';
-import PageHeading from '../components/PageHeading';
-import { checklistStageMeta, isChecklistStage } from '../constants/checklist';
+import { ButtonLink } from '../components/ui/Button';
+import Icon from '../components/ui/Icon';
+import TopNavigation from '../components/ui/TopNavigation';
+import { isChecklistStage } from '../constants/checklist';
 import { useChecklistList } from '../hooks/query/useChecklists';
 import type { ChecklistStage } from '../types/Checklist';
 import type { PublicConfig } from '../types/PublicConfig';
+import styles from './ChecklistListPage.module.css';
 
 const ChecklistListPage = ({ config }: { config: PublicConfig }) => {
   const { resource: stageParam } = useParams();
@@ -19,7 +22,7 @@ const InvalidStage = () => (
     <div className="page-container">
       <div className="content-state">
         <strong>올바른 체크리스트 단계가 아니에요.</strong>
-        <Link to="/checklists">체크리스트 홈으로 돌아가기</Link>
+        <Link to="/checklists">내 체크리스트로 돌아가기</Link>
       </div>
     </div>
   </main>
@@ -30,20 +33,26 @@ const ResolvedChecklistListPage = ({ config, stage }: { config: PublicConfig; st
   const items = list.data?.pages.flatMap((page) => page.content) ?? [];
 
   return (
-    <main className="property-page checklist-page">
-      <div className="page-container checklist-page__narrow">
-        <PageHeading
-          title="내 체크리스트"
-          description={checklistStageMeta[stage].description}
-          backTo="/checklists"
-          backLabel="체크리스트 홈"
-        />
-        <ChecklistStageTabs stage={stage} />
-        <div className="page-primary-action">
-          <Link className="primary-link" to={`/checklists/new?stage=${stage}`}>
-            새 체크리스트
-          </Link>
+    <main className={styles.page}>
+      <div className={styles.container}>
+        <div className={styles.navigationArea}>
+          <TopNavigation
+            title="내 체크리스트"
+            className={styles.topNavigation}
+            endSlot={
+              <ButtonLink
+                className={styles.createAction}
+                variant="text"
+                to={`/checklists/new?stage=${stage}`}
+                aria-label="새 체크리스트"
+              >
+                <Icon name="plus" size={15} /> 추가
+              </ButtonLink>
+            }
+          />
+          <ChecklistStageTabs stage={stage} fullBleed />
         </div>
+        <h1 className="sr-only">내 체크리스트</h1>
         {list.isPending ? (
           <div className="content-state" role="status">
             <span className="spinner" />
@@ -63,9 +72,9 @@ const ResolvedChecklistListPage = ({ config, stage }: { config: PublicConfig; st
             <span>프리셋으로 빠르게 시작해 보세요.</span>
           </div>
         ) : (
-          <ul className="checklist-list">
+          <ul className={styles.list}>
             {items.map((item) => (
-              <ChecklistListCard key={item.checklistId} config={config} checklist={item} />
+              <ChecklistListCard key={item.checklistId} checklist={item} />
             ))}
           </ul>
         )}

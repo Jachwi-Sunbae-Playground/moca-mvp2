@@ -8,8 +8,17 @@ if (rootElement === null) {
   throw new Error('React 루트 요소를 찾을 수 없습니다.');
 }
 
-createRoot(rootElement).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+const startApplication = async () => {
+  if (__ENABLE_MSW__) {
+    const { startBrowserMocking } = await import('./mocks/browser');
+    await startBrowserMocking();
+  }
+
+  createRoot(rootElement).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+};
+
+void startApplication();

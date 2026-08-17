@@ -1,0 +1,15 @@
+.page {
+  min-height: calc(100dvh - var(--bottom-navigation-height));
+  background: var(--color-surface);
+}
+
+.container {
+  padding: 0.5rem 1rem 2rem;
+}
+
+.description {
+  margin: 1.25rem 0 0.65rem;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}

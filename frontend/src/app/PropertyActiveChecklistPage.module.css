@@ -1,0 +1,20 @@
+.createLink {
+  min-height: 2.25rem;
+  padding: 0.35rem 0;
+  font-size: 0.76rem;
+}
+
+.selectionHeading {
+  margin-top: 0.85rem;
+}
+
+.loadMore {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.bottomAction > div {
+  margin-right: calc(-1 * clamp(0.85rem, 4vw, 1.5rem));
+  margin-left: calc(-1 * clamp(0.85rem, 4vw, 1.5rem));
+}

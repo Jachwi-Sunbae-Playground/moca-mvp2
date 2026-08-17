@@ -66,9 +66,9 @@ export const validatePropertyForm = (values: PropertyFormValues): PropertyFormEr
   }
 
   if (discoverySource.length === 0) {
-    errors.discoverySource = '매물을 발견한 경로나 출처를 입력해 주세요.';
+    errors.discoverySource = '매물을 확인한 곳을 입력해 주세요.';
   } else if (countCodePoints(discoverySource) > 500) {
-    errors.discoverySource = '발견 경로는 500자 이하로 입력해 주세요.';
+    errors.discoverySource = '확인한 곳은 500자 이하로 입력해 주세요.';
   }
 
   return errors;
@@ -95,7 +95,7 @@ export const propertyFieldErrorMessage = (field: PropertyFormField): string => {
     name: '서버에서 매물 이름을 확인하지 못했습니다.',
     depositAmount: '서버에서 보증금 값을 확인하지 못했습니다.',
     monthlyRentAmount: '서버에서 월세 값을 확인하지 못했습니다.',
-    discoverySource: '서버에서 발견 경로를 확인하지 못했습니다.',
+    discoverySource: '서버에서 확인한 곳을 확인하지 못했습니다.',
   };
 
   return messages[field];

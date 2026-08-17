@@ -1,13 +1,14 @@
-import { useCallback, useRef, useState } from 'react';
-import type { KeyboardEvent } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
 import { getVisitErrorMessage } from '../apis/visitErrorMessages';
-import { checklistStageMeta } from '../constants/checklist';
+import { checklistStageMeta, isChecklistStage } from '../constants/checklist';
+import ChecklistStageTabs from '../components/ChecklistStageTabs';
 import ConfirmDialog from '../components/ConfirmDialog';
-import PageHeading from '../components/PageHeading';
 import VisitAggregateSummary from '../components/VisitAggregateSummary';
 import VisitItemStatusControl from '../components/VisitItemStatusControl';
+import { ButtonLink } from '../components/ui/Button';
+import TopNavigation from '../components/ui/TopNavigation';
 import { useVisitAutosaveRegistry } from '../hooks/query/useVisitAutosaveRegistry';
 import { useCompleteVisit } from '../hooks/query/useVisitMutations';
 import { usePropertyDetail } from '../hooks/query/useProperties';
@@ -18,6 +19,7 @@ import type { ChecklistStage } from '../types/Checklist';
 import type { PublicConfig } from '../types/PublicConfig';
 import type { VisitDetail } from '../types/Visit';
 import { formatDateTime, parsePositiveId } from '../utils/propertyFormat';
+import styles from './VisitDetailPage.module.css';
 
 const VisitDetailPage = ({ config }: { config: PublicConfig }) => {
   const visitId = parsePositiveId(useParams().visitId);
@@ -68,7 +70,11 @@ const ResolvedVisitDetailPage = ({ config, visitId }: { config: PublicConfig; vi
 
 const VisitDetailContent = ({ config, detail }: { config: PublicConfig; detail: VisitDetail }) => {
   const orderedStages = CHECKLIST_STAGES.flatMap((stage) => detail.stages.filter((item) => item.stage === stage));
-  const [selectedStage, setSelectedStage] = useState<ChecklistStage>(orderedStages[0]?.stage ?? 'ONLINE_PHONE');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedStage, setSelectedStage] = useState<ChecklistStage>(() => {
+    const requestedStage = searchParams.get('stage');
+    return isChecklistStage(requestedStage) ? requestedStage : (orderedStages[0]?.stage ?? 'ONLINE_PHONE');
+  });
   const [liveMessage, setLiveMessage] = useState('');
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
   const [isFlushingForCompletion, setIsFlushingForCompletion] = useState(false);
@@ -77,8 +83,13 @@ const VisitDetailContent = ({ config, detail }: { config: PublicConfig; detail: 
   const property = usePropertyDetail(config, detail.propertyId);
   const completion = useCompleteVisit(config, detail);
   const autosave = useVisitAutosaveRegistry();
-  const currentStage = orderedStages.find((stage) => stage.stage === selectedStage) ?? orderedStages[0];
+  const currentStage = orderedStages.find((stage) => stage.stage === selectedStage);
   const title = property.data === undefined ? '방문 기록' : `${property.data.name} 방문`;
+
+  useEffect(() => {
+    const requestedStage = searchParams.get('stage');
+    if (isChecklistStage(requestedStage) && requestedStage !== selectedStage) setSelectedStage(requestedStage);
+  }, [searchParams, selectedStage]);
 
   const handleFlushFailure = useCallback(() => {
     setLiveMessage('저장하지 못한 항목이 있어 화면에 남았습니다. 채널별 다시 저장 버튼을 이용해 주세요.');
@@ -91,29 +102,15 @@ const VisitDetailContent = ({ config, detail }: { config: PublicConfig; detail: 
     onFlushFailure: handleFlushFailure,
   });
 
-  const selectStage = async (stage: ChecklistStage, focusTab = false) => {
-    if (stage === currentStage?.stage) return;
+  const selectStage = async (stage: ChecklistStage) => {
+    if (stage === selectedStage) return true;
     if (autosave.hasPending && !(await autosave.flushAll())) {
       handleFlushFailure();
-      return;
+      return false;
     }
     setSelectedStage(stage);
-    if (focusTab) window.setTimeout(() => document.getElementById(`visit-tab-${stage}`)?.focus(), 0);
-  };
-
-  const moveStageFocus = (event: KeyboardEvent<HTMLButtonElement>, currentIndex: number) => {
-    let nextIndex: number | null = null;
-
-    if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % orderedStages.length;
-    if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + orderedStages.length) % orderedStages.length;
-    if (event.key === 'Home') nextIndex = 0;
-    if (event.key === 'End') nextIndex = orderedStages.length - 1;
-    if (nextIndex === null) return;
-
-    event.preventDefault();
-    const nextStage = orderedStages[nextIndex];
-    if (nextStage === undefined) return;
-    void selectStage(nextStage.stage, true);
+    setSearchParams({ stage }, { replace: true });
+    return true;
   };
 
   const complete = async () => {
@@ -141,79 +138,80 @@ const VisitDetailContent = ({ config, detail }: { config: PublicConfig; detail: 
   }, [autosave, completionFlushError]);
 
   return (
-    <main className="property-page visit-detail-page">
-      <div className="page-container">
+    <main className={`property-page ${styles.page}`}>
+      <div className={`page-container ${styles.container}`}>
         <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
           {liveMessage}
         </div>
-        <PageHeading
-          title={title}
-          description={`시작 ${formatDateTime(detail.startedAt)}`}
-          backTo={`/properties/${detail.propertyId}/visits`}
-          backLabel="방문 기록"
+        <TopNavigation
+          title={property.data === undefined ? '매물 체크리스트' : `${property.data.name} 체크리스트`}
+          backTo={`/properties/${detail.propertyId}`}
+          backLabel="매물 상세로 돌아가기"
         />
-        <div className="visit-detail-meta">
+        <h1 className="sr-only">{title}</h1>
+        <div className="sr-only">
+          <time dateTime={detail.startedAt}>시작 {formatDateTime(detail.startedAt)}</time>
           <span data-status={detail.status}>{detail.status === 'COMPLETED' ? '방문 완료' : '확인 진행 중'}</span>
           {detail.completedAt !== null && (
             <time dateTime={detail.completedAt}>최초 완료 {formatDateTime(detail.completedAt)}</time>
           )}
-          <Link to={`/properties/${detail.propertyId}`}>매물 상세</Link>
         </div>
         {property.isError && (
           <p className="form-error" role="alert">
             매물 이름을 불러오지 못했지만 방문 기록은 계속 확인할 수 있어요.
           </p>
         )}
-        <VisitAggregateSummary summary={detail.summary} />
+        <div className="sr-only">
+          <VisitAggregateSummary summary={detail.summary} />
+        </div>
+        <div className={styles.stageTabs}>
+          <ChecklistStageTabs
+            stage={selectedStage}
+            variant="progress"
+            idPrefix={`visit-stage-${detail.visitId}`}
+            onSelect={selectStage}
+          />
+        </div>
+
         {detail.status === 'COMPLETED' && (
-          <p className="visit-completed-note">
+          <p className={styles.completedNote}>
             완료한 방문입니다. 최초 완료 시각은 유지되며 아래 항목은 계속 수정할 수 있어요.
           </p>
         )}
 
-        <div className="visit-stage-tabs" role="tablist" aria-label="방문 확인 단계">
-          {orderedStages.map((stage, index) => (
-            <button
-              key={stage.stage}
-              id={`visit-tab-${stage.stage}`}
-              type="button"
-              role="tab"
-              aria-selected={currentStage?.stage === stage.stage}
-              aria-controls={`visit-panel-${stage.stage}`}
-              tabIndex={currentStage?.stage === stage.stage ? 0 : -1}
-              onClick={() => void selectStage(stage.stage)}
-              onKeyDown={(event) => moveStageFocus(event, index)}
-            >
-              <span>{checklistStageMeta[stage.stage].label}</span>
-              <small>
-                {stage.summary.checkedCount}/{stage.summary.totalCount}
-              </small>
-            </button>
-          ))}
-        </div>
+        {currentStage === undefined && (
+          <section className={styles.unavailableStage} aria-labelledby={`unavailable-stage-${selectedStage}`}>
+            <h2 id={`unavailable-stage-${selectedStage}`}>{checklistStageMeta[selectedStage].shortLabel}</h2>
+            <strong>이 단계에 연결된 체크리스트가 없어요.</strong>
+            <p>체크리스트를 선택하면 새 체크에서 이 단계의 항목을 확인할 수 있어요.</p>
+            <ButtonLink to={`/properties/${detail.propertyId}/active-checklists/${selectedStage}`} variant="secondary">
+              체크리스트 선택하러 가기
+            </ButtonLink>
+          </section>
+        )}
 
         {orderedStages.map((stage) => (
           <section
             key={stage.stage}
             id={`visit-panel-${stage.stage}`}
             role="tabpanel"
-            aria-labelledby={`visit-tab-${stage.stage}`}
-            className="visit-stage-panel"
+            aria-labelledby={`visit-stage-${detail.visitId}-${stage.stage}`}
+            className={styles.stagePanel}
             hidden={currentStage?.stage !== stage.stage}
           >
-            <div className="visit-stage-panel__heading">
-              <div>
-                <p className="section-eyebrow">스냅샷 체크리스트</p>
-                <h2>{stage.checklistName}</h2>
-              </div>
-              <VisitAggregateSummary summary={stage.summary} label={`${checklistStageMeta[stage.stage].label} 집계`} />
+            <div className={styles.stageHeading}>
+              <h2>전체</h2>
+              <strong aria-label={`${stage.summary.totalCount}개 중 ${stage.summary.checkedCount}개 확인`}>
+                {stage.summary.checkedCount}/{stage.summary.totalCount}
+              </strong>
             </div>
-            <p className="section-note">
+            <p className="sr-only">
+              체크리스트 이름: {stage.checklistName}.{' '}
               {stage.sourceChecklistId === null
                 ? '원본 체크리스트는 삭제되었지만 이 방문의 질문은 그대로 보관됩니다.'
                 : '방문 시작 당시 질문을 보관한 사본입니다. 현재 원본과 다를 수 있어요.'}
             </p>
-            <ol className="visit-item-list">
+            <ol className={styles.itemList}>
               {stage.items.map((item) => (
                 <VisitItemStatusControl
                   key={item.visitItemId}
@@ -230,22 +228,22 @@ const VisitDetailContent = ({ config, detail }: { config: PublicConfig; detail: 
           </section>
         ))}
 
-        {detail.status === 'IN_PROGRESS' && (
+        {detail.status === 'IN_PROGRESS' && currentStage !== undefined && (
           <>
             {completionFlushError && (
               <p className="form-error visit-completion-flush-error" role="alert">
                 저장하지 못한 항목이 있어 방문을 완료하지 않았어요. 해당 상태나 메모를 다시 저장한 뒤 완료해 주세요.
               </p>
             )}
-            <div className="sticky-form-action visit-complete-action">
+            <div className={styles.completeAction}>
               <button
                 ref={completeButtonRef}
-                className="primary-button"
+                className={styles.completeButton}
                 type="button"
                 disabled={isFlushingForCompletion || completion.isPending}
                 onClick={() => setIsCompleteDialogOpen(true)}
               >
-                {autosave.hasPending ? '모두 저장하고 방문 완료' : '방문 완료'}
+                {autosave.hasPending ? '모두 저장하고 체크 완료' : '체크 완료 및 저장'}
               </button>
             </div>
           </>

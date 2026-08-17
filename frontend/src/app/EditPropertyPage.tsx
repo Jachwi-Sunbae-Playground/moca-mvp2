@@ -3,13 +3,15 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
 import type { UpdatePropertyRequestDto } from '../apis/dtos/PropertyDto';
 import { getPropertyErrorMessage } from '../apis/propertyErrorMessages';
-import PageHeading from '../components/PageHeading';
 import PropertyForm from '../components/PropertyForm';
+import PropertyPhotoManager from '../components/PropertyPhotoManager';
+import TopNavigation from '../components/ui/TopNavigation';
 import { usePropertyDetail } from '../hooks/query/useProperties';
 import { useUpdateProperty } from '../hooks/query/usePropertyMutations';
 import type { PublicConfig } from '../types/PublicConfig';
 import { formatAmountForInput } from '../utils/propertyForm';
 import { parsePositiveId } from '../utils/propertyFormat';
+import styles from './EditPropertyPage.module.css';
 
 type EditPropertyPageProps = { config: PublicConfig };
 
@@ -71,14 +73,16 @@ const ResolvedEditPropertyPage = ({ config, propertyId }: { config: PublicConfig
   const mutationError = updateMutation.error instanceof ApiError ? updateMutation.error : null;
 
   return (
-    <main className="property-page">
-      <div className="page-container page-container--form">
-        <PageHeading
-          title="매물 기본 정보 수정"
-          description="바뀐 정보만 안전하게 저장합니다."
+    <main className={styles.page}>
+      <div className={styles.container}>
+        <TopNavigation
+          title="매물 정보 수정"
           backTo={`/properties/${propertyId}`}
-          backLabel="매물 상세"
+          backLabel="매물 정보 수정 닫기"
+          navigationIcon="close"
         />
+        <PropertyPhotoManager config={config} propertyId={propertyId} showHeading />
+        <p className={styles.description}>수정할 값을 눌러 내용을 변경해 주세요.</p>
         <PropertyForm
           initialValues={{
             name: initial.name,
@@ -90,6 +94,7 @@ const ResolvedEditPropertyPage = ({ config, propertyId }: { config: PublicConfig
           isSubmitting={updateMutation.isPending}
           mutationError={mutationError}
           formNotice={formNotice}
+          variant="detail"
           onSubmit={(input) => {
             const changes: UpdatePropertyRequestDto = {};
             if (input.name !== initial.name) changes.name = input.name;

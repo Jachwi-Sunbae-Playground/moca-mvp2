@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import ChecklistEditor from '../components/ChecklistEditor';
 import ChecklistStageTabs from '../components/ChecklistStageTabs';
-import PageHeading from '../components/PageHeading';
+import TopNavigation from '../components/ui/TopNavigation';
 import { checklistStageMeta, isChecklistStage } from '../constants/checklist';
 import { useCreateChecklist } from '../hooks/query/useChecklistMutations';
 import { useChecklistPreset } from '../hooks/query/useChecklists';
@@ -12,6 +12,7 @@ import { checkItemToEditorItem } from '../types/ChecklistEditor';
 import type { PublicConfig } from '../types/PublicConfig';
 import { parseChecklistReturnTo } from '../utils/checklist';
 import { toCreateChecklistItems } from '../utils/checklistEditor';
+import styles from './CreateChecklistPage.module.css';
 
 const CreateChecklistPage = ({ config }: { config: PublicConfig }) => {
   const [searchParams] = useSearchParams();
@@ -41,54 +42,67 @@ const ResolvedCreateChecklistPage = ({
   returnTo: string | null;
 }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const safeReturn = parseChecklistReturnTo(returnTo);
   const [startMode, setStartMode] = useState<'EMPTY' | 'ONE_ROOM' | null>(null);
-  const [draftName, setDraftName] = useState('');
   const [editorInitialName, setEditorInitialName] = useState('');
-  const [isEditorDirty, setIsEditorDirty] = useState(false);
   const preset = useChecklistPreset(config, stage, 'ONE_ROOM', startMode === 'ONE_ROOM');
   const create = useCreateChecklist(config);
+  const isAddingItems = searchParams.get('mode') === 'add-items';
 
   const tabTarget = (nextStage: ChecklistStage) => `/checklists/new?stage=${nextStage}`;
 
   return (
-    <main className="property-page checklist-page">
-      <div className="page-container page-container--form">
-        <PageHeading
-          title="새 체크리스트"
-          description={`${checklistStageMeta[stage].label} 단계의 확인 목록을 만들어요.`}
-          backTo={safeReturn?.path ?? `/checklists/${stage}`}
-          backLabel="취소"
+    <main className={`${styles.page} property-page checklist-page checklist-editor-page`}>
+      <div className={`${styles.container} page-container page-container--form`}>
+        <TopNavigation
+          className={styles.topNavigation}
+          title={isAddingItems ? '체크 항목 편집' : '새 체크리스트'}
+          backLabel={isAddingItems ? '새 체크리스트로 돌아가기' : '새 체크리스트 닫기'}
+          navigationIcon={isAddingItems ? 'arrow-left' : 'close'}
+          {...(isAddingItems
+            ? {
+                onBack: () => {
+                  const next = new URLSearchParams(searchParams);
+                  next.delete('mode');
+                  setSearchParams(next, { replace: true });
+                },
+              }
+            : { backTo: safeReturn?.path ?? `/checklists/${stage}` })}
         />
-        <ChecklistStageTabs stage={stage} getTo={tabTarget} />
+        <h1 className="sr-only">새 체크리스트</h1>
+        <ChecklistStageTabs stage={stage} getTo={tabTarget} fullBleed />
 
         {startMode === null ? (
-          <section className="preset-section" aria-labelledby="preset-heading">
-            <p className="section-eyebrow">시작 방식</p>
+          <section className={styles.presetSection} aria-labelledby="preset-heading">
             <h2 id="preset-heading">항목 구성 선택</h2>
             <p>빈 목록이나 원룸 제공 항목으로 시작한 뒤 직접 질문을 섞고 순서를 바꿀 수 있어요.</p>
-            <div className="preset-options">
+            <div className={styles.presetOptions}>
               <button
                 type="button"
+                aria-label="빈 목록으로 시작"
                 onClick={() => {
-                  setEditorInitialName(draftName || `${checklistStageMeta[stage].label} 체크리스트`);
+                  setEditorInitialName(`${checklistStageMeta[stage].label} 체크리스트`);
                   setStartMode('EMPTY');
                 }}
               >
                 <strong>빈 목록</strong>
-                <span>제공 항목을 검색하거나 나만의 질문만으로 구성해요.</span>
-                <small>빈 목록으로 시작 →</small>
+                <span className={styles.chevron} aria-hidden="true">
+                  &gt;
+                </span>
               </button>
               <button
                 type="button"
+                aria-label="원룸 제공 항목으로 시작"
                 onClick={() => {
-                  setEditorInitialName(draftName || `원룸 ${checklistStageMeta[stage].label} 체크리스트`);
+                  setEditorInitialName(`원룸 ${checklistStageMeta[stage].label} 체크리스트`);
                   setStartMode('ONE_ROOM');
                 }}
               >
                 <strong>원룸 제공 항목</strong>
-                <span>원룸을 확인할 때 자주 쓰는 제공 항목을 먼저 불러와요.</span>
-                <small>원룸 항목으로 시작 →</small>
+                <span className={styles.chevron} aria-hidden="true">
+                  &gt;
+                </span>
               </button>
             </div>
           </section>
@@ -109,44 +123,36 @@ const ResolvedCreateChecklistPage = ({
             </button>
           </div>
         ) : (
-          <>
-            <button
-              type="button"
-              className="inline-button preset-change-button"
-              onClick={() => {
-                if (!isEditorDirty || window.confirm('현재 항목 구성을 초기화하고 다른 프리셋을 선택할까요?')) {
-                  setStartMode(null);
-                }
-              }}
-            >
-              시작 방식 변경 (항목 초기화)
-            </button>
-            <ChecklistEditor
-              key={`${stage}-${startMode}`}
-              config={config}
-              stage={stage}
-              initialName={editorInitialName}
-              initialItems={startMode === 'ONE_ROOM' ? (preset.data?.items ?? []).map(checkItemToEditorItem) : []}
-              submitLabel="체크리스트 만들기"
-              isSubmitting={create.isPending}
-              serverError={create.isError ? getChecklistErrorMessage(create.error) : undefined}
-              onNameChange={setDraftName}
-              onDirtyChange={setIsEditorDirty}
-              onSubmit={async ({ name, items }) => {
-                const created = await create.mutateAsync({
-                  name,
-                  stage,
-                  items: toCreateChecklistItems(items),
-                });
-                if (safeReturn !== null && safeReturn.stage === stage) {
-                  navigate(safeReturn.path, { replace: true, state: { newChecklistId: created.checklistId } });
-                } else {
-                  navigate(`/checklists/${created.checklistId}`, { replace: true, state: { focusHeading: true } });
-                }
-                return created;
-              }}
-            />
-          </>
+          <ChecklistEditor
+            key={`${stage}-${startMode}`}
+            config={config}
+            stage={stage}
+            initialName={editorInitialName}
+            initialItems={startMode === 'ONE_ROOM' ? (preset.data?.items ?? []).map(checkItemToEditorItem) : []}
+            submitLabel="체크리스트 만들기"
+            isSubmitting={create.isPending}
+            serverError={create.isError ? getChecklistErrorMessage(create.error) : undefined}
+            viewMode={isAddingItems ? 'ADD_ITEMS' : 'EDIT'}
+            onViewModeChange={(mode) => {
+              const next = new URLSearchParams(searchParams);
+              if (mode === 'ADD_ITEMS') next.set('mode', 'add-items');
+              else next.delete('mode');
+              setSearchParams(next, { replace: mode === 'EDIT' });
+            }}
+            onSubmit={async ({ name, items }) => {
+              const created = await create.mutateAsync({
+                name,
+                stage,
+                items: toCreateChecklistItems(items),
+              });
+              if (safeReturn !== null && safeReturn.stage === stage) {
+                navigate(safeReturn.path, { replace: true, state: { newChecklistId: created.checklistId } });
+              } else {
+                navigate(`/checklists/${created.checklistId}`, { replace: true, state: { focusHeading: true } });
+              }
+              return created;
+            }}
+          />
         )}
       </div>
     </main>

@@ -8,6 +8,11 @@ const isBrowserTestHarness = process.env.BROWSER_TEST_HARNESS === 'true';
 
 module.exports = (_env, argv) => {
   const isProduction = argv.mode === 'production';
+  const isMockingEnabled = !isProduction && process.env.ENABLE_MSW === 'true';
+  const apiBaseUrl = process.env.API_BASE_URL ?? (isMockingEnabled ? 'http://127.0.0.1:3000' : '');
+  const googleClientId = process.env.GOOGLE_CLIENT_ID ?? (isMockingEnabled ? 'local-msw-client' : '');
+  const googleRedirectUri =
+    process.env.GOOGLE_REDIRECT_URI ?? (isMockingEnabled ? 'http://127.0.0.1:3000/oauth/google/callback' : '');
 
   return {
     entry: isBrowserTestHarness ? './src/test-browser/main.tsx' : './src/main.tsx',
@@ -23,9 +28,10 @@ module.exports = (_env, argv) => {
     },
     plugins: [
       new webpack.DefinePlugin({
-        __API_BASE_URL__: JSON.stringify(process.env.API_BASE_URL ?? ''),
-        __GOOGLE_CLIENT_ID__: JSON.stringify(process.env.GOOGLE_CLIENT_ID ?? ''),
-        __GOOGLE_REDIRECT_URI__: JSON.stringify(process.env.GOOGLE_REDIRECT_URI ?? ''),
+        __API_BASE_URL__: JSON.stringify(apiBaseUrl),
+        __GOOGLE_CLIENT_ID__: JSON.stringify(googleClientId),
+        __GOOGLE_REDIRECT_URI__: JSON.stringify(googleRedirectUri),
+        __ENABLE_MSW__: JSON.stringify(isMockingEnabled),
       }),
       new HtmlWebpackPlugin({
         template: './index.html',
@@ -90,7 +96,7 @@ module.exports = (_env, argv) => {
     },
     devServer: {
       static: {
-        directory: path.join(__dirname, 'dist'),
+        directory: path.join(__dirname, 'public'),
       },
       port: 3000,
       open: false,

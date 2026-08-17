@@ -79,11 +79,17 @@ const memoUpdateResult = (visitItemId: number, memo: string, version: number) =>
 });
 
 describe('FE-4 방문 시작과 목록', () => {
-  it('활성 체크리스트 스냅샷 정책을 확인한 뒤 새 방문 상세로 이동한다', async () => {
+  it('연결된 체크리스트를 누르면 새 방문 상세로 이동한다', async () => {
     let startCalls = 0;
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
-        HttpResponse.json(successEnvelope(propertyDetailFixture)),
+        HttpResponse.json(
+          successEnvelope({
+            ...propertyDetailFixture,
+            activeChecklists: [{ stage: 'ONLINE_PHONE', checklistId: 7, name: '전화 문의 기본 목록', itemCount: 2 }],
+            recentVisit: null,
+          }),
+        ),
       ),
       http.post(`${config.apiBaseUrl}/api/properties/10/visits`, () => {
         startCalls += 1;
@@ -98,11 +104,7 @@ describe('FE-4 방문 시작과 목록', () => {
     const user = userEvent.setup();
     renderAuthenticated('/properties/10');
 
-    await user.click(await screen.findByRole('button', { name: '새 방문 시작' }));
-    const dialog = screen.getByRole('dialog', { name: '신림역 원룸 방문을 시작할까요?' });
-    expect(within(dialog).getByText(/질문을 지금 상태 그대로 복사/)).toBeInTheDocument();
-    expect(within(dialog).getByText(/원본 체크리스트를 나중에 수정·교체·삭제해도/)).toBeInTheDocument();
-    await user.click(within(dialog).getByRole('button', { name: '방문 시작' }));
+    await user.click(await screen.findByRole('button', { name: '온라인·전화 체크 시작' }));
 
     expect(await screen.findByRole('heading', { name: '신림역 원룸 방문', level: 1 })).toBeInTheDocument();
     expect(startCalls).toBe(1);
@@ -155,6 +157,19 @@ describe('FE-4 방문 시작과 목록', () => {
 });
 
 describe('FE-4 항목 자동 저장', () => {
+  it('연결되지 않은 단계도 열어 체크리스트 선택 화면으로 이동할 수 있다', async () => {
+    useVisitDetailHandlers();
+    renderAuthenticated('/visits/31?stage=PRE_CONTRACT');
+
+    expect(await screen.findByRole('tab', { name: '계약 전' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('이 단계에 연결된 체크리스트가 없어요.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '체크리스트 선택하러 가기' })).toHaveAttribute(
+      'href',
+      '/properties/10/active-checklists/PRE_CONTRACT',
+    );
+    expect(screen.queryByRole('button', { name: '체크 완료 및 저장' })).not.toBeInTheDocument();
+  });
+
   it('상태 선택 즉시 정본 version만 보내고 같은 값을 다시 저장해도 증가한 version을 반영한다', async () => {
     const requests: { visitItemId: number; body: unknown }[] = [];
     useVisitDetailHandlers();
@@ -190,7 +205,7 @@ describe('FE-4 항목 자동 저장', () => {
     if (goodForNoise !== undefined) await user.click(goodForNoise);
     const cautionForWater = screen.getAllByRole('radio', { name: /^주의/ })[1];
     if (cautionForWater !== undefined) await user.click(cautionForWater);
-    expect(screen.getByRole('button', { name: '모두 저장하고 방문 완료' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '모두 저장하고 체크 완료' })).toBeEnabled();
     expect(screen.getAllByRole('radio', { name: /^괜찮음/ })[0]).toBeEnabled();
     expect(screen.getAllByRole('radio', { name: /^괜찮음/ })[1]).toBeEnabled();
 
@@ -679,8 +694,8 @@ describe('FE-4 완료와 마이페이지', () => {
     const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
 
     fireEvent.change(memo, { target: { value: '이동 전 저장' } });
-    await user.click(screen.getByRole('link', { name: /방문 기록/ }));
-    expect(await screen.findByRole('heading', { name: '신림역 원룸 방문 기록', level: 1 })).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: '매물 상세로 돌아가기' }));
+    expect(await screen.findByRole('heading', { name: '신림역 원룸', level: 1 })).toBeInTheDocument();
     expect(memoBody).toEqual({ memo: '이동 전 저장', expectedMemoVersion: 0 });
   });
 
@@ -746,7 +761,7 @@ describe('FE-4 완료와 마이페이지', () => {
     const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
 
     fireEvent.change(memo, { target: { value: '잃으면 안 되는 메모' } });
-    await user.click(screen.getByRole('link', { name: /방문 기록/ }));
+    await user.click(screen.getByRole('link', { name: '매물 상세로 돌아가기' }));
     await waitFor(() => expect(confirm).toHaveBeenCalledOnce());
     expect(screen.getByRole('heading', { name: '신림역 원룸 방문', level: 1 })).toBeInTheDocument();
     expect(memo).toHaveValue('잃으면 안 되는 메모');
@@ -791,7 +806,7 @@ describe('FE-4 완료와 마이페이지', () => {
 
     await user.click(screen.getByRole('radio', { name: /^괜찮음/ }));
     fireEvent.change(memo, { target: { value: '완료 전 메모' } });
-    await user.click(screen.getByRole('button', { name: '모두 저장하고 방문 완료' }));
+    await user.click(screen.getByRole('button', { name: '모두 저장하고 체크 완료' }));
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: '방문 완료' }));
     expect(await screen.findByText(/완료한 방문입니다/)).toBeInTheDocument();
     expect(events).toContain('status-saved');
@@ -818,7 +833,7 @@ describe('FE-4 완료와 마이페이지', () => {
     const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
 
     fireEvent.change(memo, { target: { value: '완료 전에 꼭 저장' } });
-    await user.click(screen.getByRole('button', { name: '모두 저장하고 방문 완료' }));
+    await user.click(screen.getByRole('button', { name: '모두 저장하고 체크 완료' }));
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: '방문 완료' }));
     expect(await screen.findByText(/저장하지 못한 항목이 있어 방문을 완료하지 않았어요/)).toBeInTheDocument();
     expect(completionCalls).toBe(0);
@@ -828,7 +843,7 @@ describe('FE-4 완료와 마이페이지', () => {
     expect(screen.getByRole('button', { name: '메모 다시 저장' })).toHaveFocus();
 
     fireEvent.blur(memo);
-    await user.click(screen.getByRole('button', { name: '모두 저장하고 방문 완료' }));
+    await user.click(screen.getByRole('button', { name: '모두 저장하고 체크 완료' }));
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: '방문 완료' }));
     await waitFor(() => expect(screen.getByText(/저장하지 못한 항목이 있어 방문을 완료하지 않았어요/)).toBeVisible());
     expect(memoSaveCalls).toBe(1);
@@ -878,7 +893,7 @@ describe('FE-4 완료와 마이페이지', () => {
     const user = userEvent.setup();
     renderAuthenticated('/visits/31');
 
-    await user.click(await screen.findByRole('button', { name: '방문 완료' }));
+    await user.click(await screen.findByRole('button', { name: '체크 완료 및 저장' }));
     const dialog = screen.getByRole('dialog', { name: '이 방문을 완료할까요?' });
     expect(within(dialog).getByText(/미확인 항목이 있어도 완료/)).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: '방문 완료' }));
@@ -904,13 +919,11 @@ describe('FE-4 완료와 마이페이지', () => {
     expect(await screen.findByRole('heading', { name: '마이페이지' })).toBeInTheDocument();
     expect(screen.getByText(memberFixture.email)).toBeInTheDocument();
     expect(screen.getByText('Google 계정으로 로그인됨')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /내 매물/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /비교표/ })).toHaveAttribute('href', '/compare');
     expect(screen.getByRole('link', { name: /내보내기/ })).toHaveAttribute('href', '/export');
     expect(screen.getByRole('link', { name: /선배 팁/ })).toHaveAttribute('href', '/tips');
-    await user.click(
-      screen.getAllByRole('button', { name: '로그아웃' })[1] ?? screen.getByRole('button', { name: '로그아웃' }),
-    );
-    expect(await screen.findByRole('button', { name: 'Google로 로그인하기' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: '현재 로그인' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '로그아웃' }));
+    expect(await screen.findByRole('button', { name: 'Google로 로그인하고 이용하기' })).toBeInTheDocument();
   });
 });

@@ -66,9 +66,6 @@
   --color-overlay: rgb(23 28 24 / 56%);
   --color-overlay-strong: rgb(23 28 24 / 78%);
   --color-surface-translucent: rgb(255 255 255 / 96%);
-  /* 기존 화면이 공용 토큰으로 이동하는 동안 유지하는 호환 토큰입니다. */
-  --shadow-soft: 0 0.7rem 1.8rem rgb(23 28 24 / 10%);
-  --shadow-button: 0 0.35rem 0.8rem rgb(23 28 24 / 12%);
   --shadow-app-shell: 0 0 2.5rem rgb(23 28 24 / 12%);
   --radius-sm: 0.65rem;
   --radius-md: 0.9rem;

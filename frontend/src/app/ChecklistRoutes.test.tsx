@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { MemoryRouter } from 'react-router-dom';
@@ -25,6 +25,7 @@ import {
 } from '../test/checklistFixtures';
 import { errorEnvelope, memberFixture, propertyDetailFixture, successEnvelope } from '../test/propertyFixtures';
 import { server } from '../test/server';
+import { visitDetailFixture } from '../test/visitFixtures';
 import type { PublicConfig } from '../types/PublicConfig';
 import type { ChecklistDetail } from '../types/Checklist';
 
@@ -63,7 +64,7 @@ const useCatalogHandlers = () => {
 };
 
 describe('FE-3 체크리스트 탐색과 편집', () => {
-  it('체크리스트 홈은 세 단계를 표시하고 카탈로그를 미리 조회하지 않는다', async () => {
+  it('체크리스트 진입 시 첫 단계 목록과 세 단계 탭을 표시하고 카탈로그를 미리 조회하지 않는다', async () => {
     let catalogCalls = 0;
     server.use(
       http.get(`${config.apiBaseUrl}/api/check-items`, () => {
@@ -76,15 +77,15 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
       }),
     );
     renderAuthenticated('/checklists');
-    expect(await screen.findByRole('heading', { name: '체크리스트', level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /온라인·전화/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /집에서 확인/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /계약 전/ })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '내 체크리스트', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '온라인·전화' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: '집에서 확인' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '계약 전' })).toBeInTheDocument();
     expect(catalogCalls).toBe(0);
     expect(screen.getByRole('link', { name: '체크리스트' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('같은 이름을 포함한 단계 목록을 모두 표시하고 수정·삭제 동작을 제공한다', async () => {
+  it('같은 이름을 포함한 단계 목록을 모두 표시하고 편집 동작만 제공한다', async () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/checklists`, () =>
         HttpResponse.json(
@@ -100,7 +101,7 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     renderAuthenticated('/checklists/ONLINE_PHONE');
     expect(await screen.findAllByText('전화 문의 기본 목록')).toHaveLength(2);
     expect(screen.getAllByRole('link', { name: '편집' })).toHaveLength(2);
-    expect(screen.getAllByRole('button', { name: '삭제' })).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: '삭제' })).not.toBeInTheDocument();
   });
 
   it('PROVIDED 항목만 재정렬해 생성하고 v1.1 전체 순서를 보낸다', async () => {
@@ -126,11 +127,12 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     renderAuthenticated('/checklists/new?stage=ONLINE_PHONE');
     await screen.findByRole('heading', { name: '새 체크리스트' });
     expect(screen.getAllByRole('link', { current: 'page' })).toHaveLength(2);
-    await user.click(await screen.findByRole('button', { name: /원룸 제공 항목.*원룸 항목으로 시작/ }));
+    await user.click(await screen.findByRole('button', { name: '원룸 제공 항목으로 시작' }));
     const name = await screen.findByLabelText('체크리스트 이름');
     await user.clear(name);
     await user.type(name, '  전화 확인  ');
-    await user.click(screen.getByRole('button', { name: `${secondOnlineItemFixture.question} 위로 이동` }));
+    screen.getByRole('button', { name: `${secondOnlineItemFixture.question} 순서 변경` }).focus();
+    await user.keyboard('{ArrowUp}');
     await user.click(screen.getByRole('button', { name: '체크리스트 만들기' }));
     expect(await screen.findByRole('heading', { name: '전화 확인', level: 1 })).toBeInTheDocument();
     expect(requestBody).toEqual({
@@ -144,19 +146,13 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     expect(requestBody).not.toHaveProperty('checkItemIds');
   });
 
-  it('편집 중 시작 방식을 바꾸면 항목 초기화를 확인하고 작성한 이름은 보존한다', async () => {
+  it('시작 방식을 선택한 뒤에는 초기화 버튼을 노출하지 않는다', async () => {
     useCatalogHandlers();
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const user = userEvent.setup();
     renderAuthenticated('/checklists/new?stage=ONLINE_PHONE');
-    await user.click(await screen.findByRole('button', { name: /원룸 제공 항목.*원룸 항목으로 시작/ }));
-    const name = await screen.findByLabelText('체크리스트 이름');
-    await user.clear(name);
-    await user.type(name, '유지할 이름');
-    await user.click(screen.getByRole('button', { name: '시작 방식 변경 (항목 초기화)' }));
-    expect(confirm).toHaveBeenCalledOnce();
-    await user.click(screen.getByRole('button', { name: /빈 목록.*빈 목록으로 시작/ }));
-    expect(await screen.findByLabelText('체크리스트 이름')).toHaveValue('유지할 이름');
+    await user.click(await screen.findByRole('button', { name: '빈 목록으로 시작' }));
+    expect(await screen.findByLabelText('체크리스트 이름')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '시작 방식 변경 (항목 초기화)' })).not.toBeInTheDocument();
   });
 
   it('CUSTOM 항목만으로 생성하며 신규 항목에 checklistItemId를 만들지 않는다', async () => {
@@ -190,7 +186,7 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/checklists/new?stage=ONLINE_PHONE');
-    await user.click(await screen.findByRole('button', { name: /빈 목록.*빈 목록으로 시작/ }));
+    await user.click(await screen.findByRole('button', { name: '빈 목록으로 시작' }));
     await user.clear(screen.getByLabelText('체크리스트 이름'));
     await user.type(screen.getByLabelText('체크리스트 이름'), '나만의 질문');
     await user.type(screen.getByLabelText('질문'), '  창틀 곰팡이는 괜찮은가?  ');
@@ -226,10 +222,14 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/checklists/new?stage=ONLINE_PHONE');
-    await user.click(await screen.findByRole('button', { name: /원룸 제공 항목.*원룸 항목으로 시작/ }));
+    await user.click(await screen.findByRole('button', { name: '원룸 제공 항목으로 시작' }));
     await user.type(await screen.findByLabelText('질문'), onlineItemFixture.question);
     await user.click(screen.getByRole('button', { name: '직접 질문 추가' }));
-    await user.click(screen.getAllByRole('button', { name: `${onlineItemFixture.question} 위로 이동` }).at(-1)!);
+    screen
+      .getAllByRole('button', { name: `${onlineItemFixture.question} 순서 변경` })
+      .at(-1)!
+      .focus();
+    await user.keyboard('{ArrowUp}');
     await user.click(screen.getByRole('button', { name: '체크리스트 만들기' }));
     await waitFor(() =>
       expect(requestBody).toEqual({
@@ -346,7 +346,7 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     useCatalogHandlers();
     const user = userEvent.setup();
     renderAuthenticated('/checklists/new?stage=ONLINE_PHONE');
-    await user.click(await screen.findByRole('button', { name: /원룸 제공 항목.*원룸 항목으로 시작/ }));
+    await user.click(await screen.findByRole('button', { name: '원룸 제공 항목으로 시작' }));
     const customInput = await screen.findByLabelText('질문');
     await user.type(customInput, '같은 질문');
     await user.click(screen.getByRole('button', { name: '직접 질문 추가' }));
@@ -355,6 +355,8 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     expect(screen.getByLabelText('직접 추가 질문 3')).toHaveValue('같은 질문');
     expect(screen.getByLabelText('직접 추가 질문 4')).toHaveValue('같은 질문');
 
+    await user.click(screen.getByRole('button', { name: '+ 체크 항목 추가' }));
+    expect(screen.getByText('체크 항목 편집')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '전체 제공 항목 보기' }));
     const providedCheckbox = await screen.findByRole('checkbox', { name: new RegExp(onlineItemFixture.question) });
     expect(providedCheckbox).toBeChecked();
@@ -372,22 +374,85 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/checklists/7');
-    const moveButton = await screen.findByRole('button', {
-      name: `${customChecklistItemFixture.question} 위로 이동`,
+    const moveHandle = await screen.findByRole('button', {
+      name: `${customChecklistItemFixture.question} 순서 변경`,
     });
-    moveButton.focus();
-    await user.keyboard('{Enter}');
+    moveHandle.focus();
+    await user.keyboard('{ArrowUp}');
     const itemList = screen.getByRole('heading', { name: '확인 순서' }).closest('section')?.querySelector('ol');
     expect(itemList).not.toBeNull();
     expect(within(itemList as HTMLOListElement).getAllByRole('listitem')[0]).toHaveTextContent('직접 추가');
-    expect(screen.getByLabelText('직접 추가 질문 1')).toHaveFocus();
+    expect(moveHandle).toHaveFocus();
+  });
+
+  it('마우스로 순서 조작 핸들을 끌어 혼합 항목 순서를 바꾼다', async () => {
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/checklists/7`, () =>
+        HttpResponse.json(successEnvelope(mixedChecklistDetailFixture)),
+      ),
+      http.get(`${config.apiBaseUrl}/api/check-items`, () =>
+        HttpResponse.json(successEnvelope(checkItemPageFixture([onlineItemFixture]))),
+      ),
+    );
+    renderAuthenticated('/checklists/7');
+    const moveHandle = await screen.findByRole('button', {
+      name: `${customChecklistItemFixture.question} 순서 변경`,
+    });
+    const itemList = screen.getByRole('heading', { name: '확인 순서' }).closest('section')?.querySelector('ol');
+    expect(itemList).not.toBeNull();
+    const rows = within(itemList as HTMLOListElement).getAllByRole('listitem');
+    const firstRow = rows[0];
+
+    Object.defineProperties(moveHandle, {
+      setPointerCapture: { configurable: true, value: vi.fn() },
+      hasPointerCapture: { configurable: true, value: vi.fn(() => false) },
+    });
+    const originalElementFromPoint = document.elementFromPoint;
+    Object.defineProperty(document, 'elementFromPoint', {
+      configurable: true,
+      value: vi.fn(() => firstRow),
+    });
+
+    try {
+      fireEvent.pointerDown(moveHandle, {
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        button: 0,
+        clientX: 0,
+        clientY: 40,
+      });
+      fireEvent.pointerMove(moveHandle, {
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        button: 0,
+        clientX: 0,
+        clientY: 0,
+      });
+      fireEvent.pointerUp(moveHandle, {
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        button: 0,
+        clientX: 0,
+        clientY: 0,
+      });
+    } finally {
+      Object.defineProperty(document, 'elementFromPoint', {
+        configurable: true,
+        value: originalElementFromPoint,
+      });
+    }
+
+    expect(within(itemList as HTMLOListElement).getAllByRole('listitem')[0]).toHaveTextContent('직접 추가');
   });
 
   it('공백 및 200 코드포인트 초과 CUSTOM을 막고 이모지 200자는 허용한다', async () => {
     useCatalogHandlers();
     const user = userEvent.setup();
     renderAuthenticated('/checklists/new?stage=ONLINE_PHONE');
-    await user.click(await screen.findByRole('button', { name: /빈 목록.*빈 목록으로 시작/ }));
+    await user.click(await screen.findByRole('button', { name: '빈 목록으로 시작' }));
     const customInput = screen.getByLabelText('질문');
     await user.type(customInput, '   ');
     await user.click(screen.getByRole('button', { name: '직접 질문 추가' }));
@@ -418,7 +483,7 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/checklists/new?stage=ONLINE_PHONE');
-    await user.click(await screen.findByRole('button', { name: /빈 목록.*빈 목록으로 시작/ }));
+    await user.click(await screen.findByRole('button', { name: '빈 목록으로 시작' }));
     const customInput = screen.getByLabelText('질문');
     await user.type(customInput, '아직 목록에 넣지 않은 질문');
     await user.click(screen.getByRole('button', { name: '체크리스트 만들기' }));
@@ -459,7 +524,8 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     await user.type(name, '실패해도 남는 이름');
     await user.clear(custom);
     await user.type(custom, '수정 중인 질문');
-    await user.click(screen.getByRole('button', { name: '수정 중인 질문 위로 이동' }));
+    screen.getByRole('button', { name: '수정 중인 질문 순서 변경' }).focus();
+    await user.keyboard('{ArrowUp}');
     await user.click(screen.getByRole('button', { name: '변경 내용 저장' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('작성한 내용은 그대로 유지');
     expect(name).toHaveValue('실패해도 남는 이름');
@@ -566,25 +632,74 @@ describe('FE-3 체크리스트 탐색과 편집', () => {
     const name = await screen.findByLabelText('체크리스트 이름');
     await user.clear(name);
     await user.type(name, '저장하지 않은 이름');
-    await user.click(screen.getByRole('link', { name: '← 목록' }));
+    await user.click(screen.getByRole('link', { name: '체크리스트 목록으로 돌아가기' }));
     expect(confirm).toHaveBeenCalledOnce();
     expect(screen.getByLabelText('체크리스트 이름')).toHaveValue('저장하지 않은 이름');
   });
 });
 
 describe('FE-3 매물 활성 체크리스트', () => {
-  it('매물 상세에 연결이 없는 단계까지 세 단계 모두 표시한다', async () => {
+  it('진행 중 방문이 있으면 연결된 단계에서 해당 체크 화면으로 바로 이동한다', async () => {
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
+        HttpResponse.json(
+          successEnvelope({
+            ...propertyDetailFixture,
+            activeChecklists: [{ stage: 'ONLINE_PHONE', checklistId: 7, name: '전화 문의 기본 목록', itemCount: 2 }],
+            recentVisit: {
+              ...propertyDetailFixture.recentVisit,
+              status: 'IN_PROGRESS',
+              completedAt: null,
+            },
+            photoPreview: { totalCount: 0, photos: [] },
+          }),
+        ),
+      ),
+      http.get(`${config.apiBaseUrl}/api/visits/31`, () =>
+        HttpResponse.json(successEnvelope({ ...visitDetailFixture, status: 'IN_PROGRESS', completedAt: null })),
+      ),
+    );
+    renderAuthenticated('/properties/10');
+    expect(await screen.findByRole('link', { name: '온라인·전화 체크하기' })).toHaveAttribute(
+      'href',
+      '/visits/31?stage=ONLINE_PHONE',
+    );
+    expect(screen.getByRole('link', { name: '계약 전 체크리스트 연결' }).parentElement).toHaveClass(
+      /unlinkedChecklist/,
+    );
+  });
+
+  it('매물 상세에서 세 단계와 최근 체크 결과를 한 번에 확인한다', async () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
         HttpResponse.json(successEnvelope({ ...propertyDetailFixture, photoPreview: { totalCount: 0, photos: [] } })),
       ),
+      http.get(`${config.apiBaseUrl}/api/visits/31`, () => HttpResponse.json(successEnvelope(visitDetailFixture))),
     );
     renderAuthenticated('/properties/10');
-    const section = await screen.findByRole('heading', { name: '현재 연결된 확인 단계' });
+    const section = await screen.findByRole('heading', { name: '체크리스트' });
     const container = section.closest('section');
     expect(container).not.toBeNull();
-    expect(within(container as HTMLElement).getAllByRole('listitem')).toHaveLength(3);
-    expect(within(container as HTMLElement).getAllByText('연결된 체크리스트 없음')).toHaveLength(2);
+    expect(within(container as HTMLElement).getByRole('link', { name: '연결 관리' })).toHaveAttribute(
+      'href',
+      '/properties/10/active-checklists/ONLINE_PHONE',
+    );
+    expect(within(container as HTMLElement).getAllByRole('tab')).toHaveLength(3);
+    expect(await within(container as HTMLElement).findByText('관리비 포함 항목을 확인했나요?')).toBeInTheDocument();
+    expect(within(container as HTMLElement).getAllByText('연결된 체크리스트 없음')).toHaveLength(1);
+    expect(within(container as HTMLElement).getByText('밤 소음도 다시 확인')).toBeInTheDocument();
+    expect(within(container as HTMLElement).getByRole('link', { name: '온라인·전화 체크하기' })).toHaveAttribute(
+      'href',
+      '/visits/31?stage=ONLINE_PHONE',
+    );
+    expect(within(container as HTMLElement).getByRole('link', { name: '집에서 확인 체크하기' })).toHaveAttribute(
+      'href',
+      '/visits/31?stage=ON_SITE',
+    );
+    expect(within(container as HTMLElement).getByRole('link', { name: '계약 전 체크리스트 연결' })).toHaveAttribute(
+      'href',
+      '/properties/10/active-checklists/PRE_CONTRACT',
+    );
   });
 
   it('목록 선택만으로는 API-401을 호출하지 않고 최종 확인 때 연결한다', async () => {
@@ -617,13 +732,19 @@ describe('FE-3 매물 활성 체크리스트', () => {
           }),
         );
       }),
+      http.post(`${config.apiBaseUrl}/api/properties/10/visits`, () =>
+        HttpResponse.json(successEnvelope(visitDetailFixture), { status: 201 }),
+      ),
     );
     const user = userEvent.setup();
     renderAuthenticated('/properties/10/active-checklists/ONLINE_PHONE');
-    await user.click(await screen.findByRole('radio', { name: /직방 매물 문의 목록/ }));
+    await user.click(await screen.findByRole('checkbox', { name: /직방 매물 문의 목록/ }));
     expect(assignCalls).toBe(0);
     await user.click(screen.getByRole('button', { name: '이 체크리스트 연결' }));
-    expect(await screen.findByRole('heading', { name: propertyDetailFixture.name, level: 1 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: `${propertyDetailFixture.name} 방문`, level: 1 }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /온라인·전화/ })).toHaveAttribute('aria-selected', 'true');
     expect(assignCalls).toBe(1);
   });
 
@@ -658,8 +779,49 @@ describe('FE-3 매물 활성 체크리스트', () => {
       }),
     );
     renderAuthenticated({ pathname: '/properties/10/active-checklists/ONLINE_PHONE', state: { newChecklistId: 8 } });
-    expect(await screen.findByRole('radio', { name: /직방 매물 문의 목록/ })).toBeChecked();
+    expect(await screen.findByRole('checkbox', { name: /직방 매물 문의 목록/ })).toBeChecked();
     expect(screen.getByText('방금 생성')).toBeInTheDocument();
     expect(assignCalls).toBe(0);
+  });
+
+  it('현재 연결된 체크리스트를 다시 누르면 별도 해제 버튼 없이 연결을 해제한다', async () => {
+    let connected = true;
+    let removeCalls = 0;
+    const onSiteChecklist = {
+      ...checklistSummaryFixture,
+      name: '집에서 확인할 목록',
+      stage: 'ON_SITE',
+    };
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
+        HttpResponse.json(
+          successEnvelope({
+            ...propertyDetailFixture,
+            activeChecklists: connected
+              ? [{ stage: 'ON_SITE', checklistId: 7, name: onSiteChecklist.name, itemCount: 2 }]
+              : [],
+            photoPreview: { totalCount: 0, photos: [] },
+          }),
+        ),
+      ),
+      http.get(`${config.apiBaseUrl}/api/checklists`, () =>
+        HttpResponse.json(successEnvelope(checklistPageFixture([onSiteChecklist]))),
+      ),
+      http.delete(`${config.apiBaseUrl}/api/properties/10/active-checklists/ON_SITE`, () => {
+        connected = false;
+        removeCalls += 1;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const user = userEvent.setup();
+    renderAuthenticated('/properties/10/active-checklists/ON_SITE');
+    const checkbox = await screen.findByRole('checkbox', { name: /집에서 확인할 목록/ });
+    expect(checkbox).toBeChecked();
+    expect(screen.queryByRole('button', { name: '이 단계 연결 해제' })).not.toBeInTheDocument();
+
+    await user.click(checkbox);
+
+    await waitFor(() => expect(removeCalls).toBe(1));
+    await waitFor(() => expect(checkbox).not.toBeChecked());
   });
 });

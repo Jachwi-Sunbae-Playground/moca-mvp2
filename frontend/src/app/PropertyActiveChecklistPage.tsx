@@ -3,14 +3,18 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
 import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import ChecklistStageTabs from '../components/ChecklistStageTabs';
-import PageHeading from '../components/PageHeading';
-import { checklistStageMeta, isChecklistStage } from '../constants/checklist';
+import BottomActionArea from '../components/ui/BottomActionArea';
+import { Button, ButtonLink } from '../components/ui/Button';
+import TopNavigation from '../components/ui/TopNavigation';
+import { isChecklistStage } from '../constants/checklist';
 import { useAssignActiveChecklist, useRemoveActiveChecklist } from '../hooks/query/useChecklistMutations';
 import { useChecklistList } from '../hooks/query/useChecklists';
 import { usePropertyDetail } from '../hooks/query/useProperties';
+import { useStartPropertyVisit } from '../hooks/query/useVisitMutations';
 import type { ChecklistStage } from '../types/Checklist';
 import type { PublicConfig } from '../types/PublicConfig';
 import { parsePositiveId } from '../utils/propertyFormat';
+import styles from './PropertyActiveChecklistPage.module.css';
 
 const readNewChecklistId = (state: unknown): number | null => {
   if (typeof state !== 'object' || state === null || !('newChecklistId' in state)) return null;
@@ -51,14 +55,20 @@ const ResolvedPropertyActiveChecklist = ({
   const list = useChecklistList(config, stage);
   const assign = useAssignActiveChecklist(config, propertyId, stage);
   const unassign = useRemoveActiveChecklist(config, propertyId, stage);
+  const startVisit = useStartPropertyVisit(config, propertyId);
   const newlyCreatedId = readNewChecklistId(location.state);
   const current = property.data?.activeChecklists.find((item) => item.stage === stage) ?? null;
   const [selectedId, setSelectedId] = useState<number | null>(newlyCreatedId);
+  const [disconnectingId, setDisconnectingId] = useState<number | null>(null);
   const items = useMemo(() => list.data?.pages.flatMap((page) => page.content) ?? [], [list.data]);
 
   useEffect(() => {
+    if (disconnectingId !== null) {
+      if (current?.checklistId !== disconnectingId) setDisconnectingId(null);
+      return;
+    }
     if (selectedId === null && current !== null) setSelectedId(current.checklistId);
-  }, [current, selectedId]);
+  }, [current, disconnectingId, selectedId]);
 
   if (property.isPending || list.isPending)
     return (
@@ -108,70 +118,68 @@ const ResolvedPropertyActiveChecklist = ({
     if (selectedId === null) return;
     try {
       await assign.mutateAsync(selectedId);
-      navigate(`/properties/${propertyId}`, { replace: true, state: { focusHeading: true } });
+      const visit = await startVisit.mutateAsync();
+      navigate(`/visits/${visit.visitId}?stage=${stage}`, { replace: true });
     } catch {
       /* Keep the selected checklist visible for retry. */
     }
   };
 
-  const disconnect = async () => {
+  const disconnect = async (checklistId: number) => {
+    setDisconnectingId(checklistId);
+    setSelectedId(null);
     try {
       await unassign.mutateAsync();
-      navigate(`/properties/${propertyId}`, { replace: true, state: { focusHeading: true } });
     } catch {
-      /* Keep the current connection visible for retry. */
+      setDisconnectingId(null);
+      setSelectedId(checklistId);
     }
   };
 
+  const toggleSelection = (checklistId: number) => {
+    if (selectedId !== checklistId) {
+      setSelectedId(checklistId);
+      return;
+    }
+
+    if (current?.checklistId === checklistId) {
+      void disconnect(checklistId);
+      return;
+    }
+
+    setSelectedId(current?.checklistId ?? null);
+  };
+
   return (
-    <main className="property-page checklist-page">
+    <main className={`${styles.page} property-page checklist-page active-checklist-page`}>
       <div className="page-container checklist-page__narrow">
-        <PageHeading
-          title={`${property.data.name} 체크리스트`}
-          description={`${checklistStageMeta[stage].label} 단계에서 사용할 목록을 선택해요.`}
+        <TopNavigation
+          title="체크리스트 연결"
           backTo={`/properties/${propertyId}`}
-          backLabel="매물 상세"
+          backLabel="매물 상세로 돌아가기"
+          endSlot={
+            <ButtonLink className={styles.createLink} variant="text" to={createPath}>
+              새로 만들기
+            </ButtonLink>
+          }
         />
+        <h1 className="sr-only">{property.data.name} 체크리스트 연결</h1>
         <ChecklistStageTabs
           stage={stage}
+          fullBleed
           getTo={(nextStage) => `/properties/${propertyId}/active-checklists/${nextStage}`}
         />
 
-        {current !== null && (
-          <section className="current-connection" aria-labelledby="current-connection-heading">
-            <p className="section-eyebrow">현재 연결</p>
-            <h2 id="current-connection-heading">{current.name}</h2>
-            <p>{current.itemCount}개 항목 · 원본 변경이 이 매물에도 바로 반영돼요.</p>
-            <button
-              type="button"
-              className="text-danger-button"
-              disabled={unassign.isPending}
-              onClick={() => void disconnect()}
-            >
-              {unassign.isPending ? '연결 해제 중…' : '이 단계 연결 해제'}
-            </button>
-            {unassign.isError && (
-              <p className="form-error" role="alert">
-                {getChecklistErrorMessage(unassign.error)} 기존 연결은 유지됩니다.
-              </p>
-            )}
-          </section>
-        )}
-
-        <div className="section-heading-row active-selection-heading">
-          <div>
-            <p className="section-eyebrow">내 체크리스트</p>
-            <h2>연결할 목록 선택</h2>
-          </div>
-          <Link className="secondary-link" to={createPath}>
-            새로 만들기
-          </Link>
+        <div className={`section-heading-row active-selection-heading ${styles.selectionHeading}`}>
+          <h2>연결할 목록 선택</h2>
         </div>
 
         {items.length === 0 ? (
           <div className="content-state">
             <strong>선택할 체크리스트가 없어요.</strong>
-            <Link to={createPath}>이 단계 체크리스트 만들기</Link>
+            <ButtonLink variant="soft" to={createPath}>
+              이 단계 체크리스트 만들기
+            </ButtonLink>
           </div>
         ) : (
           <fieldset className="active-checklist-options">
@@ -179,11 +187,12 @@ const ResolvedPropertyActiveChecklist = ({
             {items.map((item) => (
               <label key={item.checklistId} className={selectedId === item.checklistId ? 'is-selected' : undefined}>
                 <input
-                  type="radio"
+                  type="checkbox"
                   name="active-checklist"
                   value={item.checklistId}
                   checked={selectedId === item.checklistId}
-                  onChange={() => setSelectedId(item.checklistId)}
+                  disabled={unassign.isPending || disconnectingId !== null}
+                  onChange={() => toggleSelection(item.checklistId)}
                 />
                 <span>
                   <strong>{item.name}</strong>
@@ -191,20 +200,26 @@ const ResolvedPropertyActiveChecklist = ({
                     {item.itemCount}개 항목 · 매물 {item.assignedPropertyCount}곳에서 사용
                   </small>
                 </span>
-                {current?.checklistId === item.checklistId && <em>현재 연결</em>}
                 {newlyCreatedId === item.checklistId && <em>방금 생성</em>}
               </label>
             ))}
           </fieldset>
         )}
 
+        {unassign.isError && (
+          <p className="form-error" role="alert">
+            {getChecklistErrorMessage(unassign.error)} 기존 연결은 유지됩니다.
+          </p>
+        )}
+
         {list.hasNextPage && (
-          <div className="load-more">
+          <div className={styles.loadMore}>
             {list.isFetchNextPageError && (
               <p role="alert">추가 목록을 불러오지 못했어요. 기존 선택지는 그대로 유지됩니다.</p>
             )}
-            <button
-              className="secondary-button"
+            <Button
+              variant="secondary"
+              fullWidth
               type="button"
               disabled={list.isFetchingNextPage}
               onClick={() => void list.fetchNextPage()}
@@ -214,7 +229,7 @@ const ResolvedPropertyActiveChecklist = ({
                 : list.isFetchNextPageError
                   ? '다시 불러오기'
                   : '체크리스트 더 보기'}
-            </button>
+            </Button>
           </div>
         )}
         {selectionChanged && current !== null && (
@@ -225,15 +240,25 @@ const ResolvedPropertyActiveChecklist = ({
             {getChecklistErrorMessage(assign.error)} 기존 연결은 유지됩니다.
           </p>
         )}
-        <div className="sticky-form-action">
-          <button
-            className="primary-button"
-            type="button"
-            disabled={selectedId === null || !selectionChanged || assign.isPending}
-            onClick={() => void saveSelection()}
-          >
-            {assign.isPending ? '연결 중…' : current === null ? '이 체크리스트 연결' : '선택한 체크리스트로 교체'}
-          </button>
+        {startVisit.isError && (
+          <p className="form-error" role="alert">
+            체크리스트는 연결했지만 체크 화면을 열지 못했어요. 매물 상세에서 다시 시작해 주세요.
+          </p>
+        )}
+        <div className={styles.bottomAction}>
+          <BottomActionArea divider={false}>
+            <Button
+              variant="soft"
+              fullWidth
+              isLoading={assign.isPending || startVisit.isPending}
+              loadingLabel={assign.isPending ? '연결 중…' : '체크 화면 여는 중…'}
+              type="button"
+              disabled={selectedId === null || !selectionChanged || assign.isPending || startVisit.isPending}
+              onClick={() => void saveSelection()}
+            >
+              {current === null ? '이 체크리스트 연결' : selectionChanged ? '선택한 체크리스트로 교체' : '연결됨'}
+            </Button>
+          </BottomActionArea>
         </div>
       </div>
     </main>

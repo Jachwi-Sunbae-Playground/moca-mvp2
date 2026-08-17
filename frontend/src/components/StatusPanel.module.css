@@ -10,8 +10,7 @@
   padding: clamp(1.5rem, 7vw, 2.25rem);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: rgb(255 253 250 / 96%);
-  box-shadow: var(--shadow-soft);
+  background: var(--color-surface-translucent);
   text-align: center;
 }
 
@@ -28,14 +27,28 @@
   font-weight: 800;
 }
 
-.error .mark {
-  background: var(--color-error-surface);
-  color: var(--color-error);
+.success .mark {
+  background: var(--color-success-surface);
+  color: var(--color-success);
 }
 
-.success .mark {
-  background: #edf6e8;
-  color: var(--color-success);
+.errorIllustrationViewport {
+  position: relative;
+  width: 8.5rem;
+  aspect-ratio: 1.1;
+  margin: 0 auto 1rem;
+  overflow: hidden;
+}
+
+.errorIllustration {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  width: 220%;
+  max-width: none;
+  height: auto;
+  transform: translate(-50%, -50%);
 }
 
 .panel h1 {
@@ -63,7 +76,7 @@
   border: 0;
   border-radius: 999px;
   background: var(--color-primary-dark);
-  color: #fff;
+  color: var(--color-on-primary);
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
@@ -72,7 +85,7 @@
 .spinner {
   width: 1.4rem;
   height: 1.4rem;
-  border: 3px solid rgb(100 127 61 / 24%);
+  border: 3px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
   border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 800ms linear infinite;

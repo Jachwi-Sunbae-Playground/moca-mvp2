@@ -1,0 +1,43 @@
+.page {
+  min-height: calc(100dvh - var(--bottom-navigation-height));
+  background: var(--color-surface);
+}
+
+.container {
+  padding: 0.5rem 0 2rem;
+}
+
+.navigationArea {
+  padding: 0 1rem;
+  background: var(--color-surface);
+}
+
+.topNavigation {
+  margin-bottom: 0;
+}
+
+.navigationArea > :global([data-full-bleed='true']) {
+  width: calc(100% + 2rem);
+  margin-left: -1rem;
+}
+
+.createAction {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.25rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.list {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.container > :global(.content-state),
+.container > :global(.load-more) {
+  margin-right: 1rem;
+  margin-left: 1rem;
+}

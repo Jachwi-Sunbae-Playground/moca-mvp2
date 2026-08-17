@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import errorIllustration from '../assets/jachwi-sunbae-error.png';
 import styles from './StatusPanel.module.css';
 
 type StatusPanelProps = {
@@ -22,9 +23,15 @@ const StatusPanel = ({ title, description, tone = 'neutral', isBusy = false, act
       aria-live={isBusy ? 'polite' : undefined}
       aria-busy={isBusy || undefined}
     >
-      <div className={styles.mark} aria-hidden="true">
-        {isBusy ? <span className={styles.spinner} /> : tone === 'success' ? '✓' : tone === 'error' ? '!' : '·'}
-      </div>
+      {tone === 'error' && !isBusy ? (
+        <div className={styles.errorIllustrationViewport} aria-hidden="true">
+          <img className={styles.errorIllustration} src={errorIllustration} alt="" />
+        </div>
+      ) : (
+        <div className={styles.mark} aria-hidden="true">
+          {isBusy ? <span className={styles.spinner} /> : tone === 'success' ? '✓' : '·'}
+        </div>
+      )}
       <h1>{title}</h1>
       <p>{description}</p>
       {action === undefined ? null : <div className={styles.action}>{action}</div>}

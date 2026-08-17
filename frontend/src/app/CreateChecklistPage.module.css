@@ -1,0 +1,117 @@
+.topNavigation {
+  margin-bottom: 0;
+}
+
+.container > :global([data-full-bleed='true']) {
+  margin-top: -0.15rem;
+}
+
+.presetSection {
+  margin-top: 0.8rem;
+}
+
+.presetSection h2,
+.presetSection p {
+  margin: 0;
+}
+
+.presetSection h2 {
+  font-size: 0.9rem;
+  letter-spacing: -0.025em;
+}
+
+.presetSection > p {
+  margin-top: 0.3rem;
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.presetOptions {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.presetOptions button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%;
+  min-height: 3.75rem;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.presetOptions button:hover {
+  background: var(--color-surface-neutral);
+}
+
+.presetOptions button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.chevron {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.presetOptions strong {
+  font-size: 0.8rem;
+}
+
+.page :global(.editor-section) {
+  margin-top: 0.75rem;
+  padding: 0.85rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.page :global(.checklist-editor > .editor-section:first-child) {
+  margin-top: 0.15rem;
+}
+
+.page :global(.editor-section + .editor-section),
+.page :global(.checklist-editor__open-picker + .editor-section) {
+  border-top: 1px solid var(--color-border);
+}
+
+.page :global(.selected-check-items) {
+  gap: 0;
+  margin-top: 0.55rem;
+}
+
+.page :global(.selected-check-items li) {
+  padding: 0.8rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+}
+
+.page :global(.checklist-editor__name-field > label),
+.page :global(.checklist-editor .editor-section h2) {
+  font-size: 0.78rem;
+}
+
+.page :global(.checklist-editor input) {
+  font-size: 0.84rem;
+}
+
+.page :global(.checklist-editor textarea) {
+  font-size: 0.82rem;
+}
+
+.page :global(.checklist-editor__open-picker),
+.page :global(.checklist-editor__custom-question-section button) {
+  min-height: 2.75rem;
+  font-size: 0.78rem;
+}

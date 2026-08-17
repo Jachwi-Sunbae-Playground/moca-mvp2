@@ -3,13 +3,13 @@
 - 문서 성격: 파생
 - 대조 대상: `frontend/package.json`, `frontend/webpack.config.js`, `frontend/.env.example`, `frontend/src/`, `.github/workflows/frontend-ci.yml`, `backend/docs/api/api-specification.md`
 
-Webpack으로 구성한 React + TypeScript SPA입니다. 백엔드 1차 MVP v1.1 OpenAPI에 맞춘 DTO·런타임 파서·API 함수·오류 계약, 구조화된 방문 전 사전 메모, PROVIDED·CUSTOM 체크리스트 편집과 방문 항목의 상태·인라인 메모 독립 자동 저장 화면을 제공합니다.
+Webpack으로 구성한 React + TypeScript SPA입니다. 백엔드 1차 MVP v1.1 OpenAPI에 맞춘 DTO·런타임 파서·API 함수·오류 계약, 자유 형식 퀵 메모, PROVIDED·CUSTOM 체크리스트 편집과 방문 항목의 상태·인라인 메모 독립 자동 저장 화면을 제공합니다.
 
 ## 1차 MVP 프론트엔드 API 기준선 v1.1
 
 현재 프론트엔드는 백엔드 OpenAPI `info.version=1차 MVP v1.1`과 API-001~506의 27개 연산을 API 계약 기준선으로 사용합니다. API-001만 공개하고 나머지 26개 보호 요청은 메모리 인증 저장소의 현재 Access Token을 Bearer로 보냅니다. 요청 Body·Query에 `memberId`를 보내지 않습니다.
 
-이번 기준선은 매물 상세의 단일 메모를 구조화된 방문 전 사전 메모로 개정하고 체크리스트 생성·편집 화면을 PROVIDED·CUSTOM 혼합 `items` 계약으로 전환했으며, 방문 상태와 한 줄 인라인 메모를 독립 CAS 채널로 자동 저장합니다. deprecated 요청 필드는 호환 API 경계를 검증하는 코드에만 남고 신규 체크리스트·방문 UI에서는 사용하지 않습니다.
+이번 기준선은 매물 상세에서 구조화된 메모 API 계약을 자유 형식 퀵 메모 UI로 감싸고, 체크리스트 생성·편집 화면을 PROVIDED·CUSTOM 혼합 `items` 계약으로 전환했으며, 방문 상태와 한 줄 인라인 메모를 독립 CAS 채널로 자동 저장합니다. deprecated 요청 필드는 호환 API 경계를 검증하는 코드에만 남고 신규 체크리스트·방문 UI에서는 사용하지 않습니다.
 
 기준선을 변경할 때는 관련 코드·테스트와 이 파생 문서를 같은 PR에서 갱신합니다. 다음 조건을 모두 만족해야 기준선으로 사용할 수 있습니다.
 
@@ -49,6 +49,14 @@ npm run dev
 ```
 
 개발 서버는 `http://localhost:3000`에서 실행됩니다. 필수 환경변수가 없거나 URL 형식이 잘못되면 애플리케이션이 설정 오류 화면을 표시합니다.
+
+실제 백엔드나 Google OAuth 없이 화면 흐름을 확인할 때는 로컬 전용 MSW 모킹 환경을 사용합니다.
+
+```bash
+npm run dev:mock
+```
+
+`dev:mock`은 개발 빌드에서만 `ENABLE_MSW`를 활성화하고 브라우저 요청을 로컬 fixture로 처리합니다. 프로덕션 빌드는 이 값과 관계없이 MSW를 비활성화하므로 dev·prod 배포의 실제 API 오류를 가리지 않습니다.
 
 ## 공개 환경변수
 
@@ -119,7 +127,7 @@ Client Secret은 백엔드에만 설정합니다. 백엔드 실행 방법과 비
 
 ### v1.1 계약 경계
 
-- `PropertyPreVisitMemo`는 일곱 구조화 필드와 `additionalMemo`, nullable `savedAt`을 정본으로 사용합니다. 각 구조화 필드는 200 Unicode 코드포인트, 추가 메모는 5,000 코드포인트 이하인지 같은 공통 함수로 검사합니다. 응답의 deprecated `content`는 `additionalMemo`와 같을 때만 호환 별칭으로 받아들입니다.
+- `PropertyPreVisitMemo` API는 일곱 구조화 필드와 `additionalMemo`, nullable `savedAt`을 정본으로 유지합니다. 화면에서는 기존 구조화 값을 하나의 자유 메모로 합쳐 보여주고, 저장할 때 구조화 필드를 비운 뒤 `additionalMemo`에 5,000 Unicode 코드포인트 이하의 메모를 보냅니다. 응답의 deprecated `content`는 `additionalMemo`와 같을 때만 호환 별칭으로 받아들입니다.
 - API-106의 `savePropertyPreVisitMemo`는 여덟 필드를 모두 보내는 전체 교체 요청입니다. 매물 상세 화면은 deprecated `content`를 보내지 않고 이 함수를 사용하며, 이 API에는 version이나 `expectedVersion`이 없습니다.
 - 체크리스트 응답은 `checklistItemId`를 체크리스트 안에서 유지되는 로컬 안정 ID, `sourceCheckItemId`를 PROVIDED 원본의 전역 ID로 구분합니다. CUSTOM은 해당 체크리스트에만 속하고 `sourceCheckItemId`가 `null`이며, 두 ID를 서로 대신 사용하지 않습니다.
 - 신규 생성은 PROVIDED에 `sourceCheckItemId`, CUSTOM에 trim한 `question`만 보냅니다. 변경은 기존 CUSTOM에만 `checklistItemId`를 함께 보내고 신규 CUSTOM에는 서버 ID를 만들지 않습니다. PROVIDED는 기존 여부와 관계없이 `sourceCheckItemId`로 표현하며 서버 응답을 저장 후 정본으로 사용합니다.
@@ -160,7 +168,7 @@ Google 리다이렉트 왕복에 필요한 `codeVerifier`, `state`, `nonce`만 �
 
 업로드는 JPEG·PNG·WebP, 파일당 10MiB, 매물당 30장 제한을 선택 시 먼저 안내합니다. 여러 파일을 선택해도 API-202의 `file` 파트 단건 요청을 순차 실행하며 한 장이 실패해도 나머지는 계속 처리합니다. `Content-Type`과 multipart boundary는 브라우저가 설정합니다. 매물과 사진은 네이티브 dialog에서 영향을 확인한 뒤 삭제하며 실패 전에는 화면에서 먼저 제거하지 않습니다.
 
-매물 상세의 방문 전 사전 메모는 일곱 구조화 필드와 추가 메모를 API-103 값으로 초기화합니다. 각 항목은 선택 사항이고 빈 문자열로 지울 수 있습니다. 일곱 필드는 각각 200 Unicode 코드포인트, 추가 메모는 5,000 코드포인트 이하로 검사하며 초과 입력을 잘라내지 않고 해당 필드 가까이 오류를 표시합니다.
+매물 상세의 퀵 메모는 API-103의 일곱 구조화 필드와 추가 메모를 하나의 자유 형식 텍스트로 합쳐 초기화합니다. 사용자가 저장하면 구조화 필드는 빈 문자열로 정리하고 자유 메모를 `additionalMemo`에 보냅니다. 메모는 5,000 Unicode 코드포인트 이하로 검사하며 초과 입력을 잘라내지 않고 입력란 가까이에 오류를 표시합니다.
 
 입력마다 자동 저장하지 않고 명시적인 `메모 저장`으로 API-106에 여덟 필드를 모두 보냅니다. `content`와 `expectedVersion`은 보내지 않습니다. 저장 성공 응답은 상세 Query Cache의 메모와 최근 활동 시각에 반영하고 목록 Query를 무효화합니다. 저장 실패나 작성 중 상세 재조회에도 로컬 입력을 유지하며 사용자가 명시적으로 다시 저장할 수 있습니다.
 
@@ -209,7 +217,7 @@ PROVIDED는 현재 단계의 활성 API-301 카탈로그에서만 새로 추가�
 
 마이페이지는 별도 회원 API를 추가하지 않고 보호 경로가 API-002로 확인한 `Member`를 정본으로 사용합니다.
 
-매물·체크리스트·방문·마이페이지 화면 모듈은 `React.lazy`로 경로 단위 분할합니다. 지연 청크에는 로딩 상태와 청크 조회 실패 복구 화면이 있으며 프로덕션 엔트리포인트는 Webpack의 350KiB 예산을 유지합니다. 하단 주요 메뉴는 홈과 체크리스트만 제공하고 현재 영역을 `aria-current="page"`로 알리며, 마이페이지는 상단 회원 링크로 이동합니다.
+매물·체크리스트·방문·마이페이지 화면 모듈은 `React.lazy`로 경로 단위 분할합니다. 지연 청크에는 로딩 상태와 청크 조회 실패 복구 화면이 있으며 프로덕션 엔트리포인트는 Webpack의 350KiB 예산을 유지합니다. 하단 주요 메뉴는 홈·체크리스트·마이를 제공하고 현재 영역을 `aria-current="page"`로 알립니다.
 
 브라우저 history를 가로채는 방문 초안 flush는 현재 잠긴 React Router의 `unstable_HistoryRouter`와 `UNSAFE_createBrowserHistory`에 의존합니다. React Router를 올리기 전에는 push·replace·back·forward, 차단 뒤 원래 delta 복원, 저장 실패 시 URL·draft 유지, history listener 해제를 실제 브라우저와 테스트에서 다시 감사하고 안정 API 전환 여부를 판단합니다.
 

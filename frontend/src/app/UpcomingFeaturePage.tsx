@@ -29,7 +29,6 @@ const UpcomingFeaturePage = ({ feature }: { feature: UpcomingFeature }) => {
       <div className="page-container page-container--form">
         <PageHeading title={content.title} backTo="/me" backLabel="마이페이지" focusOnMount />
         <section className="upcoming-feature-card" aria-labelledby="upcoming-feature-heading">
-          <p className="section-eyebrow">{content.eyebrow}</p>
           <h2 id="upcoming-feature-heading">1차 MVP에서는 안내만 제공해요</h2>
           <p>{content.description}</p>
           <div className="upcoming-feature-card__actions">

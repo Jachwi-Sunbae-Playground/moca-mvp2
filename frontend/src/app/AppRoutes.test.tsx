@@ -74,14 +74,14 @@ describe('FE-1 인증 흐름', () => {
   it('비인증 사용자에게 로그인 화면을 표시한다', () => {
     renderRoutes('/login');
 
-    expect(screen.getByRole('heading', { name: '자취방 결정 가이드' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Google로 로그인하기' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '처음 방을 보는 날부터, 떠나는 날까지' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Google로 로그인하고 이용하기' })).toBeInTheDocument();
   });
 
   it('보호 경로에 비인증으로 접근하면 로그인 화면으로 이동한다', async () => {
     renderRoutes('/');
 
-    expect(await screen.findByRole('button', { name: 'Google로 로그인하기' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Google로 로그인하고 이용하기' })).toBeInTheDocument();
   });
 
   it('로그인 버튼을 누르면 PKCE 요청을 저장하고 올바른 Google URL로 이동한다', async () => {
@@ -89,7 +89,7 @@ describe('FE-1 인증 흐름', () => {
     const user = userEvent.setup();
     renderRoutes('/login', { navigateExternally });
 
-    await user.click(screen.getByRole('button', { name: 'Google로 로그인하기' }));
+    await user.click(screen.getByRole('button', { name: 'Google로 로그인하고 이용하기' }));
 
     await waitFor(() => expect(navigateExternally).toHaveBeenCalledOnce());
     const firstCall = navigateExternally.mock.calls[0];
@@ -222,7 +222,7 @@ describe('FE-1 인증 흐름', () => {
 
     renderRoutes('/');
 
-    expect(await screen.findByRole('button', { name: 'Google로 로그인하기' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Google로 로그인하고 이용하기' })).toBeInTheDocument();
     expect(getAccessToken()).toBeNull();
     expect(screen.getByText(/인증을 확인하지 못해 로그아웃/)).toBeInTheDocument();
   });
@@ -253,9 +253,11 @@ describe('FE-1 인증 흐름', () => {
     server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.json(successEnvelope(member))));
     renderRoutes('/');
 
-    await user.click(await screen.findByRole('button', { name: '로그아웃' }));
+    await user.click(await screen.findByRole('link', { name: '마이' }));
+    await screen.findByRole('heading', { name: '마이페이지' });
+    await user.click(screen.getByRole('button', { name: '로그아웃' }));
 
-    expect(await screen.findByRole('button', { name: 'Google로 로그인하기' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Google로 로그인하고 이용하기' })).toBeInTheDocument();
     expect(getAccessToken()).toBeNull();
   });
 

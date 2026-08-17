@@ -1,6 +1,8 @@
 import { useRef } from 'react';
 import { acceptedPhotoTypes, MAX_PROPERTY_PHOTOS, usePhotoUploadQueue } from '../hooks/usePhotoUploadQueue';
 import type { PublicConfig } from '../types/PublicConfig';
+import Icon from './ui/Icon';
+import styles from './PhotoUploadPanel.module.css';
 
 type PhotoUploadPanelProps = {
   config: PublicConfig;
@@ -14,30 +16,31 @@ const PhotoUploadPanel = ({ config, propertyId, currentPhotoCount }: PhotoUpload
   const isLimitReached = currentPhotoCount >= MAX_PROPERTY_PHOTOS;
 
   return (
-    <section className="detail-section photo-upload-panel" aria-labelledby="photo-upload-heading">
-      <div className="section-heading-row">
-        <div>
-          <p className="section-eyebrow">사진 추가</p>
-          <h2 id="photo-upload-heading">한 장씩 안전하게 올려요</h2>
-        </div>
-        <span>
-          {currentPhotoCount} / {MAX_PROPERTY_PHOTOS}
-        </span>
-      </div>
-      <p className="section-note">
-        JPEG·PNG·WebP, 사진당 10MiB 이하. 여러 장을 선택하면 순서대로 업로드하며 실패해도 나머지는 계속 처리합니다.
-      </p>
-      <label className="file-input-label" htmlFor="property-photo-files">
-        사진 파일 선택
+    <section className={styles.root} aria-labelledby="photo-upload-heading">
+      <h2 className="sr-only" id="photo-upload-heading">
+        사진 추가
+      </h2>
+      <label
+        className={styles.tile}
+        data-disabled={uploadQueue.isUploading || isLimitReached}
+        htmlFor="property-photo-files"
+      >
+        <Icon name="image" size={25} />
+        <strong aria-hidden="true">{uploadQueue.isUploading ? '추가 중' : '추가'}</strong>
+        <small aria-hidden="true">
+          {currentPhotoCount}/{MAX_PROPERTY_PHOTOS}
+        </small>
+        <span className="sr-only">사진 파일 선택</span>
       </label>
       <input
         id="property-photo-files"
         ref={inputRef}
-        className="file-input"
+        className="sr-only"
         type="file"
         accept={acceptedPhotoTypes.join(',')}
         multiple
         disabled={uploadQueue.isUploading || isLimitReached}
+        aria-label="사진 파일 선택"
         aria-describedby="photo-upload-help"
         onChange={(event) => {
           const files = Array.from(event.target.files ?? []);
@@ -45,16 +48,16 @@ const PhotoUploadPanel = ({ config, propertyId, currentPhotoCount }: PhotoUpload
           event.target.value = '';
         }}
       />
-      <p id="photo-upload-help" className="field-help">
-        원본 파일명은 서버 식별자로 저장하거나 사진 설명으로 사용하지 않아요.
+      <p id="photo-upload-help" className="sr-only">
+        JPEG·PNG·WebP 형식을 사진당 10MiB 이하로 선택할 수 있어요. 원본 파일명은 저장하지 않아요.
       </p>
       {isLimitReached && (
-        <p className="form-notice" role="status">
+        <p className={`${styles.feedback} form-notice`} role="status">
           사진 30장이 모두 등록되어 추가할 수 없어요.
         </p>
       )}
       {uploadQueue.items.length > 0 && (
-        <div className="upload-queue" aria-live="polite">
+        <div className={`${styles.feedback} upload-queue`} aria-live="polite">
           <div className="upload-queue__heading">
             <strong>업로드 결과</strong>
             <button

@@ -1,7 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
-import { setAuthentication } from '../app/authStore';
+import { clearAuthentication, setAuthentication } from '../app/authStore';
 import {
   checkItemPageFixture,
   checklistPageFixture,
@@ -25,10 +26,12 @@ import {
 } from '../test/propertyFixtures';
 import { visitDetailFixture, visitPageFixture } from '../test/visitFixtures';
 import type { ChecklistDetail } from '../types/Checklist';
+import ComponentCatalog from './ComponentCatalog';
 
 const scenario = new URLSearchParams(window.location.search).get('scenario') ?? 'list-two';
 
 const routeByScenario: Record<string, string> = {
+  components: '/',
   login: '/login',
   unauthorized: '/properties',
   'not-found': '/does-not-exist',
@@ -66,17 +69,60 @@ const routeByScenario: Record<string, string> = {
 };
 
 window.history.replaceState(null, '', routeByScenario[scenario] ?? '/properties');
-if (scenario !== 'login') {
+if (scenario === 'login') {
+  clearAuthentication(null);
+} else if (scenario !== 'components') {
   setAuthentication({ accessToken: 'browser-test-memory-token', tokenType: 'Bearer', expiresIn: 60 * 60 });
 }
 
 const jsonResponse = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 
-const pngBytes = Uint8Array.from(
-  atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nLkAAAAASUVORK5CYII='),
-  (character) => character.charCodeAt(0),
-);
+const createPlaceholderPhoto = (photoId: number) => {
+  const palettes = [
+    ['#c8d4b4', '#73875c'],
+    ['#e4d5b8', '#9b805c'],
+    ['#c9d6d8', '#6d8588'],
+    ['#d8c7c2', '#8b6d64'],
+    ['#d5d1bd', '#79735c'],
+  ];
+  const [start, end] = palettes[photoId % palettes.length];
+  const canvas = document.createElement('canvas');
+  canvas.width = 480;
+  canvas.height = 480;
+  const context = canvas.getContext('2d');
+
+  if (context === null) return Promise.resolve(new Blob([], { type: 'image/png' }));
+
+  const gradient = context.createLinearGradient(0, 0, 480, 480);
+  gradient.addColorStop(0, start);
+  gradient.addColorStop(1, end);
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, 480, 480);
+  context.strokeStyle = 'rgba(255,255,255,.72)';
+  context.lineWidth = 18;
+  context.lineCap = 'round';
+  context.lineJoin = 'round';
+  context.beginPath();
+  context.moveTo(70, 345);
+  context.lineTo(180, 225);
+  context.lineTo(252, 295);
+  context.lineTo(300, 250);
+  context.lineTo(410, 345);
+  context.stroke();
+  context.fillStyle = 'rgba(255,255,255,.72)';
+  context.beginPath();
+  context.arc(165, 150, 38, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = 'rgba(255,255,255,.9)';
+  context.font = '28px sans-serif';
+  context.textAlign = 'center';
+  context.fillText(`PHOTO ${photoId - 80}`, 240, 420);
+
+  return new Promise<Blob>((resolve) => {
+    canvas.toBlob((blob) => resolve(blob ?? new Blob([], { type: 'image/png' })), 'image/png');
+  });
+};
 
 const photos = Array.from({ length: 8 }, (_, index) => ({
   ...photoFixture,
@@ -226,9 +272,7 @@ const browserTestFetch: typeof fetch = async (input, init) => {
             '동네를 걷다가 발견한 중개사에서 소개받은 매우 긴 발견 경로 설명입니다. 화면 밖으로 넘치지 않아야 합니다.',
         },
         photoPreview:
-          scenario.startsWith('photos-') || scenario.startsWith('photo-')
-            ? { totalCount: photos.length, photos: [photos[0]] }
-            : propertyDetailFixture.photoPreview,
+          scenario === 'photos-empty' ? { totalCount: 0, photos: [] } : { totalCount: 5, photos: photos.slice(0, 5) },
       }),
     );
   }
@@ -534,7 +578,8 @@ const browserTestFetch: typeof fetch = async (input, init) => {
 
   if (/^\/api\/properties\/10\/photos\/\d+\/content$/.test(path) && request.method === 'GET') {
     if (scenario === 'photo-read-failure') return jsonResponse(errorEnvelope('PHOTO_READ_FAILED'), 500);
-    return new Response(pngBytes, { headers: { 'Content-Type': 'image/png' } });
+    const photoId = Number(path.match(/photos\/(\d+)\/content$/)?.[1] ?? 81);
+    return new Response(await createPlaceholderPhoto(photoId), { headers: { 'Content-Type': 'image/png' } });
   }
 
   if (/^\/api\/properties\/10\/photos\/\d+$/.test(path) && request.method === 'DELETE') {
@@ -554,12 +599,18 @@ if (rootElement === null) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App
-      config={{
-        apiBaseUrl: 'http://localhost:8080',
-        googleClientId: 'browser-test-client',
-        googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
-      }}
-    />
+    {scenario === 'components' ? (
+      <MemoryRouter>
+        <ComponentCatalog />
+      </MemoryRouter>
+    ) : (
+      <App
+        config={{
+          apiBaseUrl: 'http://localhost:8080',
+          googleClientId: 'browser-test-client',
+          googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
+        }}
+      />
+    )}
   </StrictMode>,
 );

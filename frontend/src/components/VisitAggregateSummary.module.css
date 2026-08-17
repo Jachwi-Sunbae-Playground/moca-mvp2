@@ -23,11 +23,15 @@
 }
 
 .aggregate [data-status='GOOD'] {
-  color: var(--color-success);
+  color: var(--color-check-good-ink);
 }
 
 .aggregate [data-status='CAUTION'] {
-  color: #86600c;
+  color: var(--color-check-caution-ink);
+}
+
+.aggregate [data-status='UNCONFIRMED'] {
+  color: var(--color-check-unconfirmed-ink);
 }
 
 :global(.visit-stage-panel__heading) .aggregate {

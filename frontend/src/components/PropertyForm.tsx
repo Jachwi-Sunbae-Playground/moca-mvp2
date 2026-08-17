@@ -10,6 +10,11 @@ import {
   validatePropertyForm,
 } from '../utils/propertyForm';
 import type { PropertyFormErrors, PropertyFormField, PropertyFormValues } from '../utils/propertyForm';
+import BottomActionArea from './ui/BottomActionArea';
+import { Button } from './ui/Button';
+import InlineNotice from './ui/InlineNotice';
+import TextAreaField from './ui/TextAreaField';
+import TextField from './ui/TextField';
 import styles from './PropertyForm.module.css';
 
 type PropertyFormProps = {
@@ -18,6 +23,7 @@ type PropertyFormProps = {
   isSubmitting: boolean;
   mutationError: ApiError | null;
   formNotice?: string | null;
+  variant?: 'default' | 'detail';
   onSubmit: (input: PropertyInputDto, values: PropertyFormValues) => void;
 };
 
@@ -29,6 +35,7 @@ const PropertyForm = ({
   isSubmitting,
   mutationError,
   formNotice,
+  variant = 'default',
   onSubmit,
 }: PropertyFormProps) => {
   const [values, setValues] = useState(initialValues);
@@ -56,117 +63,104 @@ const PropertyForm = ({
     const nextErrors = validatePropertyForm(values);
     setErrors(nextErrors);
 
-    if (Object.keys(nextErrors).length > 0) {
-      return;
-    }
+    if (Object.keys(nextErrors).length > 0) return;
 
     const input = toPropertyInputDto(values);
     if (input !== null) onSubmit(input, values);
   };
 
   return (
-    <form className={styles.form} noValidate onSubmit={handleSubmit}>
-      <div className="form-field">
-        <label htmlFor="property-name">이름</label>
-        <input
-          id="property-name"
-          name="name"
-          value={values.name}
-          maxLength={50}
+    <form
+      className={`${styles.form} ${variant === 'detail' ? styles.detailForm : ''}`}
+      noValidate
+      onSubmit={handleSubmit}
+    >
+      <TextField
+        id="property-name"
+        name="name"
+        label="이름"
+        value={values.name}
+        maxLength={50}
+        autoComplete="off"
+        placeholder="예: 신림역 근처 원룸"
+        fieldClassName={variant === 'detail' ? styles.detailField : styles.defaultField}
+        className={variant === 'detail' ? styles.detailInput : styles.defaultInput}
+        error={displayedErrors.name}
+        onChange={(event) => setValue('name', event.target.value)}
+      />
+
+      <div className={variant === 'detail' ? styles.detailMoneyFields : styles.moneyFields}>
+        <TextField
+          id="property-deposit"
+          name="depositAmount"
+          label="보증금"
+          value={values.depositAmount}
+          inputMode="numeric"
           autoComplete="off"
-          aria-invalid={displayedErrors.name !== undefined}
-          aria-describedby={displayedErrors.name === undefined ? undefined : 'property-name-error'}
-          onChange={(event) => setValue('name', event.target.value)}
+          placeholder="0"
+          suffix="원"
+          fieldClassName={variant === 'detail' ? styles.detailField : styles.defaultField}
+          className={variant === 'detail' ? styles.detailInput : styles.defaultInput}
+          error={displayedErrors.depositAmount}
+          onChange={(event) => setMoneyValue('depositAmount', event.target.value)}
         />
-        {displayedErrors.name !== undefined && (
-          <p id="property-name-error" className="field-error">
-            {displayedErrors.name}
-          </p>
-        )}
+
+        <TextField
+          id="property-rent"
+          name="monthlyRentAmount"
+          label="월세"
+          value={values.monthlyRentAmount}
+          inputMode="numeric"
+          autoComplete="off"
+          placeholder="0"
+          suffix="원"
+          fieldClassName={variant === 'detail' ? styles.detailField : styles.defaultField}
+          className={variant === 'detail' ? styles.detailInput : styles.defaultInput}
+          error={displayedErrors.monthlyRentAmount}
+          onChange={(event) => setMoneyValue('monthlyRentAmount', event.target.value)}
+        />
       </div>
 
-      <div className="form-field">
-        <label htmlFor="property-deposit">보증금</label>
-        <div className={styles.moneyInput}>
-          <input
-            id="property-deposit"
-            name="depositAmount"
-            value={values.depositAmount}
-            inputMode="numeric"
-            autoComplete="off"
-            aria-invalid={displayedErrors.depositAmount !== undefined}
-            aria-describedby={displayedErrors.depositAmount === undefined ? undefined : 'property-deposit-error'}
-            onChange={(event) => setMoneyValue('depositAmount', event.target.value)}
-          />
-          <span aria-hidden="true">원</span>
-        </div>
-        {displayedErrors.depositAmount !== undefined && (
-          <p id="property-deposit-error" className="field-error">
-            {displayedErrors.depositAmount}
-          </p>
-        )}
-      </div>
-
-      <div className="form-field">
-        <label htmlFor="property-rent">월세</label>
-        <div className={styles.moneyInput}>
-          <input
-            id="property-rent"
-            name="monthlyRentAmount"
-            value={values.monthlyRentAmount}
-            inputMode="numeric"
-            autoComplete="off"
-            aria-invalid={displayedErrors.monthlyRentAmount !== undefined}
-            aria-describedby={displayedErrors.monthlyRentAmount === undefined ? undefined : 'property-rent-error'}
-            onChange={(event) => setMoneyValue('monthlyRentAmount', event.target.value)}
-          />
-          <span aria-hidden="true">원</span>
-        </div>
-        {displayedErrors.monthlyRentAmount !== undefined && (
-          <p id="property-rent-error" className="field-error">
-            {displayedErrors.monthlyRentAmount}
-          </p>
-        )}
-      </div>
-
-      <div className="form-field">
-        <label htmlFor="property-source">발견 경로</label>
-        <textarea
+      {variant === 'detail' ? (
+        <TextAreaField
           id="property-source"
           name="discoverySource"
+          label="확인한 곳"
           value={values.discoverySource}
           maxLength={500}
           rows={3}
-          aria-invalid={displayedErrors.discoverySource !== undefined}
-          aria-describedby={
-            displayedErrors.discoverySource === undefined ? 'property-source-help' : 'property-source-error'
-          }
+          placeholder="URL, 앱 이름 또는 중개사 정보를 입력해 주세요."
+          fieldClassName={styles.detailField}
+          className={styles.detailInput}
+          error={displayedErrors.discoverySource}
           onChange={(event) => setValue('discoverySource', event.target.value)}
         />
-        <p id="property-source-help" className="field-help">
-          URL과 앱 이름, 중개사 설명 같은 일반 텍스트를 모두 입력할 수 있어요.
-        </p>
-        {displayedErrors.discoverySource !== undefined && (
-          <p id="property-source-error" className="field-error">
-            {displayedErrors.discoverySource}
-          </p>
-        )}
-      </div>
-
-      {formNotice !== null && formNotice !== undefined && (
-        <p className="form-notice" role="status">
-          {formNotice}
-        </p>
+      ) : (
+        <TextField
+          id="property-source"
+          name="discoverySource"
+          label="확인한 곳"
+          value={values.discoverySource}
+          maxLength={500}
+          autoComplete="off"
+          placeholder="URL, 앱 이름 또는 중개사 정보"
+          fieldClassName={styles.defaultField}
+          className={styles.defaultInput}
+          error={displayedErrors.discoverySource}
+          onChange={(event) => setValue('discoverySource', event.target.value)}
+        />
       )}
+
+      {formNotice !== null && formNotice !== undefined && <InlineNotice>{formNotice}</InlineNotice>}
       {mutationError !== null && (
-        <p className="form-error" role="alert">
-          {getPropertyErrorMessage(mutationError)} 입력값은 그대로 유지됩니다.
-        </p>
+        <InlineNotice tone="error">{getPropertyErrorMessage(mutationError)} 입력값은 그대로 유지됩니다.</InlineNotice>
       )}
 
-      <button className={`primary-button ${styles.submit}`} type="submit" disabled={isSubmitting}>
-        {isSubmitting ? '저장 중…' : submitLabel}
-      </button>
+      <BottomActionArea>
+        <Button type="submit" variant="soft" fullWidth isLoading={isSubmitting} loadingLabel="저장 중…">
+          {submitLabel}
+        </Button>
+      </BottomActionArea>
     </form>
   );
 };

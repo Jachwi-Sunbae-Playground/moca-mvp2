@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
 import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import { checklistQueryKeys } from './checklistQueryKeys';
 import { queryClient } from './queryClient';
 import ChecklistEditor from '../components/ChecklistEditor';
 import ConfirmDialog from '../components/ConfirmDialog';
-import PageHeading from '../components/PageHeading';
+import TopNavigation from '../components/ui/TopNavigation';
 import { checklistStageMeta } from '../constants/checklist';
 import { useRemoveChecklist, useUpdateChecklist } from '../hooks/query/useChecklistMutations';
 import { useChecklistDetail } from '../hooks/query/useChecklists';
@@ -14,6 +14,7 @@ import { checklistItemToEditorItem } from '../types/ChecklistEditor';
 import type { PublicConfig } from '../types/PublicConfig';
 import { toUpdateChecklistItems } from '../utils/checklistEditor';
 import { parsePositiveId } from '../utils/propertyFormat';
+import styles from './ChecklistDetailPage.module.css';
 
 const ChecklistDetailPage = ({ config }: { config: PublicConfig }) => {
   const checklistId = parsePositiveId(useParams().resource);
@@ -26,7 +27,7 @@ const InvalidChecklist = () => (
     <div className="page-container">
       <div className="content-state">
         <strong>올바른 체크리스트 주소가 아니에요.</strong>
-        <Link to="/checklists">체크리스트 홈으로 돌아가기</Link>
+        <Link to="/checklists">내 체크리스트로 돌아가기</Link>
       </div>
     </div>
   </main>
@@ -34,6 +35,7 @@ const InvalidChecklist = () => (
 
 const ResolvedChecklistDetail = ({ config, checklistId }: { config: PublicConfig; checklistId: number }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const detail = useChecklistDetail(config, checklistId);
   const update = useUpdateChecklist(config, checklistId);
   const remove = useRemoveChecklist(config, checklistId);
@@ -74,7 +76,7 @@ const ResolvedChecklistDetail = ({ config, checklistId }: { config: PublicConfig
                 다시 시도
               </button>
             )}
-            <Link to="/checklists">체크리스트 홈으로 돌아가기</Link>
+            <Link to="/checklists">내 체크리스트로 돌아가기</Link>
           </div>
         </div>
       </main>
@@ -82,6 +84,7 @@ const ResolvedChecklistDetail = ({ config, checklistId }: { config: PublicConfig
   }
 
   const checklist = detail.data;
+  const isAddingItems = searchParams.get('mode') === 'add-items';
   const deleteChecklist = async () => {
     try {
       await remove.mutateAsync();
@@ -93,19 +96,30 @@ const ResolvedChecklistDetail = ({ config, checklistId }: { config: PublicConfig
   };
 
   return (
-    <main className="property-page checklist-page">
-      <div className="page-container page-container--form">
-        <PageHeading
-          title={checklist.name}
-          description={`${checklistStageMeta[checklist.stage].label} · 매물 ${checklist.assignedPropertyCount}곳에서 사용 중`}
-          backTo={`/checklists/${checklist.stage}`}
-          backLabel="목록"
+    <main className={`property-page checklist-page checklist-editor-page ${styles.page}`}>
+      <div className={`page-container page-container--form ${styles.container}`}>
+        <TopNavigation
+          className={styles.topNavigation}
+          title={isAddingItems ? '체크 항목 편집' : checklistStageMeta[checklist.stage].label}
+          backLabel={isAddingItems ? '체크리스트 편집으로 돌아가기' : '체크리스트 목록으로 돌아가기'}
+          {...(isAddingItems
+            ? { onBack: () => setSearchParams({}, { replace: true }) }
+            : { backTo: `/checklists/${checklist.stage}` })}
+          {...(!isAddingItems && {
+            endSlot: (
+              <button
+                ref={deleteRef}
+                type="button"
+                className="top-navigation-danger-action"
+                aria-label="체크리스트 삭제"
+                onClick={() => setIsDeleteOpen(true)}
+              >
+                삭제
+              </button>
+            ),
+          })}
         />
-        <div className="detail-actions">
-          <button ref={deleteRef} type="button" className="danger-outline-button" onClick={() => setIsDeleteOpen(true)}>
-            체크리스트 삭제
-          </button>
-        </div>
+        <h1 className="sr-only">{checklist.name}</h1>
         <ChecklistEditor
           key={checklist.checklistId}
           config={config}
@@ -115,6 +129,10 @@ const ResolvedChecklistDetail = ({ config, checklistId }: { config: PublicConfig
           submitLabel="변경 내용 저장"
           isSubmitting={update.isPending}
           serverError={update.isError ? getChecklistErrorMessage(update.error) : undefined}
+          viewMode={isAddingItems ? 'ADD_ITEMS' : 'EDIT'}
+          onViewModeChange={(mode) =>
+            setSearchParams(mode === 'ADD_ITEMS' ? { mode: 'add-items' } : {}, { replace: mode === 'EDIT' })
+          }
           onSubmit={async ({ name, items }) => {
             return update.mutateAsync({ name, items: toUpdateChecklistItems(items) });
           }}

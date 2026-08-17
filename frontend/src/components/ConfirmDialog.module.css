@@ -7,11 +7,10 @@
   border-radius: var(--radius-lg);
   background: var(--color-surface);
   color: var(--color-ink);
-  box-shadow: 0 1.5rem 4rem rgb(30 24 12 / 28%);
 }
 
 .dialog::backdrop {
-  background: rgb(31 36 25 / 56%);
+  background: var(--color-overlay);
   backdrop-filter: blur(2px);
 }
 

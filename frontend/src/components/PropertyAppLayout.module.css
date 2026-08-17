@@ -44,79 +44,8 @@
   color: color-mix(in srgb, var(--color-theme-accent) 36%, var(--color-ink));
 }
 
-.header {
-  position: sticky;
-  z-index: 20;
-  top: 0;
-  background: var(--color-surface-translucent);
-  backdrop-filter: blur(12px);
-}
-
-.headerInner {
-  display: flex;
-  width: 100%;
-  min-height: var(--app-bar-height);
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  padding: 0.45rem 0.85rem;
-}
-
-.brand {
-  display: inline-flex;
-  min-width: 0;
-  min-height: 2.75rem;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--color-ink);
-  font-weight: 850;
-  text-decoration: none;
-}
-
-.brand img {
-  width: 4rem;
-  height: 2rem;
-  object-fit: contain;
-}
-
-.member {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--color-ink-soft);
-  font-size: 0.75rem;
-}
-
-.member > a {
-  display: inline-flex;
-  min-height: 2.75rem;
-  align-items: center;
-  color: var(--color-primary-dark);
-  font-weight: 750;
-  text-decoration: none;
-}
-
-.logoutButton {
-  min-height: 2.75rem;
-  padding: 0.35rem;
-  border: 0;
-  background: transparent;
-  color: var(--color-primary-dark);
-  font-weight: 750;
-  text-decoration: underline;
-  text-underline-offset: 0.2rem;
-  cursor: pointer;
-}
-
 @media (min-width: 431px) {
   .root {
     box-shadow: var(--shadow-app-shell);
-  }
-}
-
-@media (max-width: 340px) {
-  .brandName,
-  .memberName {
-    display: none;
   }
 }

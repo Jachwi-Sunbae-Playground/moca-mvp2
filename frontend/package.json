@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "dev": "webpack serve --mode development",
+    "dev:mock": "ENABLE_MSW=true webpack serve --mode development",
     "start": "webpack serve --mode development",
     "build": "webpack --mode production",
     "typecheck": "tsc --noEmit",
@@ -23,6 +24,11 @@
   "license": "ISC",
   "engines": {
     "node": "22.23.x"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   },
   "devDependencies": {
     "@babel/core": "^8.0.1",

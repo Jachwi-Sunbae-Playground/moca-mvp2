@@ -16,7 +16,6 @@ const CreatePropertyPage = lazy(() => import('./CreatePropertyPage'));
 const PropertyDetailPage = lazy(() => import('./PropertyDetailPage'));
 const EditPropertyPage = lazy(() => import('./EditPropertyPage'));
 const PropertyPhotosPage = lazy(() => import('./PropertyPhotosPage'));
-const ChecklistHomePage = lazy(() => import('./ChecklistHomePage'));
 const ChecklistListPage = lazy(() => import('./ChecklistListPage'));
 const CreateChecklistPage = lazy(() => import('./CreateChecklistPage'));
 const ChecklistDetailPage = lazy(() => import('./ChecklistDetailPage'));
@@ -70,7 +69,7 @@ const AppRoutes = ({ config, storage, navigateExternally }: AppRoutesProps) => (
           path="/properties/:propertyId/active-checklists/:stage"
           element={lazyPage(<PropertyActiveChecklistPage config={config} />)}
         />
-        <Route path="/checklists" element={lazyPage(<ChecklistHomePage />)} />
+        <Route path="/checklists" element={<Navigate to="/checklists/ONLINE_PHONE" replace />} />
         <Route path="/checklists/new" element={lazyPage(<CreateChecklistPage config={config} />)} />
         <Route path="/checklists/:resource" element={lazyPage(<ChecklistResourceRoute config={config} />)} />
         <Route path="/me" element={lazyPage(<MyPage />)} />
