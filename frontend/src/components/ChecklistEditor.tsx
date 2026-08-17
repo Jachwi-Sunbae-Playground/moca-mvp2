@@ -346,7 +346,7 @@ const ChecklistEditor = ({
                         >
                           {item.question}
                         </strong>
-                        <small>{item.guide}</small>
+                        {item.guide !== null && <small>{item.guide}</small>}
                         {isInactiveProvided && (
                           <small className="inactive-item-note">
                             더 이상 제공되지 않음 · 유지, 이동 또는 제거 가능

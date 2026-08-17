@@ -80,31 +80,30 @@
 
 .featureList {
   display: grid;
-  gap: 1.5rem;
+  gap: 2.75rem;
 }
 
 .featureItem {
   display: grid;
-  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-  align-items: center;
-  gap: 1rem;
+  justify-items: start;
+  gap: 1.1rem;
 }
 
 .featureItemReverse {
-  grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
+  justify-items: end;
 }
 
 .featureItemReverse .screenshotFrame {
-  order: 2;
+  order: initial;
 }
 
 .featureItemReverse .featureCopy {
-  order: 1;
   text-align: right;
 }
 
 .screenshotFrame {
   position: relative;
+  width: min(72%, 15.5rem);
   aspect-ratio: 13 / 24;
   border: 1px solid var(--color-border);
   border-radius: 1.2rem;
@@ -126,6 +125,10 @@
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: -0.015em;
+}
+
+.featureCopy {
+  width: min(88%, 18rem);
 }
 
 .featureCopy h3 {

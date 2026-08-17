@@ -7,6 +7,8 @@ import type { PublicConfig } from '../types/PublicConfig';
 import { formatDateTime } from '../utils/propertyFormat';
 import { getUnicodeCodePointLength } from '../utils/unicode';
 import Icon from './ui/Icon';
+import { Button } from './ui/Button';
+import TextAreaField from './ui/TextAreaField';
 
 type PreVisitMemoEditorProps = {
   config: PublicConfig;
@@ -53,6 +55,8 @@ const PreVisitMemoEditor = ({ config, propertyId, initialMemo }: PreVisitMemoEdi
   const [savedAt, setSavedAt] = useState(initialMemo.savedAt);
   const draftRef = useRef(draft);
   const savedMemoRef = useRef(savedMemo);
+  const disclosureRef = useRef<HTMLDetailsElement>(null);
+  const summaryRef = useRef<HTMLElement>(null);
   const fieldIdPrefix = useId();
   const saveMutation = useSavePropertyPreVisitMemo(config, propertyId);
 
@@ -88,6 +92,8 @@ const PreVisitMemoEditor = ({ config, propertyId, initialMemo }: PreVisitMemoEdi
       setDraft(nextSavedMemo);
       setSavedMemo(nextSavedMemo);
       setSavedAt(saved.savedAt);
+      disclosureRef.current?.removeAttribute('open');
+      summaryRef.current?.focus();
     } catch {
       // Mutation state renders a retryable error while preserving the draft.
     }
@@ -95,8 +101,8 @@ const PreVisitMemoEditor = ({ config, propertyId, initialMemo }: PreVisitMemoEdi
 
   return (
     <section className="pre-visit-memo-editor" aria-labelledby={`${fieldIdPrefix}-summary-heading`}>
-      <details className="pre-visit-memo-editor__disclosure">
-        <summary className="pre-visit-memo-editor__summary" aria-label="퀵 메모 입력 열기">
+      <details ref={disclosureRef} className="pre-visit-memo-editor__disclosure">
+        <summary ref={summaryRef} className="pre-visit-memo-editor__summary" aria-label="퀵 메모 입력 열기">
           <strong id={`${fieldIdPrefix}-summary-heading`}>퀵 메모</strong>
           <span className="pre-visit-memo-editor__summary-action">
             <span className="sr-only">{savedMemo.trim() === '' ? '메모 작성' : '메모 수정'}</span>
@@ -114,34 +120,23 @@ const PreVisitMemoEditor = ({ config, propertyId, initialMemo }: PreVisitMemoEdi
               void save();
             }}
           >
-            <div className="pre-visit-memo-editor__freeform">
-              <label htmlFor={`${fieldIdPrefix}-memo`}>메모</label>
-              <textarea
-                id={`${fieldIdPrefix}-memo`}
-                name="additionalMemo"
-                rows={7}
-                value={draft}
-                placeholder="매물에 대해 기억할 내용을 자유롭게 적어 주세요."
-                readOnly={saveMutation.isPending}
-                aria-invalid={hasError || undefined}
-                aria-describedby={`${fieldIdPrefix}-memo-count${hasError ? ` ${fieldIdPrefix}-memo-error` : ''}`}
-                onChange={(event) => {
-                  saveMutation.reset();
-                  setDraft(event.target.value);
-                }}
-              />
-              <span
-                className={hasError ? 'character-count character-count--error' : 'character-count'}
-                id={`${fieldIdPrefix}-memo-count`}
-              >
-                {memoLength.toLocaleString('ko-KR')} / 5,000
-              </span>
-              {hasError && (
-                <p className="field-error" id={`${fieldIdPrefix}-memo-error`}>
-                  5,000자 이하로 입력해 주세요.
-                </p>
-              )}
-            </div>
+            <TextAreaField
+              id={`${fieldIdPrefix}-memo`}
+              fieldClassName="pre-visit-memo-editor__freeform"
+              className="pre-visit-memo-editor__textarea"
+              label="메모"
+              name="additionalMemo"
+              rows={7}
+              value={draft}
+              placeholder="매물에 대해 기억할 내용을 자유롭게 적어 주세요."
+              readOnly={saveMutation.isPending}
+              helpText={`${memoLength.toLocaleString('ko-KR')} / 5,000`}
+              error={hasError ? '5,000자 이하로 입력해 주세요.' : undefined}
+              onChange={(event) => {
+                saveMutation.reset();
+                setDraft(event.target.value);
+              }}
+            />
 
             <div className="pre-visit-memo-editor__status" aria-live="polite">
               {hasError && <span className="field-error">글자 수를 확인한 뒤 저장해 주세요.</span>}
@@ -165,13 +160,16 @@ const PreVisitMemoEditor = ({ config, propertyId, initialMemo }: PreVisitMemoEdi
             )}
 
             <div className="pre-visit-memo-editor__actions">
-              <button
-                className="primary-button"
+              <Button
+                variant="neutral"
+                fullWidth
                 type="submit"
                 disabled={!isDirty || hasError || saveMutation.isPending}
+                isLoading={saveMutation.isPending}
+                loadingLabel="메모 저장 중…"
               >
-                {saveMutation.isPending ? '메모 저장 중…' : saveMutation.isError ? '다시 저장' : '메모 저장'}
-              </button>
+                {saveMutation.isError ? '다시 저장' : '메모 저장'}
+              </Button>
             </div>
           </form>
         </div>

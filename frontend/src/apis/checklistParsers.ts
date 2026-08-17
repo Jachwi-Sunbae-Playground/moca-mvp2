@@ -33,7 +33,7 @@ const parseCheckItem = (value: unknown): CheckItem => {
     checkItemId: readInteger(item, 'checkItemId', 1),
     stage: parseStage(item.stage),
     question: readString(item, 'question', { maximumCodePoints: 200 }),
-    guide: readString(item, 'guide'),
+    guide: readNullableString(item, 'guide'),
   };
 };
 

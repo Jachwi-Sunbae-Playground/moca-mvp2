@@ -9,13 +9,21 @@ type ChecklistStartOptionsProps = {
 
 const ChecklistStartOptions = ({ onSelect }: ChecklistStartOptionsProps) => (
   <div className={styles.options}>
-    <Button aria-label="빈 목록으로 시작" variant="secondary" fullWidth type="button" onClick={() => onSelect('EMPTY')}>
+    <Button
+      className={styles.optionButton}
+      aria-label="빈 목록으로 시작"
+      variant="secondary"
+      fullWidth
+      type="button"
+      onClick={() => onSelect('EMPTY')}
+    >
       <span className={styles.optionContent}>
         <strong>빈 목록</strong>
         <span aria-hidden="true">&gt;</span>
       </span>
     </Button>
     <Button
+      className={styles.optionButton}
       aria-label="원룸 제공 항목으로 시작"
       variant="secondary"
       fullWidth

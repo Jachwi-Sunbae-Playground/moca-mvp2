@@ -103,7 +103,7 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onAdd }: 
                   />
                   <span>
                     <strong>{item.question}</strong>
-                    <small>{item.guide}</small>
+                    {item.guide !== null && <small>{item.guide}</small>}
                   </span>
                 </label>
                 {exists && <small className="already-added">이미 추가됨</small>}

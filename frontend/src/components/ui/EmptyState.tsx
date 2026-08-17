@@ -8,10 +8,11 @@ type EmptyStateProps = {
   description: string;
   action?: ReactNode;
   icon?: IconName;
+  variant?: 'card' | 'plain';
 };
 
-const EmptyState = ({ title, description, action, icon = 'inbox' }: EmptyStateProps) => (
-  <section className={styles.emptyState}>
+const EmptyState = ({ title, description, action, icon = 'inbox', variant = 'card' }: EmptyStateProps) => (
+  <section className={`${styles.emptyState} ${styles[variant]}`} data-variant={variant}>
     <span className={styles.icon} aria-hidden="true">
       <Icon name={icon} size={26} />
     </span>

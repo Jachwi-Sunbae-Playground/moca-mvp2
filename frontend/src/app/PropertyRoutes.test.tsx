@@ -232,6 +232,11 @@ describe('FE-2 등록·수정·메모', () => {
     await user.click(screen.getByRole('button', { name: '매물 등록' }));
 
     expect(await screen.findByRole('heading', { name: '신림역 원룸', level: 1 })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (_, element) => element?.tagName === 'P' && element.textContent === '보증금 0원 / 월세 550,000원',
+      ),
+    ).toBeInTheDocument();
     expect(requestBody).toEqual({
       name: '신림역 원룸',
       depositAmount: 0,
@@ -360,6 +365,12 @@ describe('FE-2 등록·수정·메모', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/properties/10');
+    const memoSummary = (await screen.findByText('퀵 메모')).closest('summary');
+    const memoDisclosure = memoSummary?.closest('details');
+    expect(memoSummary).not.toBeNull();
+    expect(memoDisclosure).not.toBeNull();
+    await user.click(memoSummary as HTMLElement);
+    expect(memoDisclosure).toHaveAttribute('open');
     const memo = await screen.findByRole('textbox', { name: '메모' });
 
     await user.clear(memo);
@@ -370,6 +381,8 @@ describe('FE-2 등록·수정·메모', () => {
 
     await user.click(screen.getByRole('button', { name: '다시 저장' }));
     expect(await screen.findByText(/저장했어요. 마지막 저장/)).toBeInTheDocument();
+    expect(memoDisclosure).not.toHaveAttribute('open');
+    expect(memoSummary).toHaveFocus();
     const expectedBody = {
       viewingSchedule: '',
       moveInAvailability: '',

@@ -477,7 +477,3 @@
   font-size: 0.72rem;
   line-height: 1.45;
 }
-
-.page :global(.pre-visit-memo-editor__actions .primary-button) {
-  width: 100%;
-}

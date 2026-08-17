@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import AppBar from './AppBar';
 import { Button, ButtonLink } from './Button';
+import EmptyState from './EmptyState';
 import TopNavigation from './TopNavigation';
 import SearchField from './SearchField';
 import TextField from './TextField';
@@ -80,5 +81,11 @@ describe('공용 UI 컴포넌트', () => {
     expect(screen.getByText('2개')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '매물 목록으로 돌아가기' })).toHaveAttribute('href', '/properties');
     expect(screen.getByRole('button', { name: '메뉴' })).toBeInTheDocument();
+  });
+
+  it('EmptyState는 문맥에 따라 카드 테두리 없는 상태로 표시할 수 있다', () => {
+    render(<EmptyState variant="plain" title="해당 상태의 매물이 없어요." description="다른 상태를 선택해 보세요." />);
+
+    expect(screen.getByText('해당 상태의 매물이 없어요.').closest('section')).toHaveAttribute('data-variant', 'plain');
   });
 });

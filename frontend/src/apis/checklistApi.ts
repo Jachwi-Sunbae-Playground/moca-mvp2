@@ -20,7 +20,7 @@ import type {
 
 const toLegacyChecklistDetail = (detail: Awaited<ReturnType<typeof fetchChecklistDetail>>): LegacyChecklistDetail => {
   const items = detail.items.map((item) => {
-    if (item.origin !== 'PROVIDED' || item.guide === null) {
+    if (item.origin !== 'PROVIDED') {
       throw new ApiError({ kind: 'invalid-response' });
     }
     return {

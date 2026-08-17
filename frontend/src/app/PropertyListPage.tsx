@@ -164,7 +164,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
         )}
 
         {properties.isSuccess && items.length > 0 && filteredItems.length === 0 && (
-          <EmptyState title="해당 상태의 매물이 없어요." description="다른 상태를 선택해 보세요." />
+          <EmptyState variant="plain" title="해당 상태의 매물이 없어요." description="다른 상태를 선택해 보세요." />
         )}
 
         {!hasInitialError && properties.hasNextPage && (

@@ -51,13 +51,13 @@ describe('FE-3 API 경계', () => {
         });
         expect(url.searchParams.has('memberId')).toBe(false);
         expect(request.headers.get('Authorization')).toBe('Bearer memory-token');
-        return HttpResponse.json(successEnvelope(checkItemPageFixture([onlineItemFixture], 2)));
+        return HttpResponse.json(successEnvelope(checkItemPageFixture([{ ...onlineItemFixture, guide: null }], 2)));
       }),
     );
 
     await expect(
       fetchCheckItems(config, { stage: 'ONLINE_PHONE', query: '  관리비  ', page: 2 }),
-    ).resolves.toMatchObject({ content: [{ checkItemId: 101 }] });
+    ).resolves.toMatchObject({ content: [{ checkItemId: 101, guide: null }] });
   });
 
   it('API-302는 stage와 presetType을 필수로 보내고 프리셋 순서를 읽는다', async () => {
@@ -65,11 +65,17 @@ describe('FE-3 API 경계', () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/checklist-presets`, ({ request }) => {
         expect(new URL(request.url).searchParams.toString()).toBe('stage=ONLINE_PHONE&presetType=ONE_ROOM');
-        return HttpResponse.json(successEnvelope(presetFixture));
+        return HttpResponse.json(
+          successEnvelope({
+            ...presetFixture,
+            items: [{ ...presetFixture.items[0], guide: null }, presetFixture.items[1]],
+          }),
+        );
       }),
     );
     const result = await fetchChecklistPreset(config, 'ONLINE_PHONE', 'ONE_ROOM');
     expect(result.items.map((item) => item.order)).toEqual([0, 1]);
+    expect(result.items[0]?.guide).toBeNull();
   });
 
   it('API-303은 stage 페이지를 조회하고 memberId를 보내지 않는다', async () => {

@@ -481,7 +481,7 @@ const ResolvedPropertyDetailPage = ({ config, propertyId }: { config: PublicConf
             매물 기본 정보
           </h2>
           <p className={styles.priceSummary}>
-            보증금 {formatWon(detail.depositAmount)} <span aria-hidden="true">·</span> 월세{' '}
+            보증금 {formatWon(detail.depositAmount)} <span aria-hidden="true">/</span> 월세{' '}
             {formatWon(detail.monthlyRentAmount)}
           </p>
           <div className={styles.discoverySource}>

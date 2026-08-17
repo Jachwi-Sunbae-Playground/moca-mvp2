@@ -11,6 +11,14 @@
   text-align: center;
 }
 
+.plain {
+  min-height: 10rem;
+  padding: 1.25rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 .icon {
   display: grid;
   width: 3.4rem;

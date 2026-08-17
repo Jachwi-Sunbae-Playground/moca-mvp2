@@ -9,6 +9,10 @@
   padding: 0.75rem 0.8rem;
 }
 
+.optionButton > span {
+  width: 100%;
+}
+
 .optionContent {
   display: grid;
   width: 100%;

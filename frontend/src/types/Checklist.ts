@@ -10,7 +10,7 @@ export type CheckItem = {
   checkItemId: number;
   stage: ChecklistStage;
   question: string;
-  guide: string;
+  guide: string | null;
 };
 
 type ChecklistItemBase = {
