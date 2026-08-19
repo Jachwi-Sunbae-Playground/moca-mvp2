@@ -43,6 +43,7 @@ dependencies {
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.testcontainers:mysql'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'com.google.api-client:google-api-client:2.8.1'
 }
 
 tasks.named('test') {

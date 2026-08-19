@@ -11,33 +11,30 @@ import java.time.LocalDateTime;
 public class Member extends BaseTimeEntity {
 
     private final Long id;
-    private final String email;
-    private final String name;
-    private LocalDateTime lastLoginAt;
-
+    private String email;
+    private String name;
     private Member(final Long id, final String email, final String name,
-                   final LocalDateTime lastLoginAt, final LocalDateTime createdAt,
+                   final LocalDateTime createdAt,
                    final LocalDateTime updatedAt) {
         super(createdAt, updatedAt);
         this.id = id;
         this.email = email;
         this.name = name;
-        this.lastLoginAt = lastLoginAt;
     }
 
     public static Member create(final String email, final String name, final LocalDateTime now) {
-        return new Member(null, validateEmail(email), validateName(name), validateLoginAt(now), now, now);
+        return new Member(null, validateEmail(email), validateName(name), now, now);
     }
 
     public static Member reconstruct(final Long id, final String email, final String name,
-                                     final LocalDateTime lastLoginAt, final LocalDateTime createdAt,
+                                     final LocalDateTime createdAt,
                                      final LocalDateTime updatedAt) {
-        return new Member(id, validateEmail(email), validateName(name), validateLoginAt(lastLoginAt), createdAt, updatedAt);
+        return new Member(id, validateEmail(email), validateName(name), createdAt, updatedAt);
     }
 
-    public void recordLogin(final LocalDateTime loginAt) {
-        this.lastLoginAt = validateLoginAt(loginAt);
-        updateUpdatedAt(loginAt);
+    public void updateLoginProfile(final String email, final String name) {
+        this.email = validateEmail(email);
+        this.name = validateName(name);
     }
 
     private static String validateEmail(final String email) {
@@ -50,8 +47,4 @@ public class Member extends BaseTimeEntity {
                 "회원 이름은 trim 후 1자 이상 100자 이하여야 합니다.");
     }
 
-    private static LocalDateTime validateLoginAt(final LocalDateTime loginAt) {
-        return DomainPreconditions.requireNonNull(loginAt, DomainErrorCode.MEMBER_LAST_LOGIN_AT_REQUIRED,
-                "마지막 로그인 시각은 필수입니다.");
-    }
 }

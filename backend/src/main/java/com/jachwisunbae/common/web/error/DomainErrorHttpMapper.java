@@ -15,7 +15,6 @@ public class DomainErrorHttpMapper {
                     MEMBER_SUBJECT_INVALID,
                     MEMBER_EMAIL_INVALID,
                     MEMBER_NAME_INVALID,
-                    MEMBER_LAST_LOGIN_AT_REQUIRED,
                     USER_CHECKLIST_MEMBER_REQUIRED,
                     USER_CHECKLIST_NAME_INVALID,
                     USER_CHECKLIST_STAGE_REQUIRED,
