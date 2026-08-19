@@ -6,7 +6,7 @@
 
 ## 문서를 고치기 전에
 
-- **시점 고정 문서는 고치지 않는다.** ADR, 지정 요구사항, 실험 기록, 피벗 히스토리는 그때의 기록이다. 낡아 보여도 수정하지 말고 새 문서를 만든다. 각 문서 머리말의 `갱신 정책`을 확인한다.
+- **시점 고정 문서는 고치지 않는다.** ADR, 실험 기록, 피벗 히스토리는 그때의 기록이다. 낡아 보여도 수정하지 말고 새 문서를 만든다. 각 문서 머리말의 `갱신 정책`을 확인한다.
 - 같은 내용을 두 문서에 적지 않는다. 한 곳에 적고 나머지는 링크한다.
 - `.md`를 수정했으면 `python3 .github/scripts/check_docs.py`를 실행한다.
 - 규칙은 [문서 관리](docs/convention/documentation.md)를 따른다.
@@ -32,6 +32,4 @@
 
 ## 백엔드
 
-- 테스트는 `IntegrationTest` / `RepositoryTest` / `AcceptanceTest`를 상속한다. 애너테이션을 직접 조합하지 않는다.
-- 테스트에 Docker가 필요하다. `./gradlew test`는 인수 테스트를 제외하고, `./gradlew testAll`이 전체다.
-- 코드·API·예외·테스트 규칙은 [backend/docs/conventions](backend/docs/conventions/backend-code-convention.md)를 따른다.
+- 코드·API·예외 규칙은 [backend/docs/conventions](backend/docs/conventions/backend-code-convention.md)를 따른다.

@@ -16,7 +16,7 @@
 
 모든 문서를 이 셋으로 정확히 나누지는 않는다. 지금은 **확실한 시점 고정**과 **확실한 파생**만 문서 머리말에 표시하고, 나머지는 표시하지 않는다.
 
-아직 코드가 없어 계획에 가까운 문서는 파생으로 둔다. 예를 들어 [백엔드 패키지 구조](../../backend/docs/architecture/backend-package-structure.md)와 [데이터베이스 모델](../../backend/docs/architecture/database-model.md)은 실제 코드와 테이블이 생기면 규범으로 옮긴다.
+아직 코드가 없어 계획에 가까운 문서는 파생으로 둔다. 예를 들어 [백엔드 패키지 구조](../../backend/docs/architecture/backend-package-structure.md)는 실제 코드가 생기면 규범으로 옮긴다.
 
 ## 머리말 표기
 
@@ -43,7 +43,6 @@
 | 문서 | 이유 |
 | --- | --- |
 | [ADR](../../backend/docs/adr/README.md) `0001`~`0008` | 그때의 결정 맥락을 보존한다 |
-| [지정 요구사항 1·2](../../backend/docs/requirements/01-development-environment.md) | 수행 과정과 증거의 기록이다 |
 | [실험 기록](../experiments/) | 실험 설계와 결과의 기록이다 |
 | [피벗 히스토리](../learnings/pivot-history.md) | 이전 검증에서 현재까지의 학습 기록이다 |
 
@@ -55,10 +54,6 @@ ADR은 전체를 동결하지 않는다. [ADR 작성 규칙](../../backend/docs/
 - **갱신**: `결과와 트레이드오프`, `재검토 조건`
 
 결론을 바꿀 때는 기존 ADR을 수정하지 않고 새 ADR에서 대체한다.
-
-### 기록 안의 값을 최신화하지 않는다
-
-[지정 요구사항 1](../../backend/docs/requirements/01-development-environment.md)에는 `Spring Boot 3.5.16`처럼 버전이 적혀 있다. 이는 **그때 그렇게 정했다는 기록**이지 현재 버전이 아니다. 버전을 올려도 이 값은 고치지 않는다.
 
 ## 파생 문서와 대조 대상
 
@@ -72,15 +67,11 @@ ADR은 전체를 동결하지 않는다. [ADR 작성 규칙](../../backend/docs/
 | [`README.md`](../../README.md) | 최상위 디렉터리와 `docs/` 하위 디렉터리 | B-1 |
 | [환경변수](../../backend/docs/guides/environment-variables.md) | `backend/.env.example` | B-2 |
 | [로컬 개발](../../backend/docs/guides/local-development.md) | `compose.yaml`, `build.gradle`, 실행 URL | 사람 |
-| [데이터베이스 마이그레이션](../../backend/docs/guides/database-migrations.md) | `build.gradle`, `application.yml`, `db/migration` | 사람 |
-| [테스트와 빌드](../../backend/docs/guides/test-and-build.md) | `build.gradle`의 테스트 태스크 | 사람 |
 | [백엔드 패키지 구조](../../backend/docs/architecture/backend-package-structure.md) | `build.gradle`의 `group`, `backend/src` 구조 | 사람 |
 | [시스템 개요](../../backend/docs/architecture/system-overview.md) | 실제 구성 요소 | 사람 |
 | [배포](../../backend/docs/operations/deployment.md) | `backend/deploy/`, 실제 AWS 파이프라인 구성 | 사람 |
 | [롤백](../../backend/docs/operations/rollback.md) | 실제 CodeDeploy 배포 그룹 설정 | 사람 |
 | [배포 아키텍처 설계](../operations/deployment-architecture.md) | 실제 AWS 리소스 구성 | 사람 |
-| [API 명세](../../backend/docs/api/api-specification.md) | 구현된 Controller와 Swagger | 사람 |
-| [데이터베이스 모델](../../backend/docs/architecture/database-model.md) | 실제 테이블 스키마 | 사람 |
 | [핵심 가설](../product/hypotheses.md) | [실험 기록](../experiments/)의 결과 | 사람 |
 | [`frontend/README.md`](../../frontend/README.md) | `frontend/` 구조와 `package.json` | 사람 |
 | [프론트엔드 배포](../../frontend/docs/deployment.md) | `frontend/webpack.config.js`, 실제 CloudFront·파이프라인 구성 | 사람 |
@@ -118,9 +109,7 @@ Claude Code나 Codex로 작업할 때는 문서를 수정한 직후 같은 스�
 
 | 검사 | 추가 시점 |
 | --- | --- |
-| API 명세와 Swagger 대조 | 첫 Controller를 구현할 때 |
 | 패키지 트리와 실제 구조 대조 | 첫 도메인 패키지를 만들 때 |
-| 데이터베이스 모델과 스키마 대조 | 첫 테이블을 만들 때 |
 
 ## 작성 원칙
 

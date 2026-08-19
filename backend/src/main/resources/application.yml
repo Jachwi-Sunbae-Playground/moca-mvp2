@@ -1,48 +1,6 @@
 spring:
   application:
     name: jachwi-sunbae-backend
-  profiles:
-    default: local
-  sql:
-    init:
-      mode: never
-  flyway:
-    enabled: true
-    baseline-on-migrate: false
-    clean-disabled: true
-    locations: classpath:db/migration
-    out-of-order: false
-    validate-on-migrate: true
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 11MB
-
-security:
-  jwt:
-    secret-base64: ${JWT_SECRET_BASE64}
-    issuer: jachwi-sunbae
-    audience: jachwi-sunbae-api
-    access-token-ttl: PT12H
-    clock-skew: PT60S
-
-google:
-  oauth:
-    client-id: ${GOOGLE_OAUTH_CLIENT_ID}
-    client-secret: ${GOOGLE_OAUTH_CLIENT_SECRET}
-    token-uri: https://oauth2.googleapis.com/token
-    jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
-    allowed-redirect-uris: ${GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS}
-
-app:
-  cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS}
-
-photo:
-  storage:
-    region: ${PHOTO_STORAGE_REGION}
-    bucket: ${PHOTO_STORAGE_BUCKET}
-    key-prefix: ${PHOTO_STORAGE_KEY_PREFIX:}
 
 management:
   endpoints:
