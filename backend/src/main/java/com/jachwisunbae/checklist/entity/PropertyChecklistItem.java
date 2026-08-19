@@ -2,6 +2,8 @@ package com.jachwisunbae.checklist.entity;
 
 import lombok.Getter;
 import com.jachwisunbae.checklist.type.CheckStatus;
+import com.jachwisunbae.common.exception.DomainErrorCode;
+import com.jachwisunbae.common.validation.DomainPreconditions;
 
 @Getter
 public class PropertyChecklistItem {
@@ -28,27 +30,54 @@ public class PropertyChecklistItem {
 
     public static PropertyChecklistItem create(final Long propertyChecklistId, final Long systemCheckItemId,
                                               final Integer displayOrder, final String question) {
-        return new PropertyChecklistItem(null, propertyChecklistId, systemCheckItemId, displayOrder,
-                CheckStatus.UNCONFIRMED, "", question);
+        return new PropertyChecklistItem(null, validateId(propertyChecklistId), validateId(systemCheckItemId),
+                validateOrder(displayOrder), CheckStatus.UNCONFIRMED, "", validateQuestion(question));
     }
 
     public static PropertyChecklistItem reconstruct(final Long id, final Long propertyChecklistId,
                                                     final Long systemCheckItemId, final Integer displayOrder,
                                                     final CheckStatus status, final String memo,
                                                     final String question) {
-        return new PropertyChecklistItem(id, propertyChecklistId, systemCheckItemId, displayOrder,
-                status, memo, question);
+        return new PropertyChecklistItem(id, validateId(propertyChecklistId), validateId(systemCheckItemId),
+                validateOrder(displayOrder), validateStatus(status), validateMemo(memo), validateQuestion(question));
     }
 
     public void changeStatus(final CheckStatus status) {
-        this.status = status;
+        this.status = validateStatus(status);
     }
 
     public void changeMemo(final String memo) {
-        this.memo = memo;
+        this.memo = validateMemo(memo);
     }
 
     public void reorder(final Integer displayOrder) {
-        this.displayOrder = displayOrder;
+        this.displayOrder = validateOrder(displayOrder);
+    }
+
+    private static Long validateId(final Long id) {
+        return DomainPreconditions.requireNonNull(id, DomainErrorCode.PROPERTY_CHECKLIST_ITEM_NOT_FOUND,
+                "매물 체크 항목 ID는 필수입니다.");
+    }
+
+    private static Integer validateOrder(final Integer order) {
+        return DomainPreconditions.requirePositive(order, DomainErrorCode.PROPERTY_CHECK_RESULT_INVALID,
+                "표시 순서는 양수여야 합니다.");
+    }
+
+    private static CheckStatus validateStatus(final CheckStatus status) {
+        return DomainPreconditions.requireNonNull(status, DomainErrorCode.PROPERTY_CHECK_RESULT_INVALID,
+                "체크 상태는 필수입니다.");
+    }
+
+    private static String validateMemo(final String memo) {
+        String value = memo == null ? "" : memo;
+        DomainPreconditions.require(value.length() <= 500, DomainErrorCode.PROPERTY_CHECK_RESULT_INVALID,
+                "항목 메모는 500자 이하여야 합니다.");
+        return value;
+    }
+
+    private static String validateQuestion(final String question) {
+        return DomainPreconditions.requireTrimmed(question, 1, 200, DomainErrorCode.PROPERTY_CHECK_RESULT_INVALID,
+                "스냅샷 질문은 trim 후 1자 이상 200자 이하여야 합니다.");
     }
 }

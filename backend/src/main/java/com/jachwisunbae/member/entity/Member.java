@@ -2,6 +2,8 @@ package com.jachwisunbae.member.entity;
 
 import lombok.Getter;
 import com.jachwisunbae.common.entity.BaseTimeEntity;
+import com.jachwisunbae.common.exception.DomainErrorCode;
+import com.jachwisunbae.common.validation.DomainPreconditions;
 
 import java.time.LocalDateTime;
 
@@ -24,17 +26,32 @@ public class Member extends BaseTimeEntity {
     }
 
     public static Member create(final String email, final String name, final LocalDateTime now) {
-        return new Member(null, email, name, now, now, now);
+        return new Member(null, validateEmail(email), validateName(name), validateLoginAt(now), now, now);
     }
 
     public static Member reconstruct(final Long id, final String email, final String name,
                                      final LocalDateTime lastLoginAt, final LocalDateTime createdAt,
                                      final LocalDateTime updatedAt) {
-        return new Member(id, email, name, lastLoginAt, createdAt, updatedAt);
+        return new Member(id, validateEmail(email), validateName(name), validateLoginAt(lastLoginAt), createdAt, updatedAt);
     }
 
     public void recordLogin(final LocalDateTime loginAt) {
-        this.lastLoginAt = loginAt;
+        this.lastLoginAt = validateLoginAt(loginAt);
         updateUpdatedAt(loginAt);
+    }
+
+    private static String validateEmail(final String email) {
+        return DomainPreconditions.requireNonBlank(email, DomainErrorCode.MEMBER_EMAIL_INVALID,
+                "이메일은 필수입니다.");
+    }
+
+    private static String validateName(final String name) {
+        return DomainPreconditions.requireTrimmed(name, 1, 100, DomainErrorCode.MEMBER_NAME_INVALID,
+                "회원 이름은 trim 후 1자 이상 100자 이하여야 합니다.");
+    }
+
+    private static LocalDateTime validateLoginAt(final LocalDateTime loginAt) {
+        return DomainPreconditions.requireNonNull(loginAt, DomainErrorCode.MEMBER_LAST_LOGIN_AT_REQUIRED,
+                "마지막 로그인 시각은 필수입니다.");
     }
 }
