@@ -61,7 +61,8 @@ public class AuthService {
 
     private Member updateMember(Member member, OAuthProfile profile, LocalDateTime loginAt) {
         member.updateLoginProfile(profile.email(), profile.name());
-        return memberRepository.save(member);
+        memberRepository.update(member);
+        return member;
     }
 
     private Member createMember(OAuthProfile profile, LocalDateTime loginAt) {

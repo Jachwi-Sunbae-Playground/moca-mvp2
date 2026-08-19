@@ -13,8 +13,9 @@
 | `V2__expand_v1_1_schema.sql` | 사전 메모 테이블과 사용자 항목·방문 메모용 컬럼·키를 추가한다 |
 | `V3__backfill_v1_1_data.sql` | 기존 메모·항목·방문 데이터를 보정하고 GOSHIWON 프리셋을 비활성화하며 제공 질문을 갱신한다 |
 | `V4__enforce_v1_1_constraints.sql` | 제공·사용자 항목 배타성, 메모 길이·개행·버전 제약을 확정한다 |
+| `V5__extend_schema_for_erd.sql` | ERD 기준 회원·매물·메모·시스템 항목·사용자 체크리스트·매물 스냅샷을 추가하고 Refresh Token·마지막 로그인 시각을 제거한다 |
 
-`V1`은 v1.0 정본을 옮긴 파일이다. 빈 DB에는 V1~V4가 실행되고, 명시적으로 버전 1을 baseline한 기존 DB에는 V2~V4만 실행된다.
+`V1~V4`는 레거시 스키마다. 새 개발 DB에는 V1~V5가 순서대로 실행되며, V5가 현재 ERD 기준의 최종 전환 단계다. V5·V6·V7을 별도 파일로 나누지 않고 하나의 마이그레이션으로 관리한다.
 
 ## 2. 작성 규칙
 
@@ -48,7 +49,7 @@ WHERE table_schema = DATABASE()
   AND table_name <> 'flyway_schema_history';
 ```
 
-현재 정상 결과는 성공한 V1~V4 네 행과 제품 테이블 13개다. 애플리케이션을 재시작해도 `installed_rank`가 늘지 않아야 한다.
+현재 정상 결과는 성공한 V1~V5 다섯 행이다. 애플리케이션을 재시작해도 `installed_rank`가 늘지 않아야 한다.
 
 ## 4. 기존 pre-Flyway v1.0 DB 전환
 
@@ -127,7 +128,7 @@ ORDER BY installed_rank;
 
 ### 4.4 v1.1 적용과 검증
 
-기본 설정으로 애플리케이션을 다시 시작해 V2~V4를 적용한다.
+기본 설정으로 애플리케이션을 다시 시작해 V2~V5를 적용한다.
 
 ```bash
 ./gradlew bootRun
@@ -136,19 +137,19 @@ curl --fail http://localhost:8080/actuator/health
 
 배포를 계속하기 전에 다음을 확인한다.
 
-- history에 `BASELINE`, V2, V3, V4가 모두 `success=1`로 기록된다.
+- history에 `BASELINE`, V2, V3, V4, V5가 모두 `success=1`로 기록된다.
 - 사전 기록한 기존 테이블 행 수, ID와 부모·자식 관계가 유지된다.
 - `property_pre_visit_memos` 행 수가 `properties`와 같고 기존 `properties.memo`가 `additional_memo`로 복사된다.
 - 기존 `checklist_items`와 `visit_check_items`는 `origin='PROVIDED'`이며 방문 원본 항목 연결이 채워진다.
 - 방문 질문·안내 스냅샷과 상태 `version`은 바뀌지 않고 `status_saved_at=updated_at`, `inline_memo=''`, `memo_version=0`이다.
 - GOSHIWON 프리셋과 매핑 행은 남아 있고 프리셋만 비활성 상태다.
 - 제공 질문은 안정적인 ID를 유지한 채 갱신되고 기존 방문 질문 스냅샷은 유지된다.
-- 제품 테이블은 13개이며 health가 `UP`이다.
+- ERD 기준 신규 테이블이 존재하고 Refresh Token 테이블과 회원 `last_login_at` 컬럼이 없으며 health가 `UP`이다.
 
 ## 5. 실패 대응
 
 - V1 baseline 전 실패는 DB를 변경하지 않은 상태인지 확인하고 원인을 해결한다.
-- V2~V4 도중 실패하면 애플리케이션을 중단하고 쓰기를 계속 차단한다. MySQL DDL 부분 적용 여부와 history를 먼저 보존한다.
+- V2~V5 도중 실패하면 애플리케이션을 중단하고 쓰기를 계속 차단한다. MySQL DDL 부분 적용 여부와 history를 먼저 보존한다.
 - 새 쓰기가 없고 복구 리허설이 끝난 백업이 있으면 대상 DB를 격리한 뒤 승인된 복구 절차로 전환 전 시점에 복구한다.
 - 새 쓰기가 들어왔다면 백업 복구는 그 쓰기를 잃을 수 있다. 영향 데이터를 보존하고 후속 순방향 마이그레이션으로 고칠지 결정한다.
 - 실패 이력을 숨기기 위해 `repair`, history 수정, 적용 파일 편집을 먼저 수행하지 않는다.
@@ -156,4 +157,4 @@ curl --fail http://localhost:8080/actuator/health
 
 ## 6. v1.1 이후 정리 경계
 
-V1~V4는 expand/backfill만 수행하고 변경하지 않는다. API-103·106은 `property_pre_visit_memos` 정본과 `properties.memo`, `properties.memo_updated_at` 사이의 dual-write·fallback read 전환을 완료했다. legacy 필드는 v1.0 클라이언트 호환 관찰이 충분히 끝난 뒤 별도 cleanup 이슈와 새 마이그레이션으로 삭제한다. GOSHIWON 프리셋·매핑과 이전 경로 데이터 정리도 이 cleanup과 별도로 승인한다.
+V1~V4는 레거시 이력으로 보존하고 수정하지 않는다. V5는 새 개발 DB 기준으로만 사용한다. 이미 V5·V6·V7을 적용한 DB에서 파일을 합치면 Flyway checksum 오류가 발생하므로, 해당 환경은 기존 파일을 유지하거나 별도 후속 마이그레이션으로 전환한다.

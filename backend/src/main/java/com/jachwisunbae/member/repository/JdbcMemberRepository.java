@@ -2,6 +2,7 @@ package com.jachwisunbae.member.repository;
 
 import com.jachwisunbae.member.entity.Member;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -47,14 +48,6 @@ public class JdbcMemberRepository implements MemberRepository {
 
     @Override
     public Member save(final Member member) {
-        if (member.getId() == null) {
-            return insert(member);
-        }
-        update(member);
-        return member;
-    }
-
-    private Member insert(final Member member) {
         String sql = """
                 INSERT INTO members (
                     email, name,
@@ -74,7 +67,8 @@ public class JdbcMemberRepository implements MemberRepository {
                 member.getCreatedAt(), member.getUpdatedAt());
     }
 
-    private void update(final Member member) {
+    @Override
+    public void update(final Member member) {
         String sql = """
                 UPDATE members
                 SET email = ?, name = ?, updated_at = ?
@@ -83,7 +77,7 @@ public class JdbcMemberRepository implements MemberRepository {
         jdbcTemplate.update(sql, member.getEmail(), member.getName(), member.getUpdatedAt(), member.getId());
     }
 
-    private org.springframework.jdbc.core.RowMapper<Member> memberRowMapper() {
+    private RowMapper<Member> memberRowMapper() {
         return (resultSet, rowNumber) -> Member.reconstruct(
                 resultSet.getLong("id"),
                 resultSet.getString("email"),

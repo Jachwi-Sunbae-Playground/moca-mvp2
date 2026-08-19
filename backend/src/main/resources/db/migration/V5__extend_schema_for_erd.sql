@@ -155,3 +155,14 @@ CREATE TABLE property_checklist_items
 ) ENGINE = InnoDB
   DEFAULT CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
+
+-- Access Token만 사용하므로 Refresh Token 저장 테이블을 제거한다.
+DROP TABLE IF EXISTS refresh_tokens;
+
+-- 회원 식별자는 OAuth subject가 아니라 members.id를 사용한다.
+-- 기존 레거시 OAuth 컬럼은 데이터 손실 없이 nullable로 전환한다.
+ALTER TABLE members
+    MODIFY COLUMN oauth_provider VARCHAR(20) NULL,
+    MODIFY COLUMN oauth_subject VARCHAR(255) NULL,
+    MODIFY COLUMN display_name VARCHAR(100) NULL,
+    DROP COLUMN last_login_at;
