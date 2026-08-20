@@ -9,7 +9,7 @@ import com.jachwisunbae.property.entity.PropertyMemoItem;
 import com.jachwisunbae.property.repository.PropertyMemoRepository;
 import com.jachwisunbae.property.repository.PropertyRepository;
 import com.jachwisunbae.property.repository.SystemMemoItemRepository;
-import com.jachwisunbae.property.repository.query.PropertyMemoRow;
+import com.jachwisunbae.property.repository.query.PropertyMemoQuery;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,22 +29,22 @@ public class PropertyMemoService {
         this.systemMemoItemRepository = systemMemoItemRepository;
     }
 
-    public PropertyMemoRow find(final Long memberId, final Long propertyId) {
+    public PropertyMemoQuery find(final Long memberId, final Long propertyId) {
         findOwnedProperty(memberId, propertyId);
-        return propertyMemoRepository.findRows(propertyId);
+        return propertyMemoRepository.findQuery(propertyId);
     }
 
     @Transactional
-    public PropertyMemoRow initialize(final Long memberId, final Long propertyId) {
+    public PropertyMemoQuery initialize(final Long memberId, final Long propertyId) {
         findOwnedProperty(memberId, propertyId);
         if (propertyMemoRepository.findByPropertyId(propertyId).isEmpty()) {
             createMemoWithSnapshot(propertyId, "");
         }
-        return propertyMemoRepository.findRows(propertyId);
+        return propertyMemoRepository.findQuery(propertyId);
     }
 
     @Transactional
-    public PropertyMemoRow update(final Long memberId, final Long propertyId,
+    public PropertyMemoQuery update(final Long memberId, final Long propertyId,
                                         final UpdatePropertyMemoRequest request) {
         findOwnedProperty(memberId, propertyId);
         PropertyMemo memo = propertyMemoRepository.findByPropertyId(propertyId)
@@ -52,7 +52,7 @@ public class PropertyMemoService {
                         "매물 메모를 먼저 생성해야 합니다."));
         updateMemo(memo, request.freeMemo());
         updateItems(request.items());
-        return propertyMemoRepository.findRows(propertyId);
+        return propertyMemoRepository.findQuery(propertyId);
     }
 
     private void updateMemo(final PropertyMemo memo, final String freeMemo) {
