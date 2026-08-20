@@ -88,17 +88,6 @@ const VisitItemStatusControl = ({
         </div>
       </fieldset>
 
-      <button
-        type="button"
-        className={styles.memoToggle}
-        aria-expanded={isMemoOpen}
-        aria-controls={`${memoId}-panel`}
-        aria-label={`${item.question} 메모 ${isMemoOpen ? '닫기' : '열기'}`}
-        onClick={() => setIsMemoOpen((current) => !current)}
-      >
-        <span aria-hidden="true" />
-      </button>
-
       {isMemoOpen && (
         <div id={`${memoId}-panel`} className={styles.memoPanel}>
           <div className={styles.memo}>
@@ -124,6 +113,17 @@ const VisitItemStatusControl = ({
           </div>
         </div>
       )}
+
+      <button
+        type="button"
+        className={styles.memoToggle}
+        aria-expanded={isMemoOpen}
+        aria-controls={`${memoId}-panel`}
+        aria-label={`${item.question} 메모 ${isMemoOpen ? '닫기' : '열기'}`}
+        onClick={() => setIsMemoOpen((current) => !current)}
+      >
+        <span aria-hidden="true" />
+      </button>
 
       <div id={statusStateId} className="sr-only">
         {autosave.statusPhase === 'saving' && <span>상태 저장 중… · 현재 v{autosave.statusVersion}</span>}

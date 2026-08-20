@@ -23,6 +23,9 @@ const readNewChecklistId = (state: unknown): number | null => {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0 ? value : null;
 };
 
+const isFromPropertyDetail = (state: unknown) =>
+  typeof state === 'object' && state !== null && 'from' in state && state.from === 'property-detail';
+
 const PropertyActiveChecklistPage = ({ config }: { config: PublicConfig }) => {
   const params = useParams();
   const propertyId = parsePositiveId(params.propertyId);
@@ -57,6 +60,7 @@ const ResolvedPropertyActiveChecklist = ({
   const list = useChecklistList(config, stage);
   const assign = useAssignActiveChecklist(config, propertyId, stage);
   const newlyCreatedId = readNewChecklistId(location.state);
+  const fromPropertyDetail = isFromPropertyDetail(location.state);
   const overviewStage = overview.data?.stages.find((item) => item.stage === stage);
   const legacyCurrent = property.data?.activeChecklists.find((item) => item.stage === stage) ?? null;
   const current =
@@ -68,6 +72,15 @@ const ResolvedPropertyActiveChecklist = ({
       : legacyCurrent;
   const [selectedId, setSelectedId] = useState<number | null>(newlyCreatedId);
   const items = useMemo(() => list.data?.pages.flatMap((page) => page.content) ?? [], [list.data]);
+
+  useEffect(() => {
+    if (fromPropertyDetail && overviewStage?.applied === true && overviewStage.propertyChecklistId !== null) {
+      navigate(`/properties/${propertyId}/checklists/${overviewStage.propertyChecklistId}`, {
+        replace: true,
+        state: { from: 'property-detail' },
+      });
+    }
+  }, [fromPropertyDetail, navigate, overviewStage?.applied, overviewStage?.propertyChecklistId, propertyId]);
 
   useEffect(() => {
     if (selectedId === null && current !== null) setSelectedId(current.checklistId);
@@ -126,7 +139,10 @@ const ResolvedPropertyActiveChecklist = ({
     if (selectedId === null) return;
     try {
       const applied = await assign.mutateAsync(selectedId);
-      navigate(`/properties/${propertyId}/checklists/${applied.propertyChecklistId}`, { replace: true });
+      navigate(`/properties/${propertyId}/checklists/${applied.propertyChecklistId}`, {
+        replace: true,
+        ...(fromPropertyDetail ? { state: { from: 'property-detail' } } : {}),
+      });
     } catch {
       /* Keep the selected checklist visible for retry. */
     }
@@ -134,7 +150,9 @@ const ResolvedPropertyActiveChecklist = ({
 
   const toggleSelection = (checklistId: number) => {
     if (current?.checklistId === checklistId && typeof overviewStage?.propertyChecklistId === 'number') {
-      navigate(`/properties/${propertyId}/checklists/${overviewStage.propertyChecklistId}`);
+      navigate(`/properties/${propertyId}/checklists/${overviewStage.propertyChecklistId}`, {
+        ...(fromPropertyDetail ? { state: { from: 'property-detail' } } : {}),
+      });
       return;
     }
     setSelectedId(checklistId);
@@ -145,11 +163,13 @@ const ResolvedPropertyActiveChecklist = ({
       <div className="page-container checklist-page__narrow">
         <TopNavigation title="내 체크리스트" backTo={`/properties/${propertyId}`} backLabel="매물 상세로 돌아가기" />
         <h1 className="sr-only">{property.data.name} 체크리스트 연결</h1>
-        <ChecklistStageTabs
-          stage={stage}
-          fullBleed
-          getTo={(nextStage) => `/properties/${propertyId}/active-checklists/${nextStage}`}
-        />
+        {!fromPropertyDetail && (
+          <ChecklistStageTabs
+            stage={stage}
+            fullBleed
+            getTo={(nextStage) => `/properties/${propertyId}/active-checklists/${nextStage}`}
+          />
+        )}
 
         <p className={styles.description}>이 단계에서 사용할 체크리스트를 선택해요.</p>
 

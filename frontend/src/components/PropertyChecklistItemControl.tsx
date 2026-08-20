@@ -60,16 +60,6 @@ const PropertyChecklistItemControl = ({
           </div>
         </div>
       </fieldset>
-      <button
-        type="button"
-        className={styles.memoToggle}
-        aria-expanded={isMemoOpen}
-        aria-controls={`property-checklist-memo-${item.itemId}`}
-        aria-label={`${item.question} 메모 ${isMemoOpen ? '닫기' : '열기'}`}
-        onClick={() => setIsMemoOpen((current) => !current)}
-      >
-        <span aria-hidden="true" />
-      </button>
       {isMemoOpen && (
         <div className={styles.memoPanel} id={`property-checklist-memo-${item.itemId}`}>
           <label className="sr-only" htmlFor={`property-checklist-memo-input-${item.itemId}`}>
@@ -85,6 +75,16 @@ const PropertyChecklistItemControl = ({
           />
         </div>
       )}
+      <button
+        type="button"
+        className={styles.memoToggle}
+        aria-expanded={isMemoOpen}
+        aria-controls={`property-checklist-memo-${item.itemId}`}
+        aria-label={`${item.question} 메모 ${isMemoOpen ? '닫기' : '열기'}`}
+        onClick={() => setIsMemoOpen((current) => !current)}
+      >
+        <span aria-hidden="true" />
+      </button>
       {(statusMutation.isError || memoMutation.isError) && (
         <p className={styles.error} role="alert">
           변경 내용을 저장하지 못했어요. 다시 시도해 주세요.

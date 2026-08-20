@@ -38,7 +38,7 @@ const detailWithoutPhotos = {
 
 const renderAuthenticated = (path: string) => {
   setAuthentication({ accessToken: 'memory-token', tokenType: 'Bearer', expiresIn: 60 });
-  server.use(http.get(`${config.apiBaseUrl}/api/members`, () => HttpResponse.json(successEnvelope(memberFixture))));
+  server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.json(successEnvelope(memberFixture))));
 
   return render(
     <StrictMode>

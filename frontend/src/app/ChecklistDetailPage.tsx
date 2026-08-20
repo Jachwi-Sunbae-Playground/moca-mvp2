@@ -131,7 +131,9 @@ const ResolvedChecklistDetail = ({ config, checklistId }: { config: PublicConfig
             setSearchParams(mode === 'ADD_ITEMS' ? { mode: 'add-items' } : {}, { replace: mode === 'EDIT' })
           }
           onSubmit={async ({ name, items }) => {
-            return update.mutateAsync({ name, systemCheckItemIds: toUpdateChecklistItems(items) });
+            const saved = await update.mutateAsync({ name, systemCheckItemIds: toUpdateChecklistItems(items) });
+            navigate(`/checklists/${checklist.stage}`, { replace: true, state: { focusHeading: true } });
+            return saved;
           }}
         />
         <ConfirmDialog
