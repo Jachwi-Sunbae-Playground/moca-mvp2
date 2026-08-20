@@ -45,6 +45,12 @@ public class JdbcPropertyPhotoRepository implements PropertyPhotoRepository {
     }
 
     @Override
+    public void deleteByPropertyId(final long propertyId) {
+        jdbcTemplate.update("DELETE FROM main_property_photos WHERE property_id = ?", propertyId);
+        jdbcTemplate.update("DELETE FROM property_photos WHERE property_id = ?", propertyId);
+    }
+
+    @Override
     public void ensureRepresentative(final long propertyId) {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM main_property_photos WHERE property_id = ?", Integer.class, propertyId);

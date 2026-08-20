@@ -72,6 +72,13 @@ public class JdbcPropertyMemoRepository implements PropertyMemoRepository {
     }
 
     @Override
+    public void deleteByPropertyId(final long propertyId) {
+        jdbcTemplate.update("DELETE FROM property_memo_items WHERE property_memo_id IN "
+                + "(SELECT id FROM property_memos WHERE property_id = ?)", propertyId);
+        jdbcTemplate.update("DELETE FROM property_memos WHERE property_id = ?", propertyId);
+    }
+
+    @Override
     public void updateItem(final long propertyMemoItemId, final String content) {
         jdbcTemplate.update("UPDATE property_memo_items SET content = ? WHERE id = ?",
                 content, propertyMemoItemId);

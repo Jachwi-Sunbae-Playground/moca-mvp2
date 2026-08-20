@@ -17,5 +17,4 @@ public interface PropertyRepository {
 
     void deleteById(long propertyId);
 
-    void deleteRelatedData(long propertyId);
 }

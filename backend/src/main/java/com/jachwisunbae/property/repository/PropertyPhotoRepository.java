@@ -11,6 +11,8 @@ public interface PropertyPhotoRepository {
 
     void deleteById(long photoId);
 
+    void deleteByPropertyId(long propertyId);
+
     void ensureRepresentative(long propertyId);
 
     Optional<Long> findRepresentativePhotoId(long propertyId);

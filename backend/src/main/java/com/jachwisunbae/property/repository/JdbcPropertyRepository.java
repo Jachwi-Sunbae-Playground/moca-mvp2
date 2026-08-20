@@ -119,15 +119,4 @@ public class JdbcPropertyRepository implements PropertyRepository {
         jdbcTemplate.update("DELETE FROM properties WHERE id = ?", propertyId);
     }
 
-    @Override
-    public void deleteRelatedData(final long propertyId) {
-        jdbcTemplate.update("DELETE FROM property_memo_items WHERE property_memo_id IN "
-                + "(SELECT id FROM property_memos WHERE property_id = ?)", propertyId);
-        jdbcTemplate.update("DELETE FROM property_memos WHERE property_id = ?", propertyId);
-        jdbcTemplate.update("DELETE FROM property_checklist_items WHERE property_checklist_id IN "
-                + "(SELECT id FROM property_checklists WHERE property_id = ?)", propertyId);
-        jdbcTemplate.update("DELETE FROM property_checklists WHERE property_id = ?", propertyId);
-        jdbcTemplate.update("DELETE FROM main_property_photos WHERE property_id = ?", propertyId);
-        jdbcTemplate.update("DELETE FROM property_photos WHERE property_id = ?", propertyId);
-    }
 }

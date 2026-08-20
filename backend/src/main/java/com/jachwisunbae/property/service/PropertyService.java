@@ -9,6 +9,8 @@ import com.jachwisunbae.property.controller.dto.request.CreatePropertyRequest;
 import com.jachwisunbae.property.entity.Property;
 import com.jachwisunbae.property.repository.PropertyRepository;
 import com.jachwisunbae.property.repository.PropertyPhotoRepository;
+import com.jachwisunbae.property.repository.PropertyMemoRepository;
+import com.jachwisunbae.property.repository.PropertyChecklistRepository;
 import com.jachwisunbae.property.repository.PropertyProgressRepository;
 import com.jachwisunbae.member.repository.MemberRepository;
 import com.jachwisunbae.common.exception.BusinessException;
@@ -28,15 +30,21 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final MemberRepository memberRepository;
     private final PropertyPhotoRepository propertyPhotoRepository;
+    private final PropertyMemoRepository propertyMemoRepository;
+    private final PropertyChecklistRepository propertyChecklistRepository;
     private final PropertyProgressRepository propertyProgressRepository;
 
     public PropertyService(final PropertyRepository propertyRepository, final MemberRepository memberRepository,
                            final PropertyPhotoRepository propertyPhotoRepository,
-                           final PropertyProgressRepository propertyProgressRepository) {
+                           final PropertyProgressRepository propertyProgressRepository,
+                           final PropertyMemoRepository propertyMemoRepository,
+                           final PropertyChecklistRepository propertyChecklistRepository) {
         this.propertyRepository = propertyRepository;
         this.memberRepository = memberRepository;
         this.propertyPhotoRepository = propertyPhotoRepository;
         this.propertyProgressRepository = propertyProgressRepository;
+        this.propertyMemoRepository = propertyMemoRepository;
+        this.propertyChecklistRepository = propertyChecklistRepository;
     }
 
     public PropertyListResponse findList(final Long memberId) {
@@ -117,7 +125,9 @@ public class PropertyService {
         propertyRepository.findByIdAndMemberId(propertyId, memberId)
                 .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND,
                         "매물을 찾을 수 없습니다."));
-        propertyRepository.deleteRelatedData(propertyId);
+        propertyMemoRepository.deleteByPropertyId(propertyId);
+        propertyChecklistRepository.deleteByPropertyId(propertyId);
+        propertyPhotoRepository.deleteByPropertyId(propertyId);
         propertyRepository.deleteById(propertyId);
     }
 }
