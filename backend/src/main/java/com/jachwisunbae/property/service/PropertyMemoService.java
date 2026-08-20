@@ -4,12 +4,12 @@ import com.jachwisunbae.common.exception.BusinessException;
 import com.jachwisunbae.common.exception.DomainErrorCode;
 import com.jachwisunbae.property.controller.dto.request.PropertyMemoItemRequest;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyMemoRequest;
-import com.jachwisunbae.property.controller.dto.response.PropertyMemoResponse;
 import com.jachwisunbae.property.entity.PropertyMemo;
 import com.jachwisunbae.property.entity.PropertyMemoItem;
 import com.jachwisunbae.property.repository.PropertyMemoRepository;
 import com.jachwisunbae.property.repository.PropertyRepository;
 import com.jachwisunbae.property.repository.SystemMemoItemRepository;
+import com.jachwisunbae.property.repository.query.PropertyMemoRow;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,30 +29,30 @@ public class PropertyMemoService {
         this.systemMemoItemRepository = systemMemoItemRepository;
     }
 
-    public PropertyMemoResponse find(final Long memberId, final Long propertyId) {
+    public List<PropertyMemoRow> find(final Long memberId, final Long propertyId) {
         findOwnedProperty(memberId, propertyId);
-        return PropertyMemoResponse.from(propertyMemoRepository.findRows(propertyId));
+        return propertyMemoRepository.findRows(propertyId);
     }
 
     @Transactional
-    public PropertyMemoResponse initialize(final Long memberId, final Long propertyId) {
+    public List<PropertyMemoRow> initialize(final Long memberId, final Long propertyId) {
         findOwnedProperty(memberId, propertyId);
         if (propertyMemoRepository.findByPropertyId(propertyId).isEmpty()) {
             createMemoWithSnapshot(propertyId, "");
         }
-        return PropertyMemoResponse.from(propertyMemoRepository.findRows(propertyId));
+        return propertyMemoRepository.findRows(propertyId);
     }
 
     @Transactional
-    public PropertyMemoResponse update(final Long memberId, final Long propertyId,
-                                       final UpdatePropertyMemoRequest request) {
+    public List<PropertyMemoRow> update(final Long memberId, final Long propertyId,
+                                        final UpdatePropertyMemoRequest request) {
         findOwnedProperty(memberId, propertyId);
         PropertyMemo memo = propertyMemoRepository.findByPropertyId(propertyId)
                 .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_MEMO_INVALID,
                         "매물 메모를 먼저 생성해야 합니다."));
         updateMemo(memo, request.freeMemo());
         updateItems(request.items());
-        return PropertyMemoResponse.from(propertyMemoRepository.findRows(propertyId));
+        return propertyMemoRepository.findRows(propertyId);
     }
 
     private void updateMemo(final PropertyMemo memo, final String freeMemo) {

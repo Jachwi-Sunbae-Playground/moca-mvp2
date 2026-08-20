@@ -80,14 +80,16 @@ public class PropertyController {
     public ApiResponse<PropertyMemoResponse> findMemo(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
-        return ApiResponse.of("매물 메모를 조회했습니다.", propertyMemoService.find(memberId, propertyId));
+        return ApiResponse.of("매물 메모를 조회했습니다.",
+                PropertyMemoResponse.from(propertyMemoService.find(memberId, propertyId)));
     }
 
     @PostMapping("/{propertyId}/memo")
     public ApiResponse<PropertyMemoResponse> initializeMemo(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
-        return ApiResponse.of("매물 메모를 생성했습니다.", propertyMemoService.initialize(memberId, propertyId));
+        return ApiResponse.of("매물 메모를 생성했습니다.",
+                PropertyMemoResponse.from(propertyMemoService.initialize(memberId, propertyId)));
     }
 
     @PutMapping("/{propertyId}/memo")
@@ -96,7 +98,7 @@ public class PropertyController {
             @PathVariable final Long propertyId,
             @Valid @RequestBody final UpdatePropertyMemoRequest request) {
         return ApiResponse.of("매물 메모를 저장했습니다.",
-                propertyMemoService.update(memberId, propertyId, request));
+                PropertyMemoResponse.from(propertyMemoService.update(memberId, propertyId, request)));
     }
 
 }
