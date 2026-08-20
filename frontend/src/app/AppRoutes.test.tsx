@@ -113,13 +113,12 @@ describe('FE-1 인증 흐름', () => {
           successEnvelope({
             accessToken: 'issued-access-token',
             tokenType: 'Bearer',
-            expiresInSeconds: 43_200,
-            isNewMember: false,
-            member,
+            expiresIn: 43_200,
+            member: { memberId: member.id, name: member.name, email: member.email },
           }),
         );
       }),
-      http.get(`${config.apiBaseUrl}/api/members`, ({ request }) => {
+      http.get(`${config.apiBaseUrl}/api/members/me`, ({ request }) => {
         expect(request.headers.get('Authorization')).toBe('Bearer issued-access-token');
         return HttpResponse.json(successEnvelope(member));
       }),
@@ -130,6 +129,9 @@ describe('FE-1 인증 흐름', () => {
     expect(await screen.findByRole('heading', { name: '내 매물' })).toBeInTheDocument();
     expect(loginRequest).toEqual({
       authorizationCode: 'sensitive-code',
+      codeVerifier: 'v'.repeat(43),
+      nonce: validNonce,
+      redirectUri: config.googleRedirectUri,
     });
     expect(getAccessToken()).toBe('issued-access-token');
     expect(window.sessionStorage.getItem(getOAuthTransactionStorageKey())).toBeNull();
@@ -200,7 +202,7 @@ describe('FE-1 인증 흐름', () => {
   it('저장된 유효 토큰으로 API-002를 호출해 인증 상태를 확정한다', async () => {
     setAuthentication({ accessToken: 'saved-in-memory', tokenType: 'Bearer', expiresIn: 60 });
     server.use(
-      http.get(`${config.apiBaseUrl}/api/members`, ({ request }) => {
+      http.get(`${config.apiBaseUrl}/api/members/me`, ({ request }) => {
         expect(request.headers.get('Authorization')).toBe('Bearer saved-in-memory');
         return HttpResponse.json(successEnvelope(member));
       }),
@@ -214,7 +216,7 @@ describe('FE-1 인증 흐름', () => {
   it('API-002가 401이면 메모리 토큰을 지우고 로그인으로 이동한다', async () => {
     setAuthentication({ accessToken: 'expired-token', tokenType: 'Bearer', expiresIn: 60 });
     server.use(
-      http.get(`${config.apiBaseUrl}/api/members`, () =>
+      http.get(`${config.apiBaseUrl}/api/members/me`, () =>
         HttpResponse.json(errorEnvelope('ACCESS_TOKEN_EXPIRED', 'expired'), { status: 401 }),
       ),
     );
@@ -228,7 +230,7 @@ describe('FE-1 인증 흐름', () => {
 
   it('API-002 네트워크 실패는 토큰 만료로 오인하지 않고 재시도를 제공한다', async () => {
     setAuthentication({ accessToken: 'still-valid-token', tokenType: 'Bearer', expiresIn: 60 });
-    server.use(http.get(`${config.apiBaseUrl}/api/members`, () => HttpResponse.error()));
+    server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.error()));
 
     renderRoutes('/');
 
@@ -239,7 +241,7 @@ describe('FE-1 인증 흐름', () => {
 
   it('인증 사용자가 로그인 경로에 접근하면 앱 시작 경로로 이동한다', async () => {
     setAuthentication({ accessToken: 'valid-token', tokenType: 'Bearer', expiresIn: 60 });
-    server.use(http.get(`${config.apiBaseUrl}/api/members`, () => HttpResponse.json(successEnvelope(member))));
+    server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.json(successEnvelope(member))));
 
     renderRoutes('/login');
 
@@ -249,7 +251,7 @@ describe('FE-1 인증 흐름', () => {
   it('로그아웃하면 인증 정보와 회원 캐시를 지우고 로그인으로 이동한다', async () => {
     const user = userEvent.setup();
     setAuthentication({ accessToken: 'valid-token', tokenType: 'Bearer', expiresIn: 60 });
-    server.use(http.get(`${config.apiBaseUrl}/api/members`, () => HttpResponse.json(successEnvelope(member))));
+    server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.json(successEnvelope(member))));
     renderRoutes('/');
 
     await user.click(await screen.findByRole('link', { name: '마이' }));
@@ -266,7 +268,7 @@ describe('FE-1 인증 흐름', () => {
     ['/tips', '선배 팁은 준비 중이에요'],
   ])('%s는 실제 기능 대신 공통 준비 중 안내를 표시한다', async (path, heading) => {
     setAuthentication({ accessToken: 'valid-token', tokenType: 'Bearer', expiresIn: 60 });
-    server.use(http.get(`${config.apiBaseUrl}/api/members`, () => HttpResponse.json(successEnvelope(member))));
+    server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.json(successEnvelope(member))));
 
     renderRoutes(path);
 

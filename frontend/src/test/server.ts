@@ -5,7 +5,7 @@ import { visitDetailFixture } from './visitFixtures';
 const success = (data: unknown) => HttpResponse.json({ code: 'SUCCESS', message: '요청에 성공했습니다.', data });
 
 export const server = setupServer(
-  http.get('*/api/members', () => success({ id: 1, name: '이자취', email: 'jachwi@example.com' })),
+  http.get('*/api/members/me', () => success({ id: 1, name: '이자취', email: 'jachwi@example.com' })),
   http.get('*/api/checklists', () => success({ totalCount: 0, items: [] })),
   http.get('*/api/visits/:visitId', () => success(visitDetailFixture)),
   http.get('*/api/properties/:propertyId/memo', ({ params }) =>
