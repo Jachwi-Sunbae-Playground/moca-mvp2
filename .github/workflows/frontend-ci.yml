@@ -1,20 +1,16 @@
 name: Frontend CI
 
+# 필수 상태 검사로 지정하므로 경로 필터를 두지 않는다. 워크플로 자체가 건너뛰어지면
+# 검사 결과가 Pending에 남아 frontend 변경이 없는 PR도 병합할 수 없게 된다.
 on:
   pull_request:
     branches:
       - main
       - develop
-    paths:
-      - "frontend/**"
-      - ".github/workflows/frontend-ci.yml"
   push:
     branches:
       - main
       - develop
-    paths:
-      - "frontend/**"
-      - ".github/workflows/frontend-ci.yml"
   workflow_dispatch:
 
 permissions:
