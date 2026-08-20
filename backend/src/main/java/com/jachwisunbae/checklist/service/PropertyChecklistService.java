@@ -9,6 +9,9 @@ import com.jachwisunbae.common.exception.DomainErrorCode;
 import com.jachwisunbae.property.repository.PropertyChecklistRepository;
 import com.jachwisunbae.property.repository.PropertyRepository;
 import com.jachwisunbae.property.repository.query.PropertyChecklistApplicationQuery;
+import com.jachwisunbae.property.repository.PropertyProgressRepository;
+import com.jachwisunbae.property.repository.query.PropertyChecklistProgressQuery;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,13 +21,16 @@ public class PropertyChecklistService {
     private final PropertyRepository propertyRepository;
     private final UserChecklistRepository userChecklistRepository;
     private final PropertyChecklistRepository propertyChecklistRepository;
+    private final PropertyProgressRepository propertyProgressRepository;
 
     public PropertyChecklistService(final PropertyRepository propertyRepository,
                                      final UserChecklistRepository userChecklistRepository,
-                                     final PropertyChecklistRepository propertyChecklistRepository) {
+                                     final PropertyChecklistRepository propertyChecklistRepository,
+                                     final PropertyProgressRepository propertyProgressRepository) {
         this.propertyRepository = propertyRepository;
         this.userChecklistRepository = userChecklistRepository;
         this.propertyChecklistRepository = propertyChecklistRepository;
+        this.propertyProgressRepository = propertyProgressRepository;
     }
 
     @Transactional
@@ -43,5 +49,12 @@ public class PropertyChecklistService {
         }
         return propertyChecklistRepository.replace(propertyId, checklist.getId(), checklist.getName(), stage,
                 userChecklistRepository.findItems(checklist.getId()));
+    }
+
+    public List<PropertyChecklistProgressQuery> findOverview(final Long memberId, final Long propertyId) {
+        propertyRepository.findByIdAndMemberId(propertyId, memberId)
+                .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND,
+                        "매물을 찾을 수 없습니다."));
+        return propertyProgressRepository.findByPropertyIdAndStage(propertyId);
     }
 }

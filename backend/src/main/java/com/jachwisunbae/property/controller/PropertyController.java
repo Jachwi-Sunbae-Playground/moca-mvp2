@@ -21,6 +21,8 @@ import com.jachwisunbae.property.entity.Property;
 import com.jachwisunbae.property.repository.query.PropertyPhotosQuery;
 import com.jachwisunbae.property.service.PropertyService;
 import com.jachwisunbae.property.service.PropertyMemoService;
+import com.jachwisunbae.property.service.PropertyPhotoService;
+import com.jachwisunbae.property.service.PropertyDeletionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -42,13 +44,19 @@ public class PropertyController {
     private final PropertyService propertyService;
     private final PropertyMemoService propertyMemoService;
     private final PropertyChecklistService propertyChecklistService;
+    private final PropertyPhotoService propertyPhotoService;
+    private final PropertyDeletionService propertyDeletionService;
 
     public PropertyController(final PropertyService propertyService,
                               final PropertyMemoService propertyMemoService,
-                              final PropertyChecklistService propertyChecklistService) {
+                              final PropertyChecklistService propertyChecklistService,
+                              final PropertyPhotoService propertyPhotoService,
+                              final PropertyDeletionService propertyDeletionService) {
         this.propertyService = propertyService;
         this.propertyMemoService = propertyMemoService;
         this.propertyChecklistService = propertyChecklistService;
+        this.propertyPhotoService = propertyPhotoService;
+        this.propertyDeletionService = propertyDeletionService;
     }
 
     @GetMapping
@@ -84,7 +92,7 @@ public class PropertyController {
     public ResponseEntity<Void> delete(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
-        propertyService.delete(memberId, propertyId);
+        propertyDeletionService.delete(memberId, propertyId);
         return ResponseEntity.noContent().build();
     }
 
@@ -92,7 +100,7 @@ public class PropertyController {
     public ApiResponse<PropertyPhotoListResponse> findPhotos(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
-        PropertyPhotosQuery query = propertyService.findPhotos(memberId, propertyId);
+        PropertyPhotosQuery query = propertyPhotoService.find(memberId, propertyId);
         List<PropertyPhotoResponse> items =  query.photos().stream()
                 .map(photo -> PropertyPhotoResponse.from(photo, photo.getId().equals(query.representativePhotoId())))
                 .toList();
@@ -105,7 +113,7 @@ public class PropertyController {
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId,
             @PathVariable final Long photoId) {
-        propertyService.deletePhoto(memberId, propertyId, photoId);
+        propertyPhotoService.delete(memberId, propertyId, photoId);
         return ResponseEntity.noContent().build();
     }
 
@@ -114,7 +122,7 @@ public class PropertyController {
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId,
             @PathVariable final Long photoId) {
-        propertyService.designateRepresentativePhoto(memberId, propertyId, photoId);
+        propertyPhotoService.designateRepresentative(memberId, propertyId, photoId);
         return ResponseEntity.noContent().build();
     }
 
@@ -124,7 +132,7 @@ public class PropertyController {
             @PathVariable final Long propertyId) {
         return ApiResponse.of("매물 체크 현황을 조회했습니다.",
                 PropertyChecklistOverviewResponse.from(propertyId,
-                        propertyService.findChecklistOverview(memberId, propertyId)));
+                        propertyChecklistService.findOverview(memberId, propertyId)));
     }
 
     @PutMapping("/{propertyId}/checklists/{stage}")
