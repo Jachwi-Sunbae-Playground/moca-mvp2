@@ -68,12 +68,12 @@ public class UserChecklistService {
     }
 
     public List<UserChecklistItem> findItems(final Long memberId, final long checklistId) {
-        findOwnedChecklist(memberId, checklistId);
+        requireOwnedChecklist(memberId, checklistId);
         return userChecklistRepository.findItems(checklistId);
     }
 
     public List<UserChecklistItemDetail> findItemDetails(final Long memberId, final long checklistId) {
-        findOwnedChecklist(memberId, checklistId);
+        requireOwnedChecklist(memberId, checklistId);
         return userChecklistRepository.findItemDetails(checklistId);
     }
 
@@ -99,7 +99,7 @@ public class UserChecklistService {
 
     @Transactional
     public void delete(final Long memberId, final long checklistId) {
-        findOwnedChecklist(memberId, checklistId);
+        requireOwnedChecklist(memberId, checklistId);
         userChecklistRepository.deleteItems(checklistId);
         userChecklistRepository.delete(checklistId);
     }
@@ -116,6 +116,12 @@ public class UserChecklistService {
         Optional<UserChecklist> checklist = userChecklistRepository.findByIdAndMemberId(checklistId, memberId);
         return checklist.orElseThrow(() -> new BusinessException(DomainErrorCode.CHECKLIST_NOT_FOUND,
                 "체크리스트를 찾을 수 없습니다."));
+    }
+
+    private void requireOwnedChecklist(final Long memberId, final long checklistId) {
+        if (!userChecklistRepository.existsByIdAndMemberId(checklistId, memberId)) {
+            throw new BusinessException(DomainErrorCode.CHECKLIST_NOT_FOUND, "체크리스트를 찾을 수 없습니다.");
+        }
     }
 
     private List<SystemCheckItem> orderItems(final List<SystemCheckItem> coreItems,

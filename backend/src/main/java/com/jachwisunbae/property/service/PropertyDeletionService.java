@@ -28,7 +28,7 @@ public class PropertyDeletionService {
 
     @Transactional
     public void delete(final Long memberId, final Long propertyId) {
-        propertyRepository.findByIdAndMemberId(propertyId, memberId)
+        propertyRepository.findByIdAndMemberIdForUpdate(propertyId, memberId)
                 .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND,
                         "매물을 찾을 수 없습니다."));
         propertyMemoRepository.deleteByPropertyId(propertyId);

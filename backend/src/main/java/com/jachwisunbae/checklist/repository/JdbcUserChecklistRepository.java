@@ -85,6 +85,14 @@ public class JdbcUserChecklistRepository implements UserChecklistRepository {
     }
 
     @Override
+    public boolean existsByIdAndMemberId(final long checklistId, final long memberId) {
+        Boolean exists = jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM user_checklists WHERE id = ? AND member_id = ?)",
+                Boolean.class, checklistId, memberId);
+        return Boolean.TRUE.equals(exists);
+    }
+
+    @Override
     public Optional<UserChecklist> findByIdAndMemberIdForUpdate(final long checklistId, final long memberId) {
         return findOne("""
                 SELECT id, member_id, name, stage

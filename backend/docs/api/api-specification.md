@@ -1030,6 +1030,68 @@ v1.0의 `expectedVersion`은 `expectedStatusVersion` 별칭으로 계속 읽는�
 | 500 | `INTERNAL_SERVER_ERROR` | 예상하지 못한 내부 오류 |
 | 502 | `GOOGLE_AUTHENTICATION_FAILED` | Google 통신, JWK 조회 또는 상류 응답 처리 실패 |
 
+## API-507 매물 체크 항목 상태 자동 저장
+
+- Method: `PATCH`
+- URL: `/api/properties/{propertyId}/checklists/{propertyChecklistId}/items/{itemId}/status`
+- 인증: 필요
+- 성공 상태: `200 OK`
+- 대표 오류: `PROPERTY_CHECKLIST_ITEM_NOT_FOUND`, `INVALID_REQUEST`
+
+```json
+{
+  "status": "CAUTION"
+}
+```
+
+`status`는 `UNCONFIRMED`, `GOOD`, `CAUTION` 중 하나여야 한다. 매물·적용 체크리스트·항목의 중첩 관계와 회원 소유권을 UPDATE 조건에서 함께 검증한다. 상태 컬럼만 갱신하며 메모 컬럼은 변경하지 않는다. 같은 상태를 다시 저장해도 성공하는 멱등 요청이다.
+
+성공 응답:
+
+```json
+{
+  "code": "SUCCESS",
+  "message": "체크 상태를 저장했습니다.",
+  "data": {
+    "item": {
+      "id": 801,
+      "status": "CAUTION"
+    }
+  }
+}
+```
+
+## API-508 매물 체크 항목 메모 자동 저장
+
+- Method: `PATCH`
+- URL: `/api/properties/{propertyId}/checklists/{propertyChecklistId}/items/{itemId}/memo`
+- 인증: 필요
+- 성공 상태: `200 OK`
+- 대표 오류: `PROPERTY_CHECKLIST_ITEM_NOT_FOUND`, `INVALID_REQUEST`
+
+```json
+{
+  "memo": "창가 벽면에 작은 곰팡이 흔적 있음"
+}
+```
+
+`memo`는 필수이며 최대 500자다. 빈 문자열은 메모 삭제를 의미한다. 매물·적용 체크리스트·항목의 중첩 관계와 회원 소유권을 UPDATE 조건에서 함께 검증한다. 메모 컬럼만 갱신하며 상태 컬럼은 변경하지 않는다. 같은 메모를 다시 저장해도 성공하는 멱등 요청이다.
+
+성공 응답:
+
+```json
+{
+  "code": "SUCCESS",
+  "message": "항목 메모를 저장했습니다.",
+  "data": {
+    "item": {
+      "id": 801,
+      "memo": "창가 벽면에 작은 곰팡이 흔적 있음"
+    }
+  }
+}
+```
+
 ## 비범위
 
 - Refresh Token과 토큰 재발급 API

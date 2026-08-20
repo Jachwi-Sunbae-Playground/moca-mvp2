@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 public class PropertyPhotoService {
     private final PropertyRepository propertyRepository;
     private final PropertyPhotoRepository propertyPhotoRepository;
@@ -19,7 +20,6 @@ public class PropertyPhotoService {
         this.propertyPhotoRepository = propertyPhotoRepository;
     }
 
-    @Transactional(readOnly = true)
     public PropertyPhotosQuery find(final Long memberId, final Long propertyId) {
         findOwnedProperty(memberId, propertyId);
         return new PropertyPhotosQuery(propertyId, propertyPhotoRepository.findByPropertyId(propertyId),
@@ -46,8 +46,8 @@ public class PropertyPhotoService {
     }
 
     private void findOwnedProperty(final Long memberId, final Long propertyId) {
-        propertyRepository.findByIdAndMemberId(propertyId, memberId)
-                .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND,
-                        "매물을 찾을 수 없습니다."));
+        if (!propertyRepository.existsByIdAndMemberId(propertyId, memberId)) {
+            throw new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND, "매물을 찾을 수 없습니다.");
+        }
     }
 }

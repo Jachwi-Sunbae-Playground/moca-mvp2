@@ -73,8 +73,8 @@ public class PropertyMemoService {
     }
 
     private void findOwnedProperty(final Long memberId, final Long propertyId) {
-        propertyRepository.findByIdAndMemberId(propertyId, memberId)
-                .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND,
-                        "매물을 찾을 수 없습니다."));
+        if (!propertyRepository.existsByIdAndMemberId(propertyId, memberId)) {
+            throw new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND, "매물을 찾을 수 없습니다.");
+        }
     }
 }

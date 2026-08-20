@@ -13,6 +13,10 @@ public interface PropertyRepository {
     Property save(Property property);
     Optional<Property> findByIdAndMemberId(long propertyId, long memberId);
 
+    boolean existsByIdAndMemberId(long propertyId, long memberId);
+
+    Optional<Property> findByIdAndMemberIdForUpdate(long propertyId, long memberId);
+
     Property update(Property property);
 
     void deleteById(long propertyId);

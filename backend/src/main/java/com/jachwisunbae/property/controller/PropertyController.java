@@ -5,7 +5,9 @@ import com.jachwisunbae.common.web.ApiResponse;
 import com.jachwisunbae.property.controller.dto.request.CreatePropertyRequest;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyRequest;
 import com.jachwisunbae.property.controller.dto.request.ApplyPropertyChecklistRequest;
-import com.jachwisunbae.checklist.service.PropertyChecklistService;
+import com.jachwisunbae.property.controller.dto.request.UpdatePropertyChecklistMemoRequest;
+import com.jachwisunbae.property.controller.dto.request.UpdatePropertyChecklistStatusRequest;
+import com.jachwisunbae.property.service.PropertyChecklistService;
 import com.jachwisunbae.checklist.type.CheckStage;
 import com.jachwisunbae.property.controller.dto.response.PropertyChecklistApplicationResponse;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyMemoRequest;
@@ -17,6 +19,8 @@ import com.jachwisunbae.property.controller.dto.response.PropertyMemoResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyPhotoListResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyPhotoResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyChecklistOverviewResponse;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemMemoResponse;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemStatusResponse;
 import com.jachwisunbae.property.entity.Property;
 import com.jachwisunbae.property.repository.query.PropertyPhotosQuery;
 import com.jachwisunbae.property.service.PropertyService;
@@ -24,6 +28,7 @@ import com.jachwisunbae.property.service.PropertyMemoService;
 import com.jachwisunbae.property.service.PropertyPhotoService;
 import com.jachwisunbae.property.service.PropertyDeletionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -32,6 +37,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -144,6 +150,33 @@ public class PropertyController {
         return ApiResponse.of("매물 단계 체크리스트를 적용했습니다.",
                 PropertyChecklistApplicationResponse.from(
                         propertyChecklistService.apply(memberId, propertyId, stage, request)));
+    }
+
+    @PatchMapping("/{propertyId}/checklists/{propertyChecklistId}/items/{itemId}/status")
+    @Operation(summary = "매물 체크 항목 상태 저장", description = "상태 컬럼만 갱신합니다.")
+    public ApiResponse<PropertyChecklistItemStatusResponse> updateChecklistItemStatus(
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId,
+            @PathVariable final Long propertyChecklistId,
+            @PathVariable final Long itemId,
+            @Valid @RequestBody final UpdatePropertyChecklistStatusRequest request) {
+        var item = propertyChecklistService.updateStatus(memberId, propertyId, propertyChecklistId, itemId, request);
+        return ApiResponse.of("체크 상태를 저장했습니다.",
+                new PropertyChecklistItemStatusResponse(
+                        new PropertyChecklistItemStatusItem(item.id(), item.status())));
+    }
+
+    @PatchMapping("/{propertyId}/checklists/{propertyChecklistId}/items/{itemId}/memo")
+    @Operation(summary = "매물 체크 항목 메모 저장", description = "메모 컬럼만 갱신합니다.")
+    public ApiResponse<PropertyChecklistItemMemoResponse> updateChecklistItemMemo(
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId,
+            @PathVariable final Long propertyChecklistId,
+            @PathVariable final Long itemId,
+            @Valid @RequestBody final UpdatePropertyChecklistMemoRequest request) {
+        var item = propertyChecklistService.updateMemo(memberId, propertyId, propertyChecklistId, itemId, request);
+        return ApiResponse.of("항목 메모를 저장했습니다.",
+                new PropertyChecklistItemMemoResponse(new PropertyChecklistItemMemoItem(item.id(), item.memo())));
     }
 
     @GetMapping("/{propertyId}/memo")

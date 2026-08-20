@@ -16,6 +16,8 @@ public interface UserChecklistRepository {
 
     Optional<UserChecklist> findByIdAndMemberId(long checklistId, long memberId);
 
+    boolean existsByIdAndMemberId(long checklistId, long memberId);
+
     Optional<UserChecklist> findByIdAndMemberIdForUpdate(long checklistId, long memberId);
 
     List<UserChecklist> findByMemberId(long memberId, CheckStage stage);

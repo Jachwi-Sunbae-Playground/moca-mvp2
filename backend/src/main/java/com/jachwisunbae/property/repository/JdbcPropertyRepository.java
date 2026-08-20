@@ -106,6 +106,24 @@ public class JdbcPropertyRepository implements PropertyRepository {
     }
 
     @Override
+    public boolean existsByIdAndMemberId(final long propertyId, final long memberId) {
+        Boolean exists = jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM properties WHERE id = ? AND member_id = ?)",
+                Boolean.class, propertyId, memberId);
+        return Boolean.TRUE.equals(exists);
+    }
+
+    @Override
+    public Optional<Property> findByIdAndMemberIdForUpdate(final long propertyId, final long memberId) {
+        String sql = "SELECT id, member_id, name, deposit_amount, monthly_rent_amount, discovery_source "
+                + "FROM properties WHERE id = ? AND member_id = ? FOR UPDATE";
+        return jdbcTemplate.query(sql, (rs, row) -> Property.reconstruct(
+                rs.getLong("id"), rs.getLong("member_id"), rs.getString("name"),
+                rs.getObject("deposit_amount", Long.class), rs.getObject("monthly_rent_amount", Long.class),
+                rs.getString("discovery_source")), propertyId, memberId).stream().findFirst();
+    }
+
+    @Override
     public Property update(final Property property) {
         String sql = "UPDATE properties SET name = ?, deposit_amount = ?, monthly_rent_amount = ?, discovery_source = ? "
                 + "WHERE id = ? AND member_id = ?";
