@@ -23,10 +23,10 @@ public class MemberController {
         this.memberService = memberService;
     }
 
-    @GetMapping
+    @GetMapping("/me")
     @Operation(summary = "현재 회원 정보 조회", description = "Access Token의 회원 ID로 이름과 이메일을 조회합니다.")
     public ApiResponse<MemberDetailResponse> get(
-        @AuthenticatedMemberId final long memberId
+        @AuthenticatedMemberId final Long memberId
     ){
         return ApiResponse.of(MemberDetailResponse.from(memberService.findById(memberId)));
     }

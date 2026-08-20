@@ -41,6 +41,7 @@ public class JdbcPropertyPhotoRepository implements PropertyPhotoRepository {
 
     @Override
     public void deleteById(final long photoId) {
+        jdbcTemplate.update("DELETE FROM main_property_photos WHERE property_photos_id = ?", photoId);
         jdbcTemplate.update("DELETE FROM property_photos WHERE id = ?", photoId);
     }
 
