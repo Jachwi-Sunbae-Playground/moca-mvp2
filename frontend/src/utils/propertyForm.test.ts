@@ -28,19 +28,25 @@ describe('매물 입력 검증', () => {
   });
 
   it('모든 필수 입력과 길이 경계를 검증한다', () => {
-    expect(validatePropertyForm({ name: ' ', depositAmount: '', monthlyRentAmount: '', discoverySource: ' ' })).toEqual(
-      {
-        name: expect.any(String),
-        depositAmount: expect.any(String),
-        monthlyRentAmount: expect.any(String),
-        discoverySource: expect.any(String),
-      },
-    );
     expect(
       validatePropertyForm({
-        name: '가'.repeat(51),
+        name: ' ',
+        depositAmount: '',
+        monthlyRentAmount: '',
+        maintenanceFeeAmount: '',
+        discoverySource: ' ',
+      }),
+    ).toEqual({
+      name: expect.any(String),
+      depositAmount: expect.any(String),
+      monthlyRentAmount: expect.any(String),
+    });
+    expect(
+      validatePropertyForm({
+        name: '가'.repeat(31),
         depositAmount: '0',
         monthlyRentAmount: '0',
+        maintenanceFeeAmount: '',
         discoverySource: '나'.repeat(501),
       }),
     ).toMatchObject({
@@ -50,7 +56,7 @@ describe('매물 입력 검증', () => {
   });
 
   it('URL과 일반 텍스트 발견 경로를 같은 요청 문자열로 보존한다', () => {
-    const base = { name: ' 매물 ', depositAmount: '0', monthlyRentAmount: '55,000' };
+    const base = { name: ' 매물 ', depositAmount: '0', monthlyRentAmount: '55,000', maintenanceFeeAmount: '' };
     expect(toPropertyInputDto({ ...base, discoverySource: ' https://example.com/home ' })?.discoverySource).toBe(
       'https://example.com/home',
     );

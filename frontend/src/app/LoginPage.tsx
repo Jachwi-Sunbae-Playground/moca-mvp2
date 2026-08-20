@@ -1,9 +1,6 @@
 import { useRef, useState } from 'react';
-import jachwiSunbaeLogo from '../assets/jachwi-sunbae-landing-logo.png';
-import checklistListScreenshot from '../assets/landing/checklist-list.jpg';
-import propertyDetailScreenshot from '../assets/landing/property-detail.jpg';
-import propertyListScreenshot from '../assets/landing/property-list.jpg';
 import GoogleIcon from '../components/GoogleIcon';
+import Icon from '../components/ui/Icon';
 import type { PublicConfig } from '../types/PublicConfig';
 import { startGoogleLogin } from '../utils/googleOAuth';
 import { useAuthentication } from '../hooks/useAuthentication';
@@ -14,17 +11,6 @@ type LoginPageProps = {
   storage?: Storage;
   navigateExternally?: (url: string) => void;
 };
-
-type LandingScreenshotProps = {
-  src: string;
-  alt: string;
-};
-
-const LandingScreenshot = ({ src, alt }: LandingScreenshotProps) => (
-  <div className={styles.screenshotFrame}>
-    <img src={src} alt={alt} />
-  </div>
-);
 
 const LoginPage = ({ config, storage, navigateExternally }: LoginPageProps) => {
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -63,52 +49,40 @@ const LoginPage = ({ config, storage, navigateExternally }: LoginPageProps) => {
   return (
     <main className={styles.page}>
       <section className={styles.card} aria-labelledby="login-heading">
+        <div className={styles.heroPlaceholder} aria-hidden="true" />
         <header className={styles.brandHeader}>
-          <div className={styles.logoViewport}>
-            <img className={styles.brandLogo} src={jachwiSunbaeLogo} alt="자취선배" />
-          </div>
-          <h1 id="login-heading" className={styles.brandMessage} aria-label="처음 방을 보는 날부터, 떠나는 날까지">
-            처음 방을 보는 날부터,
-            <br />
-            떠나는 날까지
-          </h1>
+          <p>처음 방을 보는 날부터, 떠나는 날까지.</p>
+          <h1 id="login-heading">자취방 결정 가이드</h1>
         </header>
 
-        <section className={styles.featureIntro} aria-labelledby="feature-heading">
-          <div className={styles.featureHeading}>
-            <h2 id="feature-heading">방을 볼 때 놓치기 쉬운 것은?</h2>
-            <p>방을 알아보는 순간마다 필요한 기록을 한곳에 모아요.</p>
-          </div>
-
-          <div className={styles.featureList}>
-            <article className={styles.featureItem}>
-              <LandingScreenshot src={propertyListScreenshot} alt="기록한 매물 목록 화면" />
-              <div className={styles.featureCopy}>
-                <span>매물 기록·비교</span>
-                <h3>본 매물을 한눈에 모아요</h3>
-                <p>보증금과 월세를 기록하고, 방문 확인 진행 상황을 매물별로 비교할 수 있어요.</p>
-              </div>
-            </article>
-
-            <article className={`${styles.featureItem} ${styles.featureItemReverse}`}>
-              <LandingScreenshot src={propertyDetailScreenshot} alt="매물 상세 정보와 퀵 메모 화면" />
-              <div className={styles.featureCopy}>
-                <span>사진·정보·메모</span>
-                <h3>매물 정보를 한곳에 남겨요</h3>
-                <p>사진과 가격, 확인한 곳을 정리하고 현장에서 떠오른 내용도 바로 메모할 수 있어요.</p>
-              </div>
-            </article>
-
-            <article className={styles.featureItem}>
-              <LandingScreenshot src={checklistListScreenshot} alt="단계별 체크리스트 목록 화면" />
-              <div className={styles.featureCopy}>
-                <span>단계별 체크리스트</span>
-                <h3>단계마다 놓치지 않게 확인해요</h3>
-                <p>온라인 문의, 집에서 확인할 내용, 계약 전 조건을 나누어 확인하고 결과를 기록할 수 있어요.</p>
-              </div>
-            </article>
-          </div>
+        <section className={styles.guideCard} aria-label="자취선배 주요 기능">
+          <p>
+            방마다 체크한 내용을 그대로 남기고
+            <br />
+            한번에 비교해서 고르세요.
+          </p>
         </section>
+
+        <ul className={styles.featureList}>
+          <li>
+            <span>
+              <Icon name="checklist" size={16} />
+            </span>
+            <strong>빠짐없이 체크</strong>
+          </li>
+          <li>
+            <span>
+              <Icon name="arrow-right" size={16} />
+            </span>
+            <strong>매물끼리 비교</strong>
+          </li>
+          <li>
+            <span>
+              <Icon name="link" size={16} />
+            </span>
+            <strong>기록 자동 보관</strong>
+          </li>
+        </ul>
 
         <section className={styles.actions} aria-label="로그인">
           {authenticationNotice === null ? null : (
@@ -123,7 +97,7 @@ const LoginPage = ({ config, storage, navigateExternally }: LoginPageProps) => {
           )}
           <button className={styles.googleLoginButton} type="button" onClick={handleLogin} disabled={isRedirecting}>
             <GoogleIcon className={styles.googleIcon} />
-            {isRedirecting ? 'Google로 이동 중…' : 'Google로 로그인하고 이용하기'}
+            {isRedirecting ? 'Google로 이동 중…' : '구글로 로그인하기'}
           </button>
           <p className={styles.agreement}>계속하면 이용약관과 개인정보처리방침에 동의하는 것으로 간주됩니다.</p>
         </section>

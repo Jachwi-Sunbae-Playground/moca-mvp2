@@ -112,9 +112,6 @@ const OAuthCallbackPage = ({ config, storage = window.sessionStorage }: OAuthCal
           config,
           {
             authorizationCode,
-            codeVerifier: transaction.codeVerifier,
-            nonce: transaction.nonce,
-            redirectUri: config.googleRedirectUri,
           },
           abortController.signal,
         );

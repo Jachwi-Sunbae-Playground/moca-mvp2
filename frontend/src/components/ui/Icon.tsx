@@ -13,6 +13,7 @@ export type IconName =
   | 'more-vertical'
   | 'plus'
   | 'search'
+  | 'trash'
   | 'user';
 
 type IconProps = {
@@ -128,6 +129,16 @@ const IconPaths = ({ name }: { name: IconName }) => {
         <>
           <circle cx="11" cy="11" r="7" />
           <path d="m16.5 16.5 4 4" />
+        </>
+      );
+    case 'trash':
+      return (
+        <>
+          <path d="M4 7h16" />
+          <path d="M9 7V4h6v3" />
+          <path d="m6 7 1 13h10l1-13" />
+          <path d="M10 11v5" />
+          <path d="M14 11v5" />
         </>
       );
     case 'user':

@@ -19,8 +19,8 @@ const config: PublicConfig = {
 };
 
 const member = {
-  memberId: 1,
-  displayName: '이자취',
+  id: 1,
+  name: '이자취',
   email: 'jachwi@example.com',
 };
 
@@ -74,14 +74,14 @@ describe('FE-1 인증 흐름', () => {
   it('비인증 사용자에게 로그인 화면을 표시한다', () => {
     renderRoutes('/login');
 
-    expect(screen.getByRole('heading', { name: '처음 방을 보는 날부터, 떠나는 날까지' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Google로 로그인하고 이용하기' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '자취방 결정 가이드' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '구글로 로그인하기' })).toBeInTheDocument();
   });
 
   it('보호 경로에 비인증으로 접근하면 로그인 화면으로 이동한다', async () => {
     renderRoutes('/');
 
-    expect(await screen.findByRole('button', { name: 'Google로 로그인하고 이용하기' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: '구글로 로그인하기' })).toBeInTheDocument();
   });
 
   it('로그인 버튼을 누르면 PKCE 요청을 저장하고 올바른 Google URL로 이동한다', async () => {
@@ -89,7 +89,7 @@ describe('FE-1 인증 흐름', () => {
     const user = userEvent.setup();
     renderRoutes('/login', { navigateExternally });
 
-    await user.click(screen.getByRole('button', { name: 'Google로 로그인하고 이용하기' }));
+    await user.click(screen.getByRole('button', { name: '구글로 로그인하기' }));
 
     await waitFor(() => expect(navigateExternally).toHaveBeenCalledOnce());
     const firstCall = navigateExternally.mock.calls[0];
@@ -112,12 +112,13 @@ describe('FE-1 인증 흐름', () => {
           successEnvelope({
             accessToken: 'issued-access-token',
             tokenType: 'Bearer',
-            expiresIn: 43_200,
+            expiresInSeconds: 43_200,
+            isNewMember: false,
             member,
           }),
         );
       }),
-      http.get(`${config.apiBaseUrl}/api/members/me`, ({ request }) => {
+      http.get(`${config.apiBaseUrl}/api/members`, ({ request }) => {
         expect(request.headers.get('Authorization')).toBe('Bearer issued-access-token');
         return HttpResponse.json(successEnvelope(member));
       }),
@@ -128,9 +129,6 @@ describe('FE-1 인증 흐름', () => {
     expect(await screen.findByRole('heading', { name: '내 매물' })).toBeInTheDocument();
     expect(loginRequest).toEqual({
       authorizationCode: 'sensitive-code',
-      codeVerifier: 'v'.repeat(43),
-      nonce: validNonce,
-      redirectUri: config.googleRedirectUri,
     });
     expect(getAccessToken()).toBe('issued-access-token');
     expect(window.sessionStorage.getItem(getOAuthTransactionStorageKey())).toBeNull();
@@ -201,7 +199,7 @@ describe('FE-1 인증 흐름', () => {
   it('저장된 유효 토큰으로 API-002를 호출해 인증 상태를 확정한다', async () => {
     setAuthentication({ accessToken: 'saved-in-memory', tokenType: 'Bearer', expiresIn: 60 });
     server.use(
-      http.get(`${config.apiBaseUrl}/api/members/me`, ({ request }) => {
+      http.get(`${config.apiBaseUrl}/api/members`, ({ request }) => {
         expect(request.headers.get('Authorization')).toBe('Bearer saved-in-memory');
         return HttpResponse.json(successEnvelope(member));
       }),
@@ -215,21 +213,21 @@ describe('FE-1 인증 흐름', () => {
   it('API-002가 401이면 메모리 토큰을 지우고 로그인으로 이동한다', async () => {
     setAuthentication({ accessToken: 'expired-token', tokenType: 'Bearer', expiresIn: 60 });
     server.use(
-      http.get(`${config.apiBaseUrl}/api/members/me`, () =>
+      http.get(`${config.apiBaseUrl}/api/members`, () =>
         HttpResponse.json(errorEnvelope('ACCESS_TOKEN_EXPIRED', 'expired'), { status: 401 }),
       ),
     );
 
     renderRoutes('/');
 
-    expect(await screen.findByRole('button', { name: 'Google로 로그인하고 이용하기' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: '구글로 로그인하기' })).toBeInTheDocument();
     expect(getAccessToken()).toBeNull();
     expect(screen.getByText(/인증을 확인하지 못해 로그아웃/)).toBeInTheDocument();
   });
 
   it('API-002 네트워크 실패는 토큰 만료로 오인하지 않고 재시도를 제공한다', async () => {
     setAuthentication({ accessToken: 'still-valid-token', tokenType: 'Bearer', expiresIn: 60 });
-    server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.error()));
+    server.use(http.get(`${config.apiBaseUrl}/api/members`, () => HttpResponse.error()));
 
     renderRoutes('/');
 
@@ -240,7 +238,7 @@ describe('FE-1 인증 흐름', () => {
 
   it('인증 사용자가 로그인 경로에 접근하면 앱 시작 경로로 이동한다', async () => {
     setAuthentication({ accessToken: 'valid-token', tokenType: 'Bearer', expiresIn: 60 });
-    server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.json(successEnvelope(member))));
+    server.use(http.get(`${config.apiBaseUrl}/api/members`, () => HttpResponse.json(successEnvelope(member))));
 
     renderRoutes('/login');
 
@@ -250,14 +248,14 @@ describe('FE-1 인증 흐름', () => {
   it('로그아웃하면 인증 정보와 회원 캐시를 지우고 로그인으로 이동한다', async () => {
     const user = userEvent.setup();
     setAuthentication({ accessToken: 'valid-token', tokenType: 'Bearer', expiresIn: 60 });
-    server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.json(successEnvelope(member))));
+    server.use(http.get(`${config.apiBaseUrl}/api/members`, () => HttpResponse.json(successEnvelope(member))));
     renderRoutes('/');
 
     await user.click(await screen.findByRole('link', { name: '마이' }));
-    await screen.findByRole('heading', { name: '마이페이지' });
+    await screen.findByRole('heading', { name: '마이' });
     await user.click(screen.getByRole('button', { name: '로그아웃' }));
 
-    expect(await screen.findByRole('button', { name: 'Google로 로그인하고 이용하기' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: '구글로 로그인하기' })).toBeInTheDocument();
     expect(getAccessToken()).toBeNull();
   });
 
@@ -267,7 +265,7 @@ describe('FE-1 인증 흐름', () => {
     ['/tips', '선배 팁은 준비 중이에요'],
   ])('%s는 실제 기능 대신 공통 준비 중 안내를 표시한다', async (path, heading) => {
     setAuthentication({ accessToken: 'valid-token', tokenType: 'Bearer', expiresIn: 60 });
-    server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.json(successEnvelope(member))));
+    server.use(http.get(`${config.apiBaseUrl}/api/members`, () => HttpResponse.json(successEnvelope(member))));
 
     renderRoutes(path);
 

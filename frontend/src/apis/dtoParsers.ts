@@ -13,13 +13,14 @@ const isMemberDto = (value: unknown): value is MemberDto =>
   typeof value.email === 'string' &&
   value.email.length > 0;
 
-export const parseMemberDto = (value: unknown): MemberDto => {
-  if (!isMemberDto(value)) {
-    throw new Error('현재 회원 응답 형식이 올바르지 않습니다.');
-  }
-
-  return value;
+const parseMember = (value: unknown): MemberDto => {
+  if (!isRecord(value)) throw new Error('현재 회원 응답 형식이 올바르지 않습니다.');
+  const member = { memberId: value.id, displayName: value.name, email: value.email };
+  if (!isMemberDto(member)) throw new Error('현재 회원 응답 형식이 올바르지 않습니다.');
+  return member;
 };
+
+export const parseMemberDto = (value: unknown): MemberDto => parseMember(value);
 
 export const parseGoogleLoginResponseDto = (value: unknown): GoogleLoginResponseDto => {
   if (
@@ -27,10 +28,10 @@ export const parseGoogleLoginResponseDto = (value: unknown): GoogleLoginResponse
     typeof value.accessToken !== 'string' ||
     value.accessToken.length === 0 ||
     value.tokenType !== 'Bearer' ||
-    typeof value.expiresIn !== 'number' ||
-    !Number.isFinite(value.expiresIn) ||
-    value.expiresIn <= 0 ||
-    !isMemberDto(value.member)
+    typeof value.expiresInSeconds !== 'number' ||
+    !Number.isFinite(value.expiresInSeconds) ||
+    value.expiresInSeconds <= 0 ||
+    typeof value.isNewMember !== 'boolean'
   ) {
     throw new Error('로그인 응답 형식이 올바르지 않습니다.');
   }
@@ -38,7 +39,8 @@ export const parseGoogleLoginResponseDto = (value: unknown): GoogleLoginResponse
   return {
     accessToken: value.accessToken,
     tokenType: value.tokenType,
-    expiresIn: value.expiresIn,
-    member: value.member,
+    expiresIn: value.expiresInSeconds,
+    isNewMember: value.isNewMember,
+    member: parseMember(value.member),
   };
 };

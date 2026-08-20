@@ -1,43 +1,50 @@
 .page {
-  min-height: calc(100dvh - var(--bottom-navigation-height));
-  background: var(--color-surface);
+  min-height: 100%;
+  background: var(--color-canvas);
 }
 
 .container {
-  padding: 0.5rem 0 2rem;
+  padding: 0 0 1.5rem;
 }
 
 .navigationArea {
   padding: 0 1rem;
-  background: var(--color-surface);
+  background: var(--color-canvas);
 }
 
 .topNavigation {
   margin-bottom: 0;
+  border-bottom: 0;
 }
 
 .navigationArea > :global([data-full-bleed='true']) {
-  width: calc(100% + 2rem);
-  margin-left: -1rem;
+  width: 100%;
+  margin-left: 0;
 }
 
-.createAction {
-  min-height: 2.5rem;
-  padding: 0.4rem 0.25rem;
-  font-size: 0.75rem;
-  white-space: nowrap;
+.description {
+  margin: 0.65rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  line-height: 1.5;
 }
 
 .list {
   display: grid;
-  gap: 0.65rem;
-  margin: 1rem;
+  gap: 0.55rem;
+  margin: 0.7rem 1rem 0;
   padding: 0;
   list-style: none;
 }
 
-.emptyAction {
-  margin: 1.25rem 1rem 0;
+.createCard {
+  margin: 0.55rem 1rem 0;
+}
+
+.createCard :global(a) {
+  border-style: solid;
+  border-color: var(--color-border);
+  color: var(--color-ink);
 }
 
 .container > :global(.content-state),

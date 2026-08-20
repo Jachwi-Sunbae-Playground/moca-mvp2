@@ -9,15 +9,18 @@ export type ChecklistPresetType = (typeof PRESET_TYPES)[number];
 export type CheckItem = {
   checkItemId: number;
   stage: ChecklistStage;
+  itemType: 'CORE' | 'OPTIONAL';
   question: string;
   guide: string | null;
 };
 
 type ChecklistItemBase = {
   checklistItemId: number;
+  itemType: 'CORE' | 'OPTIONAL';
   question: string;
   guide: string | null;
   order: number;
+  active: boolean;
 };
 
 export type ProvidedChecklistItem = ChecklistItemBase & {
@@ -89,9 +92,10 @@ export type CreatedChecklist = ChecklistDetail;
 export type LegacyChecklistDetail = Omit<ChecklistDetail, 'items'> & { items: CheckItem[] };
 
 export type ActiveChecklist = {
+  propertyChecklistId: number;
   propertyId: number;
   stage: ChecklistStage;
-  checklistId: number;
+  checklistId: number | null;
   name: string;
   itemCount: number;
 };

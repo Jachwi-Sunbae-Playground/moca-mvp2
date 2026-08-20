@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
 import { getPropertyErrorMessage } from '../apis/propertyErrorMessages';
 import PropertyPhotoManager from '../components/PropertyPhotoManager';
-import AppBar from '../components/ui/AppBar';
+import TopNavigation from '../components/ui/TopNavigation';
 import { usePropertyDetail } from '../hooks/query/useProperties';
 import type { PublicConfig } from '../types/PublicConfig';
 import { parsePositiveId } from '../utils/propertyFormat';
@@ -66,7 +66,7 @@ const ResolvedPropertyPhotosPage = ({ config, propertyId }: { config: PublicConf
 
   return (
     <main className={styles.page}>
-      <AppBar
+      <TopNavigation
         title={`${property.data.name} · 사진`}
         backTo={`/properties/${propertyId}`}
         backLabel="매물 상세로 돌아가기"

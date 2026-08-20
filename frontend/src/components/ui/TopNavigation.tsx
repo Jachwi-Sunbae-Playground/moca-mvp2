@@ -38,9 +38,9 @@ const TopNavigation = ({
           <Icon name={navigationIcon} size={21} />
         </Link>
       ) : null}
-      <strong className={styles.title} title={title}>
+      <h1 className={styles.title} title={title}>
         {title}
-      </strong>
+      </h1>
     </div>
     {(meta !== undefined || endSlot !== undefined) && (
       <div className={styles.endSlot}>

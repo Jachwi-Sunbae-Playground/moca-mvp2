@@ -16,10 +16,13 @@ const CreatePropertyPage = lazy(() => import('./CreatePropertyPage'));
 const PropertyDetailPage = lazy(() => import('./PropertyDetailPage'));
 const EditPropertyPage = lazy(() => import('./EditPropertyPage'));
 const PropertyPhotosPage = lazy(() => import('./PropertyPhotosPage'));
+const PropertyMemoPage = lazy(() => import('./PropertyMemoPage'));
 const ChecklistListPage = lazy(() => import('./ChecklistListPage'));
+const ChecklistHomePage = lazy(() => import('./ChecklistHomePage'));
 const CreateChecklistPage = lazy(() => import('./CreateChecklistPage'));
 const ChecklistDetailPage = lazy(() => import('./ChecklistDetailPage'));
 const PropertyActiveChecklistPage = lazy(() => import('./PropertyActiveChecklistPage'));
+const PropertyChecklistPage = lazy(() => import('./PropertyChecklistPage'));
 const PropertyVisitsPage = lazy(() => import('./PropertyVisitsPage'));
 const VisitDetailPage = lazy(() => import('./VisitDetailPage'));
 const MyPage = lazy(() => import('./MyPage'));
@@ -63,13 +66,18 @@ const AppRoutes = ({ config, storage, navigateExternally }: AppRoutesProps) => (
         <Route path="/properties/:propertyId" element={lazyPage(<PropertyDetailPage config={config} />)} />
         <Route path="/properties/:propertyId/edit" element={lazyPage(<EditPropertyPage config={config} />)} />
         <Route path="/properties/:propertyId/photos" element={lazyPage(<PropertyPhotosPage config={config} />)} />
+        <Route path="/properties/:propertyId/memo" element={lazyPage(<PropertyMemoPage config={config} />)} />
         <Route path="/properties/:propertyId/visits" element={lazyPage(<PropertyVisitsPage config={config} />)} />
         <Route path="/visits/:visitId" element={lazyPage(<VisitDetailPage config={config} />)} />
         <Route
           path="/properties/:propertyId/active-checklists/:stage"
           element={lazyPage(<PropertyActiveChecklistPage config={config} />)}
         />
-        <Route path="/checklists" element={<Navigate to="/checklists/ONLINE_PHONE" replace />} />
+        <Route
+          path="/properties/:propertyId/checklists/:propertyChecklistId"
+          element={lazyPage(<PropertyChecklistPage config={config} />)}
+        />
+        <Route path="/checklists" element={lazyPage(<ChecklistHomePage />)} />
         <Route path="/checklists/new" element={lazyPage(<CreateChecklistPage config={config} />)} />
         <Route path="/checklists/:resource" element={lazyPage(<ChecklistResourceRoute config={config} />)} />
         <Route path="/me" element={lazyPage(<MyPage />)} />

@@ -11,9 +11,15 @@ type PropertyCardProps = {
 };
 
 const PropertyCard = ({ property, thumbnailUrl }: PropertyCardProps) => {
-  const summary = property.recentVisit?.summary;
+  const summary = {
+    ...property.progress,
+    checkedCount: property.progress.completedCount,
+  };
+  const resolvedThumbnailUrl = thumbnailUrl ?? property.representativePhoto?.contentUrl;
   const progressLabel =
-    property.recentVisit === null ? '미완료' : property.recentVisit.status === 'IN_PROGRESS' ? '작성 중' : null;
+    property.progress.totalCount === 0 || property.progress.completedCount < property.progress.totalCount
+      ? '미완료'
+      : null;
 
   return (
     <article>
@@ -21,8 +27,12 @@ const PropertyCard = ({ property, thumbnailUrl }: PropertyCardProps) => {
         {progressLabel !== null && <span className={styles.progressLabel}>{progressLabel}</span>}
         <div className={styles.mainInfo}>
           <div className={styles.thumbnail}>
-            {thumbnailUrl === undefined ? <Icon name="image" size={22} /> : <img src={thumbnailUrl} alt="" />}
-            <span aria-label={`사진 ${property.photoCount}장`}>{property.photoCount}장</span>
+            {resolvedThumbnailUrl === undefined ? (
+              <Icon name="image" size={22} />
+            ) : (
+              <img src={resolvedThumbnailUrl} alt="" />
+            )}
+            {property.representativePhoto !== null && <span>대표</span>}
           </div>
           <div className={styles.details}>
             <h2>{property.name}</h2>
@@ -31,7 +41,7 @@ const PropertyCard = ({ property, thumbnailUrl }: PropertyCardProps) => {
             </p>
           </div>
         </div>
-        {summary === undefined ? (
+        {property.progress.totalCount === 0 ? (
           <div className={styles.emptyVisit}>
             <span className={styles.emptyBar} aria-hidden="true" />
             <span>아직 방문 확인 기록이 없어요.</span>

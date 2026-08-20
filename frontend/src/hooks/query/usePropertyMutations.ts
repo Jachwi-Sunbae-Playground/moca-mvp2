@@ -1,11 +1,18 @@
 import { useMutation } from '@tanstack/react-query';
 import type {
   PropertyInputDto,
+  SavePropertyMemoDocumentRequestDto,
   SavePropertyPreVisitMemoRequestDto,
   UpdatePropertyRequestDto,
 } from '../../apis/dtos/PropertyDto';
-import { removePropertyPhoto, uploadPropertyPhoto } from '../../apis/photoApi';
-import { createProperty, removeProperty, savePropertyPreVisitMemo, updateProperty } from '../../apis/propertyApi';
+import { removePropertyPhoto, setRepresentativePropertyPhoto, uploadPropertyPhoto } from '../../apis/photoApi';
+import {
+  createProperty,
+  removeProperty,
+  savePropertyMemoDocument,
+  savePropertyPreVisitMemo,
+  updateProperty,
+} from '../../apis/propertyApi';
 import { propertyQueryKeys } from '../../app/propertyQueryKeys';
 import { queryClient } from '../../app/queryClient';
 import type { PublicConfig } from '../../types/PublicConfig';
@@ -29,12 +36,21 @@ export const useUpdateProperty = (config: PublicConfig, propertyId: number) =>
               name: updated.name,
               depositAmount: updated.depositAmount,
               monthlyRentAmount: updated.monthlyRentAmount,
+              maintenanceFeeAmount: updated.maintenanceFeeAmount,
               discoverySource: updated.discoverySource,
-              updatedAt: updated.updatedAt,
-              lastActivityAt: updated.updatedAt,
+              updatedAt: updated.updatedAt ?? current.updatedAt,
+              lastActivityAt: updated.updatedAt ?? current.lastActivityAt,
             },
       );
       await queryClient.invalidateQueries({ queryKey: propertyQueryKeys.lists() });
+    },
+  });
+
+export const useSavePropertyMemoDocument = (config: PublicConfig, propertyId: number) =>
+  useMutation({
+    mutationFn: (request: SavePropertyMemoDocumentRequestDto) => savePropertyMemoDocument(config, propertyId, request),
+    onSuccess: (memo) => {
+      queryClient.setQueryData(propertyQueryKeys.memo(propertyId), memo);
     },
   });
 
@@ -79,6 +95,12 @@ const invalidatePhotoAggregates = async (propertyId: number) => {
 export const useUploadPropertyPhoto = (config: PublicConfig, propertyId: number) =>
   useMutation({
     mutationFn: (file: File) => uploadPropertyPhoto(config, propertyId, file),
+    onSuccess: async () => invalidatePhotoAggregates(propertyId),
+  });
+
+export const useSetRepresentativePropertyPhoto = (config: PublicConfig, propertyId: number) =>
+  useMutation({
+    mutationFn: (photoId: number) => setRepresentativePropertyPhoto(config, propertyId, photoId),
     onSuccess: async () => invalidatePhotoAggregates(propertyId),
   });
 

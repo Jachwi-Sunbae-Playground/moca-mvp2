@@ -1,149 +1,124 @@
-import { isChecklistPresetType, isChecklistStage } from '../constants/checklist';
+import { isChecklistStage } from '../constants/checklist';
 import type {
   ActiveChecklist,
   CheckItem,
   CheckItemPage,
   ChecklistDetail,
-  ChecklistItem,
   ChecklistPage,
   ChecklistPreset,
   ChecklistStage,
   ChecklistSummary,
   CreatedChecklist,
 } from '../types/Checklist';
-import {
-  readArray,
-  readBoolean,
-  readInteger,
-  readNullableInteger,
-  readNullableString,
-  readRecord,
-  readString,
-  readUtcDateTime,
-} from './responseParsers';
+import { readArray, readBoolean, readInteger, readNullableInteger, readRecord, readString } from './responseParsers';
+
+const unknownDate = '1970-01-01T00:00:00Z';
 
 const parseStage = (value: unknown): ChecklistStage => {
   if (!isChecklistStage(value)) throw new Error('체크리스트 단계 응답이 올바르지 않습니다.');
   return value;
 };
 
+const parseItemType = (value: unknown): CheckItem['itemType'] => {
+  if (value !== 'CORE' && value !== 'OPTIONAL') throw new Error('체크 항목 유형 응답이 올바르지 않습니다.');
+  return value;
+};
+
 const parseCheckItem = (value: unknown): CheckItem => {
   const item = readRecord(value);
   return {
-    checkItemId: readInteger(item, 'checkItemId', 1),
+    checkItemId: readInteger(item, 'id', 1),
     stage: parseStage(item.stage),
+    itemType: parseItemType(item.itemType),
     question: readString(item, 'question', { maximumCodePoints: 200 }),
-    guide: readNullableString(item, 'guide'),
-  };
-};
-
-const parsePage = (value: unknown) => {
-  const result = readRecord(value);
-  return {
-    result,
-    content: readArray(result, 'content'),
-    page: readInteger(result, 'page'),
-    size: readInteger(result, 'size', 1),
-    totalElements: readInteger(result, 'totalElements'),
-    totalPages: readInteger(result, 'totalPages'),
-    hasNext: readBoolean(result, 'hasNext'),
+    guide: null,
   };
 };
 
 export const parseCheckItemPage = (value: unknown): CheckItemPage => {
-  const metadata = parsePage(value);
-  return {
-    content: metadata.content.map(parseCheckItem),
-    page: metadata.page,
-    size: metadata.size,
-    totalElements: metadata.totalElements,
-    totalPages: metadata.totalPages,
-    hasNext: metadata.hasNext,
-  };
-};
-
-export const parseChecklistPreset = (value: unknown): ChecklistPreset => {
   const result = readRecord(value);
-  const resultStage = parseStage(result.stage);
-  if (!isChecklistPresetType(result.presetType)) throw new Error('프리셋 응답이 올바르지 않습니다.');
-
+  const stage = parseStage(result.stage);
+  const items = readArray(result, 'items').map(parseCheckItem);
+  const totalElements = readInteger(result, 'totalCount');
+  if (items.some((item) => item.stage !== stage) || items.length !== totalElements) {
+    throw new Error('체크 항목 집계 응답이 올바르지 않습니다.');
+  }
   return {
-    presetType: result.presetType,
-    stage: resultStage,
-    items: readArray(result, 'items').map((value) => {
-      const item = readRecord(value);
-      const parsedItem = parseCheckItem({ ...item, stage: resultStage });
-      return { ...parsedItem, order: readInteger(item, 'order') };
-    }),
+    content: items,
+    page: 0,
+    size: Math.max(1, items.length),
+    totalElements,
+    totalPages: totalElements === 0 ? 0 : 1,
+    hasNext: false,
   };
 };
+
+/** 원룸 프리셋은 최종 API에 없으며, 체크 항목 조회 결과를 화면 시작 구성으로만 변환한다. */
+export const toChecklistPreset = (stage: ChecklistStage, items: CheckItem[]): ChecklistPreset => ({
+  presetType: 'ONE_ROOM',
+  stage,
+  items: items.map((item, order) => ({ ...item, order })),
+});
 
 const parseChecklistSummary = (value: unknown): ChecklistSummary => {
   const result = readRecord(value);
   return {
-    checklistId: readInteger(result, 'checklistId', 1),
+    checklistId: readInteger(result, 'id', 1),
     name: readString(result, 'name'),
     stage: parseStage(result.stage),
     itemCount: readInteger(result, 'itemCount'),
-    assignedPropertyCount: readInteger(result, 'assignedPropertyCount'),
-    updatedAt: readUtcDateTime(result, 'updatedAt'),
+    assignedPropertyCount: 0,
+    updatedAt: unknownDate,
   };
 };
 
 export const parseChecklistPage = (value: unknown): ChecklistPage => {
-  const metadata = parsePage(value);
+  const result = readRecord(value);
+  const content = readArray(result, 'items').map(parseChecklistSummary);
+  const totalElements = readInteger(result, 'totalCount');
+  if (content.length !== totalElements) throw new Error('체크리스트 집계 응답이 올바르지 않습니다.');
   return {
-    content: metadata.content.map(parseChecklistSummary),
-    page: metadata.page,
-    size: metadata.size,
-    totalElements: metadata.totalElements,
-    totalPages: metadata.totalPages,
-    hasNext: metadata.hasNext,
+    content,
+    page: 0,
+    size: Math.max(1, content.length),
+    totalElements,
+    totalPages: totalElements === 0 ? 0 : 1,
+    hasNext: false,
   };
 };
 
-const parseChecklistItem = (value: unknown): ChecklistItem => {
+const parseChecklistItem = (value: unknown) => {
   const item = readRecord(value);
-  const checklistItemId = readInteger(item, 'checklistItemId', 1);
-  const origin = readString(item, 'origin');
-  const sourceCheckItemId = readNullableInteger(item, 'sourceCheckItemId', 1);
-  const checkItemId = readNullableInteger(item, 'checkItemId', 1);
-  const question = readString(item, 'question', { maximumCodePoints: 200 });
-  const guide = readNullableString(item, 'guide');
-  const order = readInteger(item, 'order', 1);
-
-  if (origin === 'PROVIDED') {
-    if (sourceCheckItemId === null || (checkItemId !== null && checkItemId !== sourceCheckItemId)) {
-      throw new Error('PROVIDED 항목 출처 응답이 올바르지 않습니다.');
-    }
-    return { checklistItemId, origin, sourceCheckItemId, checkItemId, question, guide, order };
-  }
-
-  if (origin === 'CUSTOM') {
-    if (sourceCheckItemId !== null || checkItemId !== null || guide !== null) {
-      throw new Error('CUSTOM 항목 출처 응답이 올바르지 않습니다.');
-    }
-    return { checklistItemId, origin, sourceCheckItemId, checkItemId, question, guide, order };
-  }
-
-  throw new Error('체크리스트 항목 origin 응답이 올바르지 않습니다.');
+  const systemCheckItemId = readInteger(item, 'systemCheckItemId', 1);
+  return {
+    checklistItemId: systemCheckItemId,
+    origin: 'PROVIDED' as const,
+    sourceCheckItemId: systemCheckItemId,
+    checkItemId: systemCheckItemId,
+    itemType: parseItemType(item.itemType),
+    question: readString(item, 'question', { maximumCodePoints: 200 }),
+    guide: null,
+    order: readInteger(item, 'displayOrder', 1),
+    active: 'active' in item ? readBoolean(item, 'active') : true,
+  };
 };
 
 export const parseChecklistDetail = (value: unknown): ChecklistDetail => {
   const result = readRecord(value);
-  const items = readArray(result, 'items').map(parseChecklistItem);
+  const items = readArray(result, 'items')
+    .map(parseChecklistItem)
+    .sort((a, b) => a.order - b.order);
   const itemCount = readInteger(result, 'itemCount');
   if (items.length !== itemCount) throw new Error('체크리스트 항목 수 응답이 올바르지 않습니다.');
-
   return {
-    checklistId: readInteger(result, 'checklistId', 1),
+    checklistId: readInteger(result, 'id', 1),
     name: readString(result, 'name'),
     stage: parseStage(result.stage),
     items,
     itemCount,
-    assignedPropertyCount: readInteger(result, 'assignedPropertyCount'),
-    createdAt: readUtcDateTime(result, 'createdAt'),
-    updatedAt: readUtcDateTime(result, 'updatedAt'),
+    assignedPropertyCount: 0,
+    createdAt: unknownDate,
+    updatedAt: unknownDate,
   };
 };
 
@@ -151,12 +126,14 @@ export const parseCreatedChecklist = (value: unknown): CreatedChecklist => parse
 
 export const parseActiveChecklist = (value: unknown): ActiveChecklist => {
   const result = readRecord(value);
+  const items = readArray(result, 'items');
   return {
+    propertyChecklistId: readInteger(result, 'id', 1),
     propertyId: readInteger(result, 'propertyId', 1),
     stage: parseStage(result.stage),
-    checklistId: readInteger(result, 'checklistId', 1),
-    name: readString(result, 'name'),
-    itemCount: readInteger(result, 'itemCount'),
+    checklistId: readNullableInteger(result, 'sourceChecklistId', 1),
+    name: readString(result, 'checklistName'),
+    itemCount: items.length,
   };
 };
 

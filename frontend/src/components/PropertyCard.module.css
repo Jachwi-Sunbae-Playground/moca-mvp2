@@ -2,9 +2,9 @@
   position: relative;
   display: block;
   min-width: 0;
-  padding: 0.85rem 1rem;
-  border: 0;
-  border-bottom: 1px solid var(--color-border);
+  padding: 0.8rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   background: var(--color-surface);
   color: inherit;
   text-decoration: none;
@@ -16,20 +16,20 @@
 }
 
 article:last-child > .card {
-  border-bottom: 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .progressLabel {
   position: absolute;
-  top: 0.85rem;
-  right: 1rem;
+  top: 0.72rem;
+  right: 0.75rem;
   display: inline-flex;
   width: fit-content;
   min-height: 1.35rem;
   align-items: center;
   padding: 0.15rem 0.45rem;
   border-radius: 999px;
-  background: var(--color-surface-neutral);
+  background: var(--color-surface-muted);
   color: var(--color-ink-soft);
   font-size: 0.68rem;
   font-weight: 750;
@@ -40,15 +40,13 @@ article:last-child > .card {
 }
 
 .mainInfo {
-  display: grid;
-  grid-template-columns: 4.25rem minmax(0, 1fr);
+  display: block;
   align-items: center;
   gap: 0.8rem;
 }
 
 .thumbnail {
-  position: relative;
-  display: grid;
+  display: none;
   width: 4.25rem;
   aspect-ratio: 1;
   overflow: hidden;
@@ -83,28 +81,28 @@ article:last-child > .card {
 .card h2 {
   margin: 0;
   overflow-wrap: anywhere;
-  font-size: 1rem;
+  font-size: 0.82rem;
   letter-spacing: -0.035em;
 }
 
 .price {
-  margin: 0.55rem 0 0;
+  margin: 0.3rem 0 0;
   color: var(--color-muted);
-  font-size: 0.76rem;
+  font-size: 0.63rem;
 }
 
 .emptyVisit {
   display: grid;
-  gap: 0.65rem;
-  margin-top: 0.9rem;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
   color: var(--color-ink-soft);
-  font-size: 0.72rem;
+  font-size: 0.6rem;
 }
 
 .emptyBar {
   display: block;
   width: 100%;
-  height: 0.42rem;
+  height: 0.28rem;
   border-radius: 999px;
   background: var(--color-border);
 }

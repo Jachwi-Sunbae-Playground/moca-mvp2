@@ -6,7 +6,6 @@ import type { PublicConfig } from './types/PublicConfig';
 import './styles/tokens.css';
 import './styles/global.css';
 import './styles/utilities.css';
-import './style.css';
 
 type AppProps = {
   config?: PublicConfig;

@@ -6,6 +6,7 @@ export type PropertyFormValues = {
   name: string;
   depositAmount: string;
   monthlyRentAmount: string;
+  maintenanceFeeAmount: string;
   discoverySource: string;
 };
 
@@ -53,8 +54,8 @@ export const validatePropertyForm = (values: PropertyFormValues): PropertyFormEr
 
   if (name.length === 0) {
     errors.name = '매물을 구분할 이름을 입력해 주세요.';
-  } else if (countCodePoints(name) > 50) {
-    errors.name = '이름은 50자 이하로 입력해 주세요.';
+  } else if (countCodePoints(name) > 30) {
+    errors.name = '이름은 30자 이하로 입력해 주세요.';
   }
 
   if (parseMoneyInput(values.depositAmount) === null) {
@@ -65,9 +66,11 @@ export const validatePropertyForm = (values: PropertyFormValues): PropertyFormEr
     errors.monthlyRentAmount = '월세는 0 이상 최대 안전 정수 이하의 정수로 입력해 주세요.';
   }
 
-  if (discoverySource.length === 0) {
-    errors.discoverySource = '매물을 확인한 곳을 입력해 주세요.';
-  } else if (countCodePoints(discoverySource) > 500) {
+  if (values.maintenanceFeeAmount !== '' && parseMoneyInput(values.maintenanceFeeAmount) === null) {
+    errors.maintenanceFeeAmount = '관리비는 0 이상 최대 안전 정수 이하의 정수로 입력해 주세요.';
+  }
+
+  if (countCodePoints(discoverySource) > 500) {
     errors.discoverySource = '확인한 곳은 500자 이하로 입력해 주세요.';
   }
 
@@ -77,8 +80,13 @@ export const validatePropertyForm = (values: PropertyFormValues): PropertyFormEr
 export const toPropertyInputDto = (values: PropertyFormValues): PropertyInputDto | null => {
   const depositAmount = parseMoneyInput(values.depositAmount);
   const monthlyRentAmount = parseMoneyInput(values.monthlyRentAmount);
+  const maintenanceFeeAmount = values.maintenanceFeeAmount === '' ? null : parseMoneyInput(values.maintenanceFeeAmount);
 
-  if (depositAmount === null || monthlyRentAmount === null) {
+  if (
+    depositAmount === null ||
+    monthlyRentAmount === null ||
+    (maintenanceFeeAmount === null && values.maintenanceFeeAmount !== '')
+  ) {
     return null;
   }
 
@@ -86,7 +94,8 @@ export const toPropertyInputDto = (values: PropertyFormValues): PropertyInputDto
     name: values.name.trim(),
     depositAmount,
     monthlyRentAmount,
-    discoverySource: values.discoverySource.trim(),
+    maintenanceFeeAmount,
+    discoverySource: values.discoverySource.trim() || null,
   };
 };
 
@@ -95,6 +104,7 @@ export const propertyFieldErrorMessage = (field: PropertyFormField): string => {
     name: '서버에서 매물 이름을 확인하지 못했습니다.',
     depositAmount: '서버에서 보증금 값을 확인하지 못했습니다.',
     monthlyRentAmount: '서버에서 월세 값을 확인하지 못했습니다.',
+    maintenanceFeeAmount: '서버에서 관리비 값을 확인하지 못했습니다.',
     discoverySource: '서버에서 확인한 곳을 확인하지 못했습니다.',
   };
 

@@ -1,0 +1,29 @@
+.authenticated-photo,
+.authenticated-photo__image {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-md);
+}
+
+.authenticated-photo {
+  align-content: center;
+  justify-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem;
+  background: var(--color-surface-muted);
+  color: var(--color-ink-soft);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.authenticated-photo__image {
+  object-fit: cover;
+  background: var(--color-surface-muted);
+}
+
+.authenticated-photo--error {
+  border: 1px solid color-mix(in srgb, var(--color-error) 28%, transparent);
+  background: var(--color-error-surface);
+  color: var(--color-error);
+}

@@ -8,6 +8,7 @@ import { usePropertyDetail } from '../hooks/query/useProperties';
 import { usePropertyVisits } from '../hooks/query/useVisits';
 import type { PublicConfig } from '../types/PublicConfig';
 import { formatDateTime, getVisitStatusLabel, parsePositiveId } from '../utils/propertyFormat';
+import './PropertyVisitsPage.css';
 
 const PropertyVisitsPage = ({ config }: { config: PublicConfig }) => {
   const propertyId = parsePositiveId(useParams().propertyId);

@@ -4,7 +4,6 @@ import { ApiError } from '../apis/apiClient';
 import type { UpdatePropertyRequestDto } from '../apis/dtos/PropertyDto';
 import { getPropertyErrorMessage } from '../apis/propertyErrorMessages';
 import PropertyForm from '../components/PropertyForm';
-import PropertyPhotoManager from '../components/PropertyPhotoManager';
 import TopNavigation from '../components/ui/TopNavigation';
 import { usePropertyDetail } from '../hooks/query/useProperties';
 import { useUpdateProperty } from '../hooks/query/usePropertyMutations';
@@ -81,13 +80,14 @@ const ResolvedEditPropertyPage = ({ config, propertyId }: { config: PublicConfig
           backLabel="매물 정보 수정 닫기"
           navigationIcon="close"
         />
-        <PropertyPhotoManager config={config} propertyId={propertyId} showHeading />
-        <p className={styles.description}>수정할 값을 눌러 내용을 변경해 주세요.</p>
+        <h1 className={styles.heading}>매물 정보를 수정해주세요</h1>
         <PropertyForm
           initialValues={{
             name: initial.name,
             depositAmount: formatAmountForInput(initial.depositAmount),
             monthlyRentAmount: formatAmountForInput(initial.monthlyRentAmount),
+            maintenanceFeeAmount:
+              initial.maintenanceFeeAmount === null ? '' : formatAmountForInput(initial.maintenanceFeeAmount),
             discoverySource: initial.discoverySource.value,
           }}
           submitLabel="변경사항 저장"
@@ -96,15 +96,15 @@ const ResolvedEditPropertyPage = ({ config, propertyId }: { config: PublicConfig
           formNotice={formNotice}
           variant="detail"
           onSubmit={(input) => {
-            const changes: UpdatePropertyRequestDto = {};
-            if (input.name !== initial.name) changes.name = input.name;
-            if (input.depositAmount !== initial.depositAmount) changes.depositAmount = input.depositAmount;
-            if (input.monthlyRentAmount !== initial.monthlyRentAmount)
-              changes.monthlyRentAmount = input.monthlyRentAmount;
-            if (input.discoverySource !== initial.discoverySource.value)
-              changes.discoverySource = input.discoverySource;
+            const changes: UpdatePropertyRequestDto = input;
+            const isUnchanged =
+              input.name === initial.name &&
+              input.depositAmount === initial.depositAmount &&
+              input.monthlyRentAmount === initial.monthlyRentAmount &&
+              input.maintenanceFeeAmount === initial.maintenanceFeeAmount &&
+              (input.discoverySource ?? '') === initial.discoverySource.value;
 
-            if (Object.keys(changes).length === 0) {
+            if (isUnchanged) {
               setFormNotice('변경된 내용이 없어 서버에 요청하지 않았어요.');
               return;
             }

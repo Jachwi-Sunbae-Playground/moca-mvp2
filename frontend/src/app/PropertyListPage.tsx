@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getPropertyErrorMessage } from '../apis/propertyErrorMessages';
 import PropertyCard from '../components/PropertyCard';
-import AddItemLink from '../components/ui/AddItemLink';
 import { Button, ButtonLink } from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
 import Icon from '../components/ui/Icon';
@@ -28,11 +27,13 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PropertyStatusFilter>('ALL');
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const properties = usePropertyList(config, query);
+  const properties = usePropertyList(config);
   const items = properties.data?.pages.flatMap((page) => page.content) ?? [];
   const filteredItems = items.filter((property) => {
+    if (query.length > 0 && !property.name.includes(query)) return false;
     if (statusFilter === 'ALL') return true;
-    const isCompleted = property.recentVisit?.status === 'COMPLETED';
+    const isCompleted =
+      property.progress.totalCount > 0 && property.progress.completedCount === property.progress.totalCount;
     return statusFilter === 'COMPLETED' ? isCompleted : !isCompleted;
   });
   const totalElements = properties.data?.pages[0]?.totalElements ?? 0;
@@ -63,10 +64,11 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
     <main className={styles.page}>
       <div className={styles.content}>
         <TopNavigation
-          title="기록한 매물"
+          className={styles.topNavigation}
+          title="최근 담은 매물"
           endSlot={
-            <ButtonLink className={styles.addButton} to="/properties/new" variant="text" aria-label="새 매물 등록">
-              <Icon name="plus" size={15} /> 매물 추가
+            <ButtonLink className={styles.compareButton} to="/compare" variant="secondary">
+              비교표 보기
             </ButtonLink>
           }
         />
@@ -164,7 +166,11 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
         )}
 
         {properties.isSuccess && items.length > 0 && filteredItems.length === 0 && (
-          <EmptyState variant="plain" title="해당 상태의 매물이 없어요." description="다른 상태를 선택해 보세요." />
+          <EmptyState
+            variant="plain"
+            title={query.length > 0 ? '검색 결과가 없어요.' : '해당 상태의 매물이 없어요.'}
+            description={query.length > 0 ? '다른 이름으로 검색해 보세요.' : '다른 상태를 선택해 보세요.'}
+          />
         )}
 
         {!hasInitialError && properties.hasNextPage && (
@@ -185,9 +191,9 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
         )}
 
         {!hasInitialError && items.length > 0 && (
-          <div className={styles.bottomAdd}>
-            <AddItemLink to="/properties/new">매물 추가</AddItemLink>
-          </div>
+          <ButtonLink className={styles.floatingAdd} to="/properties/new" aria-label="새 매물 등록">
+            <Icon name="plus" size={20} />
+          </ButtonLink>
         )}
       </div>
     </main>

@@ -1,6 +1,5 @@
 .page {
-  padding-top: 0.5rem;
-  background: var(--color-surface);
+  background: var(--color-canvas);
 }
 
 .container {
@@ -18,14 +17,14 @@
 }
 
 .stageTabs {
-  margin: 0.45rem calc(-1 * clamp(0.85rem, 4vw, 1.5rem)) 0.85rem;
-  background: var(--color-surface);
+  margin: 0.35rem 0 0.65rem;
+  background: var(--color-canvas);
 }
 
 .unavailableStage {
   display: grid;
   gap: 0.65rem;
-  padding: 1rem;
+  padding: 0.8rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -66,7 +65,7 @@
 
 .stageHeading {
   display: flex;
-  min-height: 2.75rem;
+  min-height: 2.35rem;
   align-items: center;
   justify-content: space-between;
   gap: 0.8rem;
@@ -97,33 +96,9 @@
 .completeAction {
   position: sticky;
   z-index: 10;
-  bottom: calc(var(--bottom-navigation-height) + env(safe-area-inset-bottom));
+  bottom: env(safe-area-inset-bottom);
   margin: 0.75rem -0.1rem 0;
   padding: 0.55rem 0.1rem;
-  background: var(--color-surface-translucent);
+  background: color-mix(in srgb, var(--color-canvas) 90%, transparent);
   backdrop-filter: blur(10px);
-}
-
-.completeButton {
-  width: 100%;
-  min-height: 3rem;
-  padding: 0.75rem 1rem;
-  border: 0;
-  border-radius: 999px;
-  background: var(--color-primary-dark);
-  color: var(--color-on-primary);
-  font: inherit;
-  font-size: 0.92rem;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.completeButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.completeButton:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 2px;
 }

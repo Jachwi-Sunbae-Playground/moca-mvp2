@@ -1,8 +1,9 @@
 .page {
-  min-height: calc(100dvh - var(--bottom-navigation-height));
-  background: var(--color-surface);
+  min-height: 100%;
+  padding: 0 1rem 1.5rem;
+  background: var(--color-canvas);
 }
 
 .container {
-  padding: 1rem 1rem 2rem;
+  padding: 0.45rem 0 2rem;
 }

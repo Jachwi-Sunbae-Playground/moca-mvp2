@@ -7,7 +7,7 @@ import ChecklistStageTabs from '../components/ChecklistStageTabs';
 import ConfirmDialog from '../components/ConfirmDialog';
 import VisitAggregateSummary from '../components/VisitAggregateSummary';
 import VisitItemStatusControl from '../components/VisitItemStatusControl';
-import { ButtonLink } from '../components/ui/Button';
+import { Button, ButtonLink } from '../components/ui/Button';
 import TopNavigation from '../components/ui/TopNavigation';
 import { useVisitAutosaveRegistry } from '../hooks/query/useVisitAutosaveRegistry';
 import { useCompleteVisit } from '../hooks/query/useVisitMutations';
@@ -236,15 +236,15 @@ const VisitDetailContent = ({ config, detail }: { config: PublicConfig; detail: 
               </p>
             )}
             <div className={styles.completeAction}>
-              <button
+              <Button
                 ref={completeButtonRef}
-                className={styles.completeButton}
+                fullWidth
                 type="button"
                 disabled={isFlushingForCompletion || completion.isPending}
                 onClick={() => setIsCompleteDialogOpen(true)}
               >
                 {autosave.hasPending ? '모두 저장하고 체크 완료' : '체크 완료 및 저장'}
-              </button>
+              </Button>
             </div>
           </>
         )}

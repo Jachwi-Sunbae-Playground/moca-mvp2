@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   getVisitErrorMessage,
   isVisitMemoVersionConflict,
@@ -28,6 +29,7 @@ const VisitItemStatusControl = ({
   register: (visitItemId: number, handle: VisitItemAutosaveHandle) => () => void;
   onActivityChange: () => void;
 }) => {
+  const [isMemoOpen, setIsMemoOpen] = useState(item.inlineMemo.trim().length > 0);
   const autosave = useVisitItemAutosave({
     config,
     visitId,
@@ -46,6 +48,10 @@ const VisitItemStatusControl = ({
   const statusHasError = autosave.statusPhase === 'error';
   const memoHasError = autosave.memoPhase === 'error';
 
+  useEffect(() => {
+    if (memoHasError) setIsMemoOpen(true);
+  }, [memoHasError]);
+
   return (
     <li className={styles.card} data-status={autosave.displayedStatus} data-pending={autosave.isPending}>
       <fieldset aria-describedby={`${statusStateId}${statusHasError ? ` ${statusErrorId}` : ''}`}>
@@ -55,28 +61,6 @@ const VisitItemStatusControl = ({
         <div className={styles.cardContent}>
           <div className={styles.questionArea}>
             <strong aria-hidden="true">{item.question}</strong>
-
-            <div className={styles.memo}>
-              <div className="sr-only">
-                <label htmlFor={memoId}>한 줄 메모</label>
-                <span data-limit={autosave.memoLimitReached}>
-                  {autosave.memoCount}/200<span>자</span>
-                </span>
-              </div>
-              <input
-                id={memoId}
-                type="text"
-                value={autosave.memoDraft}
-                placeholder="메모 입력…"
-                aria-invalid={memoHasError}
-                aria-describedby={`${memoHelpId} ${memoStateId}${memoHasError ? ` ${memoErrorId}` : ''}`}
-                onChange={(event) => autosave.changeMemo(event.target.value)}
-                onBlur={() => void autosave.flushMemo()}
-              />
-              <span id={memoHelpId} className="sr-only">
-                줄바꿈 없이 200자까지, 입력을 멈추면 1초 뒤 저장해요. 공백도 입력한 그대로 보존합니다.
-              </span>
-            </div>
           </div>
 
           <div className={styles.statusOptions}>
@@ -103,6 +87,43 @@ const VisitItemStatusControl = ({
           </div>
         </div>
       </fieldset>
+
+      <button
+        type="button"
+        className={styles.memoToggle}
+        aria-expanded={isMemoOpen}
+        aria-controls={`${memoId}-panel`}
+        aria-label={`${item.question} 메모 ${isMemoOpen ? '닫기' : '열기'}`}
+        onClick={() => setIsMemoOpen((current) => !current)}
+      >
+        <span aria-hidden="true" />
+      </button>
+
+      {isMemoOpen && (
+        <div id={`${memoId}-panel`} className={styles.memoPanel}>
+          <div className={styles.memo}>
+            <div className="sr-only">
+              <label htmlFor={memoId}>한 줄 메모</label>
+              <span data-limit={autosave.memoLimitReached}>
+                {autosave.memoCount}/200<span>자</span>
+              </span>
+            </div>
+            <input
+              id={memoId}
+              type="text"
+              value={autosave.memoDraft}
+              placeholder="메모 입력…"
+              aria-invalid={memoHasError}
+              aria-describedby={`${memoHelpId} ${memoStateId}${memoHasError ? ` ${memoErrorId}` : ''}`}
+              onChange={(event) => autosave.changeMemo(event.target.value)}
+              onBlur={() => void autosave.flushMemo()}
+            />
+            <span id={memoHelpId} className="sr-only">
+              줄바꿈 없이 200자까지, 입력을 멈추면 1초 뒤 저장해요. 공백도 입력한 그대로 보존합니다.
+            </span>
+          </div>
+        </div>
+      )}
 
       <div id={statusStateId} className="sr-only">
         {autosave.statusPhase === 'saving' && <span>상태 저장 중… · 현재 v{autosave.statusVersion}</span>}

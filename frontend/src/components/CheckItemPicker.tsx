@@ -12,10 +12,11 @@ type CheckItemPickerProps = {
   stage: ChecklistStage;
   existingSourceIds: number[];
   disabled: boolean;
+  onCancel: () => void;
   onAdd: (items: CheckItem[]) => void;
 };
 
-const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onAdd }: CheckItemPickerProps) => {
+const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel, onAdd }: CheckItemPickerProps) => {
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
@@ -45,7 +46,6 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onAdd }: 
           {selectedIds.size}개 선택
         </span>
       </div>
-      <p className="field-help">현재 단계에서 새로 사용할 수 있는 항목만 검색됩니다.</p>
       <div className="check-item-search">
         <SearchField
           label="제공 항목 검색"
@@ -81,36 +81,43 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onAdd }: 
           </Button>
         </div>
       ) : items.length === 0 ? (
-        <p className="compact-state">검색 결과가 없어요. 직접 질문을 추가할 수도 있어요.</p>
+        <p className="compact-state">검색 결과가 없어요.</p>
       ) : (
-        <ul className="check-item-search-results">
-          {items.map((item) => {
-            const exists = existingIds.has(item.checkItemId);
-            const checked = exists || selectedIds.has(item.checkItemId);
-            return (
-              <li key={item.checkItemId}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    disabled={disabled || exists}
-                    onChange={(event) => {
-                      const next = new Set(selectedIds);
-                      if (event.target.checked) next.add(item.checkItemId);
-                      else next.delete(item.checkItemId);
-                      setSelectedIds(next);
-                    }}
-                  />
-                  <span>
-                    <strong>{item.question}</strong>
-                    {item.guide !== null && <small>{item.guide}</small>}
-                  </span>
-                </label>
-                {exists && <small className="already-added">이미 추가됨</small>}
-              </li>
-            );
-          })}
-        </ul>
+        <div className="check-item-results">
+          <h3>검색 결과</h3>
+          <ul className="check-item-search-results">
+            {items.map((item) => {
+              const exists = existingIds.has(item.checkItemId);
+              const checked = exists || selectedIds.has(item.checkItemId);
+              return (
+                <li key={item.checkItemId}>
+                  <label>
+                    <input
+                      className="sr-only"
+                      type="checkbox"
+                      checked={checked}
+                      disabled={disabled || exists}
+                      onChange={(event) => {
+                        const next = new Set(selectedIds);
+                        if (event.target.checked) next.add(item.checkItemId);
+                        else next.delete(item.checkItemId);
+                        setSelectedIds(next);
+                      }}
+                    />
+                    <span className="check-item-search-results__control" data-selected={checked || undefined}>
+                      {checked && <span aria-hidden="true">✓</span>}
+                    </span>
+                    <span className="check-item-search-results__copy">
+                      <strong>{item.question}</strong>
+                      {item.guide !== null && <small>{item.guide}</small>}
+                    </span>
+                  </label>
+                  {exists && <small className="already-added">이미 추가됨</small>}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
 
       {result.hasNextPage && (
@@ -127,6 +134,9 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onAdd }: 
       )}
       <div className="item-picker__bottom-actions">
         <BottomActionArea sticky={false} divider={false}>
+          <Button variant="secondary" type="button" disabled={disabled} onClick={onCancel}>
+            취소
+          </Button>
           <Button
             fullWidth
             className="item-picker__add"

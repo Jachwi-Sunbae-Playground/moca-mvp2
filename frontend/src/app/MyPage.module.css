@@ -1,91 +1,149 @@
 .page {
-  min-height: calc(100dvh - var(--bottom-navigation-height));
-  padding: 0.5rem 1rem 2rem;
+  min-height: 100%;
+  background: var(--color-canvas);
+}
+
+.container {
+  padding: 0 var(--page-inline-padding) 1.25rem;
+}
+
+.profileCard {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   background: var(--color-surface);
 }
 
-.page :global(.detail-section) {
-  margin-top: 0.75rem;
-  padding: 0.85rem;
-  border-radius: var(--radius-md);
-}
-
-.page :global(.detail-section h2) {
-  font-size: 0.95rem;
-}
-
-.page :global(.section-note) {
-  margin: 0.45rem 0 0;
-}
-
-.memberHeading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.logoutButton {
-  min-height: 2rem;
-  padding: 0.4rem 0.65rem;
-  font-size: 0.72rem;
-}
-
-.memberSummary {
+.avatar {
   display: grid;
-  gap: 0;
-  margin: 0.55rem 0 0;
-}
-
-.memberSummary div {
-  display: grid;
-  grid-template-columns: 4.25rem minmax(0, 1fr);
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.55rem 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.memberSummary div:last-child {
-  border-bottom: 0;
-}
-
-.memberSummary dt {
-  color: var(--color-muted);
-  font-size: 0.72rem;
-}
-
-.memberSummary dd {
-  margin: 0;
-  overflow-wrap: anywhere;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   font-size: 0.82rem;
+  font-weight: 800;
+  place-items: center;
+}
+
+.memberInfo {
+  min-width: 0;
+}
+
+.memberInfo h2,
+.memberInfo p,
+.memberInfo small {
+  margin: 0;
+}
+
+.memberInfo h2 {
+  font-size: 0.76rem;
+}
+
+.memberInfo p {
+  margin-top: 0.12rem;
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 0.6rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.memberInfo small {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.12rem 0.28rem;
+  border-radius: 999px;
+  background: var(--color-brand-100);
+  color: var(--color-primary-dark);
+  font-size: 0.5rem;
   font-weight: 700;
 }
 
-.links {
-  display: grid;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+.menu {
+  margin-top: 0.65rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
 }
 
-.links a {
+.menu a {
   display: grid;
-  gap: 0.15rem;
-  min-height: 3.6rem;
-  align-content: center;
-  padding: 0.7rem 0.8rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  min-height: 2.65rem;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
   color: var(--color-ink);
+  font-size: 0.66rem;
   text-decoration: none;
 }
 
-.links span {
-  color: var(--color-muted);
-  font-size: 0.72rem;
+.menu a:last-child {
+  border-bottom: 0;
 }
 
-.compactLinks {
-  grid-template-columns: 1fr;
+.menuIcon,
+.noticeIcon {
+  display: grid;
+  place-items: center;
+}
+
+.menuIcon {
+  color: var(--color-primary);
+}
+
+.menu a > svg {
+  color: var(--color-muted);
+}
+
+.notice {
+  display: grid;
+  min-height: 3.2rem;
+  grid-template-columns: 1.8rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-error-surface);
+  color: var(--color-error);
+  text-decoration: none;
+}
+
+.notice span,
+.notice strong,
+.notice small {
+  display: block;
+}
+
+.notice strong {
+  font-size: 0.62rem;
+}
+
+.notice small {
+  margin-top: 0.14rem;
+  color: color-mix(in srgb, var(--color-error) 70%, var(--color-muted));
+  font-size: 0.52rem;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 7rem;
+  color: var(--color-placeholder);
+  font-size: 0.5rem;
+}
+
+.logoutButton {
+  min-height: auto;
+  padding: 0.25rem;
+  color: var(--color-muted);
+  font-size: 0.5rem;
 }

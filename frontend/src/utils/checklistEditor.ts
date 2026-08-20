@@ -1,4 +1,3 @@
-import type { CreateChecklistItemRequestDto, UpdateChecklistItemRequestDto } from '../apis/dtos/ChecklistDto';
 import type { ChecklistEditorItem } from '../types/ChecklistEditor';
 
 export const unicodeCodePointLength = (value: string): number => Array.from(value).length;
@@ -31,20 +30,8 @@ export const editorItemsFingerprint = (items: ChecklistEditorItem[]): string =>
     ),
   );
 
-export const toCreateChecklistItems = (items: ChecklistEditorItem[]): CreateChecklistItemRequestDto[] =>
-  items.map((item) =>
-    item.origin === 'PROVIDED'
-      ? { origin: 'PROVIDED', sourceCheckItemId: item.sourceCheckItemId }
-      : { origin: 'CUSTOM', question: item.question.trim() },
-  );
+export const toCreateChecklistItems = (items: ChecklistEditorItem[]): number[] =>
+  items.flatMap((item) => (item.origin === 'PROVIDED' && item.itemType === 'OPTIONAL' ? [item.sourceCheckItemId] : []));
 
-export const toUpdateChecklistItems = (items: ChecklistEditorItem[]): UpdateChecklistItemRequestDto[] =>
-  items.map((item) => {
-    if (item.origin === 'PROVIDED') {
-      return { origin: 'PROVIDED', sourceCheckItemId: item.sourceCheckItemId };
-    }
-    const question = item.question.trim();
-    return item.checklistItemId === null
-      ? { origin: 'CUSTOM', question }
-      : { origin: 'CUSTOM', checklistItemId: item.checklistItemId, question };
-  });
+export const toUpdateChecklistItems = (items: ChecklistEditorItem[]): number[] =>
+  items.flatMap((item) => (item.origin === 'PROVIDED' ? [item.sourceCheckItemId] : []));

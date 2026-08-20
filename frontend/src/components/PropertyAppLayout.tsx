@@ -8,17 +8,19 @@ const PropertyAppLayout = () => {
 
   return (
     <div className={styles.root}>
-      <Outlet context={member} />
+      <div className={styles.content}>
+        <Outlet context={member} />
+      </div>
       <nav className={styles.bottomNavigation} aria-label="주요 메뉴">
         <NavLink to="/properties" aria-label="홈">
-          <Icon name="home" size={21} />홈
+          <Icon name="home" size={16} />홈
         </NavLink>
         <NavLink to="/checklists" aria-label="체크리스트">
-          <Icon name="checklist" size={21} />
+          <Icon name="checklist" size={16} />
           체크리스트
         </NavLink>
         <NavLink to="/me" aria-label="마이">
-          <Icon name="user" size={21} />
+          <Icon name="user" size={16} />
           마이
         </NavLink>
       </nav>

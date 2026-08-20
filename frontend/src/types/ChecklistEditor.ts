@@ -4,6 +4,8 @@ type ChecklistEditorItemBase = {
   clientKey: string;
   checklistItemId: number | null;
   question: string;
+  itemType: 'CORE' | 'OPTIONAL';
+  active: boolean;
 };
 
 export type ChecklistEditorProvidedItem = ChecklistEditorItemBase & {
@@ -29,6 +31,8 @@ export const checklistItemToEditorItem = (item: ChecklistItem): ChecklistEditorI
         sourceCheckItemId: item.sourceCheckItemId,
         question: item.question,
         guide: item.guide,
+        itemType: item.itemType,
+        active: item.active,
       }
     : {
         clientKey: `existing:${item.checklistItemId}`,
@@ -37,6 +41,8 @@ export const checklistItemToEditorItem = (item: ChecklistItem): ChecklistEditorI
         sourceCheckItemId: null,
         question: item.question,
         guide: null,
+        itemType: item.itemType,
+        active: item.active,
       };
 
 export const checkItemToEditorItem = (item: CheckItem): ChecklistEditorProvidedItem => ({
@@ -46,4 +52,6 @@ export const checkItemToEditorItem = (item: CheckItem): ChecklistEditorProvidedI
   sourceCheckItemId: item.checkItemId,
   question: item.question,
   guide: item.guide,
+  itemType: item.itemType,
+  active: true,
 });

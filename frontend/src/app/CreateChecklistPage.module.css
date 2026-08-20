@@ -1,3 +1,7 @@
+.page {
+  background: var(--color-canvas);
+}
+
 .topNavigation {
   margin-bottom: 0;
 }
@@ -7,7 +11,7 @@
 }
 
 .presetSection {
-  margin-top: 0.8rem;
+  margin-top: 0.65rem;
 }
 
 .presetSection h2,
@@ -16,14 +20,14 @@
 }
 
 .presetSection h2 {
-  font-size: 0.9rem;
+  font-size: 0.78rem;
   letter-spacing: -0.025em;
 }
 
 .presetSection > p {
   margin-top: 0.3rem;
   color: var(--color-muted);
-  font-size: 0.74rem;
+  font-size: 0.64rem;
   line-height: 1.5;
 }
 
@@ -77,8 +81,8 @@
 }
 
 .page :global(.editor-section) {
-  margin-top: 0.75rem;
-  padding: 0.85rem 0;
+  margin-top: 0.55rem;
+  padding: 0.6rem 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -99,7 +103,7 @@
 }
 
 .page :global(.selected-check-items li) {
-  padding: 0.8rem 0;
+  padding: 0.55rem 0;
   border: 0;
   border-bottom: 1px solid var(--color-border);
   border-radius: 0;
@@ -111,11 +115,11 @@
 }
 
 .page :global(.checklist-editor input) {
-  font-size: 0.84rem;
+  font-size: 0.76rem;
 }
 
 .page :global(.checklist-editor textarea) {
-  font-size: 0.82rem;
+  font-size: 0.74rem;
 }
 
 .page :global(.checklist-editor__open-picker),

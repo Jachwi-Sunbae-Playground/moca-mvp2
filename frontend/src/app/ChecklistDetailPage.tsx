@@ -7,7 +7,7 @@ import { queryClient } from './queryClient';
 import ChecklistEditor from '../components/ChecklistEditor';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TopNavigation from '../components/ui/TopNavigation';
-import { checklistStageMeta } from '../constants/checklist';
+import TopNavigationMenu from '../components/ui/TopNavigationMenu';
 import { useRemoveChecklist, useUpdateChecklist } from '../hooks/query/useChecklistMutations';
 import { useChecklistDetail } from '../hooks/query/useChecklists';
 import { checklistItemToEditorItem } from '../types/ChecklistEditor';
@@ -100,23 +100,19 @@ const ResolvedChecklistDetail = ({ config, checklistId }: { config: PublicConfig
       <div className={`page-container page-container--form ${styles.container}`}>
         <TopNavigation
           className={styles.topNavigation}
-          title={isAddingItems ? '체크 항목 편집' : checklistStageMeta[checklist.stage].label}
+          title={isAddingItems ? '체크 항목 편집' : checklist.name}
           backLabel={isAddingItems ? '체크리스트 편집으로 돌아가기' : '체크리스트 목록으로 돌아가기'}
-          navigationIcon={isAddingItems ? 'close' : 'arrow-left'}
+          navigationIcon="arrow-left"
           {...(isAddingItems
             ? { onBack: () => setSearchParams({}, { replace: true }) }
             : { backTo: `/checklists/${checklist.stage}` })}
           {...(!isAddingItems && {
             endSlot: (
-              <button
-                ref={deleteRef}
-                type="button"
-                className="top-navigation-danger-action"
-                aria-label="체크리스트 삭제"
-                onClick={() => setIsDeleteOpen(true)}
-              >
-                삭제
-              </button>
+              <TopNavigationMenu label="체크리스트 메뉴 열기">
+                <button ref={deleteRef} type="button" data-tone="danger" onClick={() => setIsDeleteOpen(true)}>
+                  삭제
+                </button>
+              </TopNavigationMenu>
             ),
           })}
         />
@@ -135,7 +131,7 @@ const ResolvedChecklistDetail = ({ config, checklistId }: { config: PublicConfig
             setSearchParams(mode === 'ADD_ITEMS' ? { mode: 'add-items' } : {}, { replace: mode === 'EDIT' })
           }
           onSubmit={async ({ name, items }) => {
-            return update.mutateAsync({ name, items: toUpdateChecklistItems(items) });
+            return update.mutateAsync({ name, systemCheckItemIds: toUpdateChecklistItems(items) });
           }}
         />
         <ConfirmDialog

@@ -3,8 +3,6 @@ import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import ChecklistListCard from '../components/ChecklistListCard';
 import ChecklistStageTabs from '../components/ChecklistStageTabs';
 import AddItemLink from '../components/ui/AddItemLink';
-import { ButtonLink } from '../components/ui/Button';
-import Icon from '../components/ui/Icon';
 import TopNavigation from '../components/ui/TopNavigation';
 import { isChecklistStage } from '../constants/checklist';
 import { useChecklistList } from '../hooks/query/useChecklists';
@@ -37,23 +35,11 @@ const ResolvedChecklistListPage = ({ config, stage }: { config: PublicConfig; st
     <main className={styles.page}>
       <div className={styles.container}>
         <div className={styles.navigationArea}>
-          <TopNavigation
-            title="내 체크리스트"
-            className={styles.topNavigation}
-            endSlot={
-              <ButtonLink
-                className={styles.createAction}
-                variant="text"
-                to={`/checklists/new?stage=${stage}`}
-                aria-label="새 체크리스트"
-              >
-                <Icon name="plus" size={15} /> 추가
-              </ButtonLink>
-            }
-          />
+          <TopNavigation title="체크리스트" className={styles.topNavigation} />
           <ChecklistStageTabs stage={stage} fullBleed />
+          <p className={styles.description}>단계별로 내 체크리스트를 만들고 항목을 관리합니다.</p>
         </div>
-        <h1 className="sr-only">내 체크리스트</h1>
+        <h1 className="sr-only">체크리스트</h1>
         {list.isPending ? (
           <div className="content-state" role="status">
             <span className="spinner" />
@@ -67,16 +53,17 @@ const ResolvedChecklistListPage = ({ config, stage }: { config: PublicConfig; st
               다시 시도
             </button>
           </div>
-        ) : items.length === 0 ? (
-          <div className={styles.emptyAction}>
-            <AddItemLink to={`/checklists/new?stage=${stage}`}>체크리스트 추가</AddItemLink>
-          </div>
-        ) : (
+        ) : items.length === 0 ? null : (
           <ul className={styles.list}>
             {items.map((item) => (
-              <ChecklistListCard key={item.checklistId} checklist={item} />
+              <ChecklistListCard key={item.checklistId} config={config} checklist={item} />
             ))}
           </ul>
+        )}
+        {!list.isPending && !list.isError && (
+          <div className={styles.createCard}>
+            <AddItemLink to={`/checklists/new?stage=${stage}`}>새 체크리스트 만들기</AddItemLink>
+          </div>
         )}
         {list.hasNextPage && (
           <div className="load-more">

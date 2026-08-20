@@ -17,8 +17,15 @@ const CreatePropertyPage = ({ config }: CreatePropertyPageProps) => {
     <main className={styles.page}>
       <div className={styles.content}>
         <TopNavigation title="새 매물 등록" backTo="/properties" backLabel="매물 등록 닫기" navigationIcon="close" />
+        <h1 className={styles.heading}>기본 정보를 입력해주세요</h1>
         <PropertyForm
-          initialValues={{ name: '', depositAmount: '', monthlyRentAmount: '', discoverySource: '' }}
+          initialValues={{
+            name: '',
+            depositAmount: '',
+            monthlyRentAmount: '',
+            maintenanceFeeAmount: '',
+            discoverySource: '',
+          }}
           submitLabel="매물 등록"
           isSubmitting={createMutation.isPending}
           mutationError={mutationError}

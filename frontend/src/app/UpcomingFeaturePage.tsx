@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import PageHeading from '../components/PageHeading';
+import './UpcomingFeaturePage.css';
 
 type UpcomingFeature = 'compare' | 'export' | 'tips';
 

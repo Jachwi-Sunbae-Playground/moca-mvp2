@@ -81,7 +81,7 @@ const ResolvedCreateChecklistPage = ({
           className={styles.topNavigation}
           title={isAddingItems ? '체크 항목 편집' : '새 체크리스트'}
           backLabel={isAddingItems ? '새 체크리스트로 돌아가기' : '새 체크리스트 닫기'}
-          navigationIcon="close"
+          navigationIcon={isAddingItems ? 'arrow-left' : 'close'}
           {...(isAddingItems
             ? {
                 onBack: () => {
@@ -98,7 +98,7 @@ const ResolvedCreateChecklistPage = ({
         {startMode === null ? (
           <section className={styles.presetSection} aria-labelledby="preset-heading">
             <h2 id="preset-heading">항목 구성 선택</h2>
-            <p>빈 목록이나 원룸 제공 항목으로 시작한 뒤 직접 질문을 섞고 순서를 바꿀 수 있어요.</p>
+            <p>빈 목록이나 원룸 제공 항목으로 시작한 뒤 필요한 항목을 고르고 순서를 바꿀 수 있어요.</p>
             <ChecklistStartOptions
               onSelect={(mode) => {
                 if (mode === 'EMPTY') {
@@ -157,7 +157,7 @@ const ResolvedCreateChecklistPage = ({
               const created = await create.mutateAsync({
                 name,
                 stage,
-                items: toCreateChecklistItems(items),
+                optionalSystemCheckItemIds: toCreateChecklistItems(items),
               });
               if (safeReturn !== null && safeReturn.stage === stage) {
                 navigate(safeReturn.path, { replace: true, state: { newChecklistId: created.checklistId } });

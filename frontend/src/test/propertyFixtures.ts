@@ -1,6 +1,6 @@
 export const memberFixture = {
-  memberId: 1,
-  displayName: '이자취',
+  id: 1,
+  name: '이자취',
   email: 'jachwi@example.com',
 };
 
@@ -23,9 +23,23 @@ export const propertySummaryFixture = {
   name: '신림역 원룸',
   depositAmount: 10_000_000,
   monthlyRentAmount: 550_000,
+  maintenanceFeeAmount: 50_000,
   discoverySource: { type: 'URL', value: 'https://example.com/listings/10' },
   recentVisit: recentVisitFixture,
   photoCount: 2,
+  representativePhoto: {
+    photoId: 81,
+    contentUrl: '/api/properties/10/photos/81/content',
+    contentType: 'image/jpeg' as const,
+  },
+  progress: {
+    totalCount: 22,
+    completedCount: 15,
+    goodCount: 10,
+    cautionCount: 5,
+    unconfirmedCount: 7,
+    progressRate: 68,
+  },
   lastActivityAt: '2026-08-10T07:30:00Z',
 };
 
@@ -36,6 +50,15 @@ export const secondPropertySummaryFixture = {
   discoverySource: { type: 'TEXT', value: '동네 중개사 추천' },
   recentVisit: null,
   photoCount: 0,
+  representativePhoto: null,
+  progress: {
+    totalCount: 12,
+    completedCount: 12,
+    goodCount: 8,
+    cautionCount: 4,
+    unconfirmedCount: 0,
+    progressRate: 100,
+  },
 };
 
 export const propertyDetailFixture = {
@@ -88,11 +111,30 @@ export const errorEnvelope = (code: string, errors: Array<{ field?: string; reas
   errors,
 });
 
-export const propertyPageFixture = (content: unknown[], page = 0, hasNext = false) => ({
-  content,
-  page,
-  size: 20,
-  totalElements: content.length + (hasNext ? 1 : 0),
-  totalPages: hasNext ? page + 2 : page + 1,
-  hasNext,
+export const propertyPageFixture = (content: Array<Record<string, unknown>>) => ({
+  totalCount: content.length,
+  items: content.map((property) => {
+    const representativePhoto = property.representativePhoto as
+      { photoId: number; contentUrl: string; contentType: string } | null | undefined;
+
+    return {
+      id: property.propertyId,
+      name: property.name,
+      depositAmount: property.depositAmount,
+      monthlyRentAmount: property.monthlyRentAmount,
+      discoverySource:
+        typeof property.discoverySource === 'object' && property.discoverySource !== null
+          ? (property.discoverySource as { value: string }).value
+          : property.discoverySource,
+      representativePhoto:
+        representativePhoto == null
+          ? null
+          : {
+              id: representativePhoto.photoId,
+              url: representativePhoto.contentUrl,
+              contentType: representativePhoto.contentType,
+            },
+      progress: property.progress,
+    };
+  }),
 });

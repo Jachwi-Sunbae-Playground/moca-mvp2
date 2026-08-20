@@ -1,8 +1,14 @@
 .page {
-  min-height: calc(100dvh - var(--bottom-navigation-height));
-  background: var(--color-surface);
+  min-height: 100%;
+  background: var(--color-canvas);
 }
 
 .content {
-  padding: 0.5rem 1rem 1rem;
+  padding: 0 1rem 1rem;
+}
+
+.heading {
+  margin: 0.9rem 0 0.85rem;
+  font-size: 1rem;
+  letter-spacing: -0.035em;
 }

@@ -72,10 +72,9 @@
   grid-column: span 3;
   align-content: center;
   gap: 0.25rem;
-  min-height: 6rem;
+  min-height: 4.5rem;
   padding: 0.75rem;
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-sm);
+  border: 0;
   color: var(--color-muted);
   font-size: 0.7rem;
 }
@@ -89,7 +88,7 @@
   width: 100%;
   min-height: 2.75rem;
   margin-top: 1rem;
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-ink);

@@ -2,17 +2,16 @@ import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { setAuthentication } from '../app/authStore';
 import { server } from '../test/server';
-import {
-  errorEnvelope,
-  photoFixture,
-  propertyDetailFixture,
-  propertyPageFixture,
-  propertySummaryFixture,
-  successEnvelope,
-} from '../test/propertyFixtures';
+import { errorEnvelope, photoFixture, propertyDetailFixture, successEnvelope } from '../test/propertyFixtures';
 import type { PublicConfig } from '../types/PublicConfig';
 import { getPropertyErrorMessage } from './propertyErrorMessages';
-import { fetchPropertyPhotoContent, fetchPropertyPhotos, removePropertyPhoto, uploadPropertyPhoto } from './photoApi';
+import {
+  fetchPropertyPhotoContent,
+  fetchPropertyPhotos,
+  removePropertyPhoto,
+  setRepresentativePropertyPhoto,
+  uploadPropertyPhoto,
+} from './photoApi';
 import {
   createProperty,
   fetchProperties,
@@ -32,17 +31,52 @@ const config: PublicConfig = {
 const authenticate = () => setAuthentication({ accessToken: 'memory-token', tokenType: 'Bearer', expiresIn: 60 });
 
 describe('FE-2 API 경계', () => {
-  it('API-101에 trim한 query와 page·size 및 Bearer 토큰을 보낸다', async () => {
+  it('매물 목록은 서버에 검색·페이지 쿼리를 보내지 않고 클라이언트에서 이름을 검색한다', async () => {
     authenticate();
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties`, ({ request }) => {
         const url = new URL(request.url);
-        expect(url.searchParams.get('query')).toBe('신림');
-        expect(url.searchParams.get('page')).toBe('2');
-        expect(url.searchParams.get('size')).toBe('20');
-        expect(url.searchParams.has('memberId')).toBe(false);
+        expect(url.search).toBe('');
         expect(request.headers.get('Authorization')).toBe('Bearer memory-token');
-        return HttpResponse.json(successEnvelope(propertyPageFixture([propertySummaryFixture], 2)));
+        return HttpResponse.json(
+          successEnvelope({
+            totalCount: 2,
+            items: [
+              {
+                id: 10,
+                name: '신림역 원룸',
+                depositAmount: 10_000_000,
+                monthlyRentAmount: 550_000,
+                discoverySource: 'https://example.com/listings/10',
+                representativePhoto: null,
+                progress: {
+                  totalCount: 0,
+                  completedCount: 0,
+                  goodCount: 0,
+                  cautionCount: 0,
+                  unconfirmedCount: 0,
+                  progressRate: 0,
+                },
+              },
+              {
+                id: 11,
+                name: '망원동 투룸',
+                depositAmount: 20_000_000,
+                monthlyRentAmount: 700_000,
+                discoverySource: null,
+                representativePhoto: null,
+                progress: {
+                  totalCount: 0,
+                  completedCount: 0,
+                  goodCount: 0,
+                  cautionCount: 0,
+                  unconfirmedCount: 0,
+                  progressRate: 0,
+                },
+              },
+            ],
+          }),
+        );
       }),
     );
 
@@ -50,7 +84,7 @@ describe('FE-2 API 경계', () => {
     expect(result.content[0]?.name).toBe('신림역 원룸');
   });
 
-  it('API-102에 네 필수 필드를 보내고 서버의 URL 분류를 사용한다', async () => {
+  it('API-102에 필수·선택 필드를 보내고 서버의 URL 분류를 사용한다', async () => {
     authenticate();
     let requestBody: unknown;
     server.use(
@@ -62,6 +96,7 @@ describe('FE-2 API 경계', () => {
             name: '신림역 원룸',
             depositAmount: 0,
             monthlyRentAmount: 550_000,
+            maintenanceFeeAmount: null,
             discoverySource: { type: 'URL', value: 'https://example.com/home' },
             createdAt: '2026-08-10T07:30:00Z',
           }),
@@ -74,6 +109,7 @@ describe('FE-2 API 경계', () => {
       name: '신림역 원룸',
       depositAmount: 0,
       monthlyRentAmount: 550_000,
+      maintenanceFeeAmount: null,
       discoverySource: 'https://example.com/home',
     });
 
@@ -81,6 +117,7 @@ describe('FE-2 API 경계', () => {
       name: '신림역 원룸',
       depositAmount: 0,
       monthlyRentAmount: 550_000,
+      maintenanceFeeAmount: null,
       discoverySource: 'https://example.com/home',
     });
     expect(result.discoverySource.type).toBe('URL');
@@ -123,11 +160,11 @@ describe('FE-2 API 경계', () => {
     await expect(fetchPropertyDetail(config, 10)).rejects.toMatchObject({ kind: 'invalid-response' });
   });
 
-  it('API-104에는 실제 변경 필드만 보내고 null을 넣지 않는다', async () => {
+  it('API-104에는 전체 필드와 선택 필드의 null을 보낸다', async () => {
     authenticate();
     let requestBody: unknown;
     server.use(
-      http.patch(`${config.apiBaseUrl}/api/properties/10`, async ({ request }) => {
+      http.put(`${config.apiBaseUrl}/api/properties/10`, async ({ request }) => {
         requestBody = await request.json();
         return HttpResponse.json(
           successEnvelope({
@@ -135,6 +172,7 @@ describe('FE-2 API 경계', () => {
             name: '신림역 원룸',
             depositAmount: 10_000_000,
             monthlyRentAmount: 530_000,
+            maintenanceFeeAmount: null,
             discoverySource: { type: 'TEXT', value: '중개사 추천' },
             updatedAt: '2026-08-11T01:00:00Z',
           }),
@@ -142,8 +180,20 @@ describe('FE-2 API 경계', () => {
       }),
     );
 
-    await updateProperty(config, 10, { monthlyRentAmount: 530_000 });
-    expect(requestBody).toEqual({ monthlyRentAmount: 530_000 });
+    await updateProperty(config, 10, {
+      name: '신림역 원룸',
+      depositAmount: 10_000_000,
+      monthlyRentAmount: 530_000,
+      maintenanceFeeAmount: null,
+      discoverySource: null,
+    });
+    expect(requestBody).toEqual({
+      name: '신림역 원룸',
+      depositAmount: 10_000_000,
+      monthlyRentAmount: 530_000,
+      maintenanceFeeAmount: null,
+      discoverySource: null,
+    });
   });
 
   it('API-105와 API-204의 204 응답을 JSON으로 파싱하지 않는다', async () => {
@@ -248,7 +298,7 @@ describe('FE-2 API 경계', () => {
     ).rejects.toMatchObject({ kind: 'invalid-response' });
   });
 
-  it('API-201과 API-202는 사진 DTO를 검증하고 file 파트 하나만 전송한다', async () => {
+  it('사진 조회는 사용하되 미구현 업로드는 실패를 그대로 드러낸다', async () => {
     authenticate();
     let formEntries: string[] = [];
     server.use(
@@ -260,13 +310,13 @@ describe('FE-2 API 경계', () => {
         const formData = await request.formData();
         formEntries = [...formData.keys()];
         expect(formData.get('file')).toMatchObject({ type: 'image/jpeg', size: expect.any(Number) });
-        return HttpResponse.json(successEnvelope(photoFixture), { status: 201 });
+        return HttpResponse.json(errorEnvelope('NOT_IMPLEMENTED'), { status: 501 });
       }),
     );
 
     await expect(fetchPropertyPhotos(config, 10)).resolves.toMatchObject({ totalCount: 1 });
     const file = new File([new Uint8Array([1, 2, 3])], 'local-only.jpg', { type: 'image/jpeg' });
-    await expect(uploadPropertyPhoto(config, 10, file)).resolves.toMatchObject({ photoId: 81 });
+    await expect(uploadPropertyPhoto(config, 10, file)).rejects.toMatchObject({ status: 501, code: 'NOT_IMPLEMENTED' });
     expect(formEntries).toEqual(['file']);
   });
 
@@ -285,6 +335,22 @@ describe('FE-2 API 경계', () => {
     expect(blob.type).toBe('image/jpeg');
     expect(requestedUrl).toBe('http://localhost:8080/api/properties/10/photos/81/content');
     expect(requestedUrl).not.toContain('memory-token');
+  });
+
+  it('대표 사진 지정은 사진 식별자와 Bearer 헤더를 사용한다', async () => {
+    authenticate();
+    let requestedUrl = '';
+    server.use(
+      http.put(`${config.apiBaseUrl}/api/properties/10/photos/81/representative`, ({ request }) => {
+        requestedUrl = request.url;
+        expect(request.headers.get('Authorization')).toBe('Bearer memory-token');
+        return HttpResponse.json(successEnvelope({ ...photoFixture, representative: true }));
+      }),
+    );
+
+    const photo = await setRepresentativePropertyPhoto(config, 10, 81);
+    expect(photo.representative).toBe(true);
+    expect(requestedUrl).toBe('http://localhost:8080/api/properties/10/photos/81/representative');
   });
 
   it('공통 오류 code를 서버 message 대신 안전한 사용자 문구로 매핑한다', async () => {

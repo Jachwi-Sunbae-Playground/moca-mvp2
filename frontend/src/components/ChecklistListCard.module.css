@@ -3,16 +3,19 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 1rem;
-  min-height: 5.5rem;
-  padding: 1rem;
+  gap: 0.5rem;
+  min-height: 4.5rem;
+  padding: 0.65rem 0.7rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
 }
 
 .main {
+  display: flex;
   min-width: 0;
+  align-items: center;
+  gap: 0.55rem;
   color: var(--color-ink);
   text-decoration: none;
 }
@@ -33,21 +36,22 @@
   outline-offset: 2px;
 }
 
-.main strong,
-.main span {
+.copy,
+.copy strong,
+.copy span {
   display: block;
   overflow-wrap: anywhere;
 }
 
 .main strong {
-  font-size: 1rem;
+  font-size: 0.76rem;
   line-height: 1.35;
 }
 
 .main span {
-  margin-top: 0.4rem;
+  margin-top: 0.15rem;
   color: var(--color-muted);
-  font-size: 0.78rem;
+  font-size: 0.62rem;
   line-height: 1.45;
 }
 
@@ -55,13 +59,64 @@
   position: relative;
   z-index: 1;
   display: inline-flex;
-  min-height: 2.75rem;
+  width: 1.9rem;
+  min-height: 1.9rem;
   align-items: center;
   justify-content: center;
-  padding: 0.4rem 0.2rem;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--color-brand-100);
   color: var(--color-primary-dark);
   font: inherit;
   font-size: 0.8rem;
   font-weight: 800;
   text-decoration: none;
+}
+
+.icon {
+  display: block;
+  width: 1.55rem;
+  height: 1.55rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+}
+
+.icon::after {
+  display: block;
+  width: 0.38rem;
+  height: 0.38rem;
+  margin: 0.53rem auto 0;
+  border: 1px solid var(--color-primary-dark);
+  content: '';
+}
+
+.copy {
+  min-width: 0;
+}
+
+.actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 0.28rem;
+}
+
+.delete {
+  display: inline-grid;
+  width: 1.9rem;
+  min-height: 1.9rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-error-surface);
+  color: var(--color-error);
+  cursor: pointer;
+  place-items: center;
+}
+
+.edit:focus-visible,
+.delete:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }

@@ -1,124 +1,58 @@
 .page {
   min-height: calc(100dvh - var(--bottom-navigation-height));
-  background: var(--color-surface);
+  background: var(--color-canvas);
 }
 
 .container {
-  padding: 0.5rem 1rem 2rem;
+  padding: 0 1rem 1.5rem;
 }
 
-.detailHeader {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.detailHeader h1 {
-  margin: 0;
-  overflow-wrap: anywhere;
-  font-size: 1.25rem;
-  letter-spacing: -0.04em;
-  line-height: 1.3;
-}
-
-.pageMenu {
-  position: relative;
-}
-
-.pageMenu > summary {
-  display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
-  cursor: pointer;
-  list-style: none;
-  place-items: center;
-}
-
-.pageMenu > summary::-webkit-details-marker {
-  display: none;
-}
-
-.pageMenuItems {
-  position: absolute;
-  z-index: 30;
-  top: 2.7rem;
-  right: 0.25rem;
-  min-width: 6.5rem;
-  padding: 0.3rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-}
-
-.pageMenuItems :is(a, button) {
-  display: flex;
-  width: 100%;
-  min-height: 2.5rem;
-  align-items: center;
-  padding: 0.5rem 0.7rem;
-  border: 0;
-  border-radius: 0.45rem;
-  background: transparent;
-  color: var(--color-ink);
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 750;
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.pageMenuItems .deleteMenuItem {
+.deleteError {
+  margin: 0.75rem 0 0;
   color: var(--color-error);
+  font-size: 0.78rem;
+  line-height: 1.5;
 }
 
 .basicSection {
-  margin-top: 1.25rem;
+  padding: 0.8rem 0;
 }
 
-.basicSection h2 {
+.basicSection h1 {
   margin: 0;
-  overflow-wrap: anywhere;
   font-size: 1.05rem;
-  letter-spacing: -0.035em;
 }
 
 .priceSummary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  margin: 0.65rem 0 0;
-  color: var(--color-ink);
-  font-size: 0.9rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
   font-weight: 750;
-  line-height: 1.5;
 }
 
 .discoverySource {
   display: flex;
-  min-width: 0;
-  min-height: 2.8rem;
+  min-height: 2.15rem;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-  padding: 0.65rem 0.75rem;
+  gap: 0.7rem;
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.6rem;
   border-radius: var(--radius-sm);
   background: var(--color-surface-neutral);
   color: var(--color-muted);
-  font-size: 0.76rem;
-  font-weight: 750;
+  font-size: 0.65rem;
 }
 
 .discoveryLabel,
 .discoverySource a {
   display: inline-flex;
-  flex: 0 0 auto;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
 }
 
 .discoverySource a {
   color: var(--color-ink-soft);
+  font-weight: 750;
   text-decoration: none;
 }
 
@@ -126,45 +60,72 @@
   min-width: 0;
   overflow: hidden;
   color: var(--color-ink-soft);
-  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.photoSection {
-  margin-top: 0.75rem;
+.photoSection,
+.memoSection,
+.checklistSection {
+  margin: 0 -1rem;
+  padding: 0.8rem 1rem;
+  border-top: 0.5rem solid var(--color-canvas);
+  background: var(--color-surface);
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.74rem;
+}
+
+.sectionHeading > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sectionHeading span {
+  color: var(--color-primary-dark);
+  font-size: 0.62rem;
+}
+
+.sectionHeading a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--color-primary-dark);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-decoration: none;
 }
 
 .photoGrid {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
-  margin-top: 0;
+  gap: 0.35rem;
 }
 
 .photoGrid[data-photo-count='1'] {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: 1fr;
 }
 
 .photoGrid[data-photo-count='2'] {
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  grid-template-columns: 1.6fr 1fr;
 }
 
 .photoThumbnailLink {
   position: relative;
-  display: grid;
-  min-width: 0;
-  height: 6.4rem;
+  height: 4.9rem;
   overflow: hidden;
   padding: 0;
   border: 0;
   border-radius: var(--radius-sm);
   background: var(--color-surface-disabled);
-  color: var(--color-muted);
-  font: inherit;
   cursor: pointer;
-  place-items: center;
-  text-decoration: none;
 }
 
 .photoThumbnail {
@@ -178,302 +139,160 @@
 .photoMoreOverlay {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding: 0.65rem;
-  background: linear-gradient(to top, var(--color-overlay-strong), transparent 70%);
-  color: var(--color-on-primary);
-  font-size: 0.76rem;
-  font-weight: 800;
-}
-
-.propertyTitle {
-  margin: 0.9rem 0 0;
-  overflow-wrap: anywhere;
-  color: var(--color-ink);
-  font-size: 1.25rem;
-  letter-spacing: -0.04em;
-  line-height: 1.3;
-}
-
-.checklistSection {
-  margin-top: 1.5rem;
-}
-
-.checklistSectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.checklistSectionHeader h2 {
-  margin: 0;
-  font-size: 1.05rem;
-}
-
-.manageChecklistLink {
-  min-height: 2.25rem;
-  padding: 0.35rem 0;
+  display: grid;
+  background: var(--color-overlay);
+  color: white;
   font-size: 0.75rem;
+  font-weight: 800;
+  place-items: center;
 }
 
-.stickyStageTabs {
-  position: sticky;
-  z-index: 20;
-  top: 0;
-  margin: 0 -1rem;
-  padding: 0 1rem;
-  background: var(--color-surface);
-}
-
-.checklistList {
-  display: grid;
-  gap: 0.65rem;
-  margin: 0.85rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.checklistStageSection {
-  scroll-margin-top: 3.25rem;
-}
-
-.checklistStageHeading {
-  margin: 0 0 0.5rem;
-  color: var(--color-ink);
-  font-size: 0.95rem;
-  font-weight: 850;
-}
-
-.checklistStageCard {
-  overflow: hidden;
-  border-radius: var(--radius-sm);
-}
-
-.checklistStageCard > :is(a, button) {
-  display: grid;
-  width: 100%;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.75rem;
+.emptyPhotoLink,
+.sectionRetry {
+  display: flex;
+  min-height: 2.75rem;
   align-items: center;
-  min-height: 3.5rem;
-  padding: 0.55rem 0.75rem;
-  border: 0;
+  justify-content: center;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--color-ink);
+  color: var(--color-muted);
   font: inherit;
-  text-align: left;
+  font-size: 0.72rem;
   text-decoration: none;
   cursor: pointer;
 }
 
-.checklistList strong {
+.sectionState {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.68rem;
+}
+
+.memoSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  padding: 0;
+  color: var(--color-muted);
+  font-size: 0.67rem;
+  list-style: none;
+}
+
+.memoSummary li:not(:last-child)::after {
+  margin-left: 0.5rem;
+  color: var(--color-border-strong);
+  content: '·';
+}
+
+.memoSummary .hasMemo {
+  color: var(--color-primary-dark);
+  font-weight: 800;
+}
+
+.checklistHeading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.checklistHeading h2,
+.checklistHeading p {
+  margin: 0;
+}
+
+.checklistHeading h2 {
+  font-size: 0.92rem;
+}
+
+.checklistHeading p {
+  margin-top: 0.2rem;
+  color: var(--color-muted);
+  font-size: 0.64rem;
+}
+
+.checklistHeading > strong {
+  font-size: 0.68rem;
+}
+
+.progressTrack {
+  display: flex;
+  height: 0.32rem;
+  margin-top: 0.55rem;
   overflow: hidden;
-  color: var(--color-ink-soft);
-  font-size: 0.84rem;
+  border-radius: 999px;
+  background: var(--color-surface-disabled);
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  min-width: 0;
+}
+
+.progressGood {
+  background: var(--color-check-good);
+}
+
+.progressCaution {
+  background: var(--color-check-caution);
+}
+
+.progressUnconfirmed {
+  background: var(--color-check-unconfirmed);
+}
+
+.checklistList {
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checklistList li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.checklistList a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: center;
+  min-height: 3.35rem;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.stageNumber {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  color: var(--color-muted);
+  font-size: 0.65rem;
+  place-items: center;
+}
+
+.stageCopy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.stageCopy strong,
+.stageCopy small {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.linkedChecklist {
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+.stageCopy strong {
+  font-size: 0.76rem;
 }
 
-.checklistPreviewHeading {
-  display: flex;
-  min-height: 2.75rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.35rem 0.7rem;
-}
-
-.checklistPreviewHeading > :is(a, button) {
-  display: inline-flex;
-  min-height: 2rem;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.25rem 0.15rem;
-  border: 0;
-  background: transparent;
-  color: var(--color-primary-dark);
-  font: inherit;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.checklistPreviewState {
-  display: flex;
-  min-height: 4rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border-top: 1px solid var(--color-border);
+.stageCopy small {
   color: var(--color-muted);
-  font-size: 0.75rem;
-}
-
-.checklistPreviewState button {
-  border: 0;
-  background: transparent;
-  color: var(--color-primary-dark);
-  font: inherit;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.checklistPreviewItems {
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-  list-style: none;
-}
-
-.checklistPreviewItems li {
-  display: grid;
-  grid-template-columns: 1.75rem minmax(0, 1fr);
-  gap: 0.55rem;
-  align-items: start;
-  padding: 0.7rem 0.85rem;
-  border-bottom: 1px solid var(--color-border);
-  border-radius: 0;
-}
-
-.checklistPreviewItems li:last-child {
-  border-bottom: 0;
-}
-
-.checklistPreviewItems span {
-  color: var(--color-placeholder);
-  font-size: 0.7rem;
-  line-height: 1.5;
-}
-
-.checklistPreviewItems p {
-  margin: 0;
-  color: var(--color-ink);
-  font-size: 0.8rem;
-  font-weight: 650;
-  line-height: 1.5;
-}
-
-.recordedChecklistItems {
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-  list-style: none;
-}
-
-.recordedChecklistItems > li {
-  padding: 0.7rem 0.85rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.recordedChecklistItems > li:last-child {
-  border-bottom: 0;
-}
-
-.recordedQuestion {
-  display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
-  gap: 0.45rem;
-  align-items: center;
-}
-
-.recordedQuestion p,
-.recordedMemo {
-  margin: 0;
-}
-
-.recordedQuestion p {
-  color: var(--color-ink);
-  font-size: 0.8rem;
-  font-weight: 650;
-  line-height: 1.45;
-}
-
-.itemOrder {
-  color: var(--color-placeholder);
-  font-size: 0.68rem;
-}
-
-.recordedStatus {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: var(--color-muted);
-  font-size: 0.68rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.recordedStatus::before {
-  width: 3px;
-  height: 0.75rem;
-  flex: 0 0 auto;
-  border-radius: 1px;
-  background: var(--color-check-unconfirmed);
-  content: '';
-}
-
-.recordedStatus[data-status='GOOD'] {
-  color: var(--color-ink-soft);
-}
-
-.recordedStatus[data-status='GOOD']::before {
-  background: var(--color-check-good);
-}
-
-.recordedStatus[data-status='CAUTION'] {
-  color: var(--color-ink-soft);
-}
-
-.recordedStatus[data-status='CAUTION']::before {
-  background: var(--color-check-caution);
-}
-
-.recordedStatus[data-status='UNCONFIRMED'] {
-  color: var(--color-ink-soft);
-}
-
-.recordedMemo {
-  margin: 0.45rem 0 0;
-  padding: 0.45rem 0.55rem;
-  border-radius: 0.4rem;
-  background: var(--color-surface-neutral);
-  color: var(--color-muted);
-  font-size: 0.72rem;
-  line-height: 1.45;
-}
-
-.unlinkedChecklist {
-  background: var(--color-surface-disabled);
-}
-
-.unlinkedChecklist strong,
-.unlinkedChecklist svg {
-  color: var(--color-muted);
-}
-
-.checklistError {
-  display: block;
-  padding: 0 0.85rem 0.7rem;
-  color: var(--color-error);
-  font-size: 0.7rem;
-}
-
-.visitLoadNotice {
-  margin: 0 0 0.7rem;
-  color: var(--color-muted);
-  font-size: 0.72rem;
-  line-height: 1.45;
+  font-size: 0.61rem;
 }

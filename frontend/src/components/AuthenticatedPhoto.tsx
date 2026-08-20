@@ -1,6 +1,7 @@
 import { getPropertyErrorMessage } from '../apis/propertyErrorMessages';
 import { useAuthenticatedPhoto } from '../hooks/query/useAuthenticatedPhoto';
 import type { PublicConfig } from '../types/PublicConfig';
+import './AuthenticatedPhoto.css';
 
 type AuthenticatedPhotoProps = {
   config: PublicConfig;

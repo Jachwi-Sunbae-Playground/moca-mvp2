@@ -5,8 +5,10 @@
 
 .options > :global(a),
 .options > :global(button) {
-  min-height: 3.75rem;
-  padding: 0.75rem 0.8rem;
+  min-height: 3.25rem;
+  padding: 0.62rem 0.7rem;
+  border-color: var(--color-border);
+  background: var(--color-surface);
 }
 
 .optionButton > span {
@@ -24,10 +26,10 @@
 }
 
 .optionContent strong {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
 }
 
 .optionContent > span {
   color: var(--color-muted);
-  font-size: 0.9rem;
+  font-size: 0.78rem;
 }

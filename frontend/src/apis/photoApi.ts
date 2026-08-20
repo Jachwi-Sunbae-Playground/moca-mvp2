@@ -36,3 +36,15 @@ export const removePropertyPhoto = (config: PublicConfig, propertyId: number, ph
     method: 'DELETE',
     parseData: parseNoContent,
   });
+
+export const setRepresentativePropertyPhoto = (
+  config: PublicConfig,
+  propertyId: number,
+  photoId: number,
+): Promise<PropertyPhoto> =>
+  apiRequest({
+    config,
+    path: `/api/properties/${propertyId}/photos/${photoId}/representative`,
+    method: 'PUT',
+    parseData: parsePropertyPhotoResponse,
+  });

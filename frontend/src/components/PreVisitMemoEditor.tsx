@@ -9,6 +9,7 @@ import { getUnicodeCodePointLength } from '../utils/unicode';
 import Icon from './ui/Icon';
 import { Button } from './ui/Button';
 import TextAreaField from './ui/TextAreaField';
+import './PreVisitMemoEditor.css';
 
 type PreVisitMemoEditorProps = {
   config: PublicConfig;

@@ -2,6 +2,7 @@
   display: grid;
   min-height: 100svh;
   place-items: stretch center;
+  background: #fff;
 }
 
 .card {
@@ -9,140 +10,84 @@
   width: min(100%, var(--app-max-width));
   min-height: 100svh;
   flex-direction: column;
-  padding: 0.25rem clamp(1rem, 5vw, 1.35rem) 7.5rem;
-  background: var(--color-surface);
+  padding: 0 1rem 7rem;
+  background: var(--color-canvas);
 }
 
 .brandHeader {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 0.5rem;
-  text-align: center;
+  padding-top: 0.85rem;
+  text-align: left;
 }
 
-.logoViewport {
-  position: relative;
-  width: min(96%, 20.5rem);
-  aspect-ratio: 3.4;
-  overflow: visible;
+.heroPlaceholder {
+  width: calc(100% + 2rem);
+  height: 11rem;
+  margin-left: -1rem;
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #e7e3d8 25%, transparent 25%), linear-gradient(-45deg, #e7e3d8 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e7e3d8 75%), linear-gradient(-45deg, transparent 75%, #e7e3d8 75%);
+  background-position:
+    0 0,
+    0 6px,
+    6px -6px,
+    -6px 0;
+  background-size: 12px 12px;
 }
 
-.brandLogo {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: block;
-  width: 108%;
-  max-width: none;
-  height: auto;
-  opacity: 0.92;
-  transform: translate(-50%, -50%);
-}
-
-.brandMessage {
-  margin: 0.7rem 0 0;
-  color: var(--color-muted);
-  font-size: 1.25rem;
-  font-weight: 750;
-  letter-spacing: -0.035em;
-  line-height: 1.4;
-}
-
-.featureIntro {
-  display: grid;
-  gap: 1.75rem;
-  padding: 3rem 0 2.5rem;
-}
-
-.featureHeading {
-  text-align: center;
-}
-
-.featureHeading h2,
-.featureHeading p,
-.featureCopy h3,
-.featureCopy p {
+.brandHeader p {
   margin: 0;
-}
-
-.featureHeading h2 {
-  font-size: 1.15rem;
-  letter-spacing: -0.035em;
-}
-
-.featureHeading p {
-  margin-top: 0.45rem;
   color: var(--color-muted);
-  font-size: 0.76rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.brandHeader h1 {
+  margin: 0.3rem 0 0;
+  font-size: 1.05rem;
+  letter-spacing: -0.03em;
+}
+
+.guideCard {
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.guideCard p {
+  margin: 0;
+  color: var(--color-ink-soft);
+  font-size: 0.67rem;
+  font-weight: 650;
   line-height: 1.55;
 }
 
 .featureList {
   display: grid;
-  gap: 2.75rem;
+  gap: 0;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.featureItem {
-  display: grid;
-  justify-items: start;
-  gap: 1.1rem;
-}
-
-.featureItemReverse {
-  justify-items: end;
-}
-
-.featureItemReverse .screenshotFrame {
-  order: initial;
-}
-
-.featureItemReverse .featureCopy {
-  text-align: right;
-}
-
-.screenshotFrame {
-  position: relative;
-  width: min(72%, 15.5rem);
-  aspect-ratio: 13 / 24;
-  border: 1px solid var(--color-border);
-  border-radius: 1.2rem;
-  background: var(--color-surface);
-  box-shadow: 0 0.5rem 1.5rem rgb(24 35 27 / 7%);
-  overflow: hidden;
-}
-
-.screenshotFrame img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: top center;
-}
-
-.featureCopy span {
-  color: var(--color-primary);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: -0.015em;
-}
-
-.featureCopy {
-  width: min(88%, 18rem);
-}
-
-.featureCopy h3 {
-  margin-top: 0.35rem;
-  font-size: 0.95rem;
-  letter-spacing: -0.035em;
-  line-height: 1.35;
-}
-
-.featureCopy p {
-  margin-top: 0.45rem;
-  color: var(--color-muted);
+.featureList li {
+  display: flex;
+  min-height: 2.7rem;
+  align-items: center;
+  gap: 0.6rem;
   font-size: 0.72rem;
-  line-height: 1.6;
+}
+
+.featureList li > span {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  background: var(--color-brand-100);
+  color: var(--color-primary);
+  place-items: center;
 }
 
 .actions {
@@ -151,10 +96,8 @@
   left: 50%;
   z-index: 20;
   width: min(100%, var(--app-max-width));
-  padding: 0.75rem clamp(1rem, 5vw, 1.35rem) calc(0.7rem + env(safe-area-inset-bottom));
-  border-top: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
-  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
-  box-shadow: 0 -0.35rem 1rem rgb(24 35 27 / 5%);
+  padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--color-canvas) 96%, transparent);
   text-align: center;
   transform: translateX(-50%);
   backdrop-filter: blur(12px);
@@ -163,7 +106,7 @@
 .googleLoginButton {
   display: flex;
   width: 100%;
-  min-height: 3.35rem;
+  min-height: 2.8rem;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
@@ -171,7 +114,7 @@
   border-radius: 999px;
   background: var(--color-surface);
   color: var(--color-ink);
-  font-size: 0.9rem;
+  font-size: 0.76rem;
   font-weight: 700;
   cursor: pointer;
   transition:
@@ -196,9 +139,9 @@
 }
 
 .agreement {
-  margin: 0.65rem auto 0;
+  margin: 0.45rem auto 0;
   color: var(--color-placeholder);
-  font-size: 0.65rem;
+  font-size: 0.55rem;
   line-height: 1.5;
 }
 

@@ -20,8 +20,17 @@ export type PropertySummary = {
   depositAmount: number;
   monthlyRentAmount: number;
   discoverySource: DiscoverySource;
+  representativePhoto: {
+    photoId: number;
+    contentUrl: string;
+    contentType: 'image/jpeg' | 'image/png' | 'image/webp';
+  } | null;
+  progress: PropertyChecklistProgress;
+  /** @deprecated 최종 목록 API에서는 progress를 사용한다. */
   recentVisit: RecentVisit | null;
+  /** @deprecated 최종 목록 API는 전체 사진 수를 반환하지 않는다. */
   photoCount: number;
+  /** @deprecated 최종 목록 API는 활동 시각을 반환하지 않는다. */
   lastActivityAt: string;
 };
 
@@ -75,6 +84,7 @@ export type PropertyDetail = {
   name: string;
   depositAmount: number;
   monthlyRentAmount: number;
+  maintenanceFeeAmount: number | null;
   discoverySource: DiscoverySource;
   memo: PropertyMemo;
   activeChecklists: PropertyActiveChecklist[];
@@ -94,8 +104,9 @@ export type PropertyBasicInfo = {
   name: string;
   depositAmount: number;
   monthlyRentAmount: number;
+  maintenanceFeeAmount: number | null;
   discoverySource: DiscoverySource;
-  updatedAt: string;
+  updatedAt: string | null;
 };
 
 export type PropertyPhoto = {
@@ -104,9 +115,67 @@ export type PropertyPhoto = {
   contentType: 'image/jpeg' | 'image/png' | 'image/webp';
   sizeBytes: number;
   createdAt: string;
+  representative?: boolean;
 };
 
 export type PropertyPhotoList = {
   photos: PropertyPhoto[];
   totalCount: number;
+};
+
+export type PropertyMemoItem = {
+  systemMemoItemId: number;
+  label: string;
+  displayOrder: number;
+  content: string;
+};
+
+export type PropertyMemoDocument = {
+  propertyId: number;
+  items: PropertyMemoItem[];
+  freeMemo: string;
+};
+
+export type PropertyChecklistProgress = {
+  totalCount: number;
+  completedCount: number;
+  goodCount: number;
+  cautionCount: number;
+  unconfirmedCount: number;
+  progressRate: number;
+};
+
+export type PropertyChecklistStageSummary = {
+  stage: ChecklistStage;
+  applied: boolean;
+  propertyChecklistId: number | null;
+  checklistName: string | null;
+  sourceChecklistId: number | null;
+  progress: PropertyChecklistProgress;
+};
+
+export type PropertyChecklistOverview = {
+  propertyId: number;
+  overallProgress: PropertyChecklistProgress;
+  stages: PropertyChecklistStageSummary[];
+};
+
+export type PropertyChecklistItemStatus = 'UNCONFIRMED' | 'GOOD' | 'CAUTION';
+
+export type PropertyChecklistItem = {
+  itemId: number;
+  systemCheckItemId: number;
+  question: string;
+  displayOrder: number;
+  status: PropertyChecklistItemStatus;
+  memo: string;
+};
+
+export type PropertyChecklistDetail = {
+  propertyChecklistId: number;
+  propertyId: number;
+  sourceChecklistId: number | null;
+  checklistName: string;
+  stage: ChecklistStage;
+  items: PropertyChecklistItem[];
 };

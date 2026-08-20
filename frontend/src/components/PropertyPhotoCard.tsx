@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
 import { getPropertyErrorMessage } from '../apis/propertyErrorMessages';
-import { useRemovePropertyPhoto } from '../hooks/query/usePropertyMutations';
+import { useRemovePropertyPhoto, useSetRepresentativePropertyPhoto } from '../hooks/query/usePropertyMutations';
 import type { PropertyPhoto } from '../types/Property';
 import type { PublicConfig } from '../types/PublicConfig';
 import AuthenticatedPhoto from './AuthenticatedPhoto';
 import ConfirmDialog from './ConfirmDialog';
 import dialogStyles from './ConfirmDialog.module.css';
+import styles from './PropertyPhotoCard.module.css';
 
 type PropertyPhotoCardProps = {
   config: PublicConfig;
@@ -18,6 +19,7 @@ const PropertyPhotoCard = ({ config, propertyId, photo, position }: PropertyPhot
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
   const removeMutation = useRemovePropertyPhoto(config, propertyId);
+  const representativeMutation = useSetRepresentativePropertyPhoto(config, propertyId);
   const accessibleName = `업로드 순 ${position}번째 사진`;
 
   const remove = async () => {
@@ -31,7 +33,7 @@ const PropertyPhotoCard = ({ config, propertyId, photo, position }: PropertyPhot
   };
 
   return (
-    <li className="photo-grid__item">
+    <li className={styles.item}>
       <AuthenticatedPhoto
         config={config}
         propertyId={propertyId}
@@ -40,14 +42,32 @@ const PropertyPhotoCard = ({ config, propertyId, photo, position }: PropertyPhot
         alt={accessibleName}
       />
       <button
+        className={`${styles.representativeButton} ${photo.representative === true ? styles.isRepresentative : ''}`}
+        type="button"
+        aria-label={
+          photo.representative === true ? `${accessibleName} 대표 사진` : `${accessibleName}을 대표 사진으로 지정`
+        }
+        aria-pressed={photo.representative === true}
+        disabled={photo.representative === true || representativeMutation.isPending}
+        onClick={() => representativeMutation.mutate(photo.photoId)}
+      >
+        <span aria-hidden="true">{photo.representative === true ? '★' : '☆'}</span>
+        대표
+      </button>
+      <button
         ref={deleteButtonRef}
-        className="photo-delete-button"
+        className={styles.deleteButton}
         type="button"
         aria-label={`${accessibleName} 삭제`}
         onClick={() => setIsDialogOpen(true)}
       >
         삭제
       </button>
+      {representativeMutation.isError && (
+        <p className={styles.representativeError} role="alert">
+          대표 사진 지정 실패
+        </p>
+      )}
       <ConfirmDialog
         isOpen={isDialogOpen}
         title="이 사진을 삭제할까요?"

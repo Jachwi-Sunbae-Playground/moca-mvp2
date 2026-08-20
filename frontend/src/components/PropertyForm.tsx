@@ -27,7 +27,13 @@ type PropertyFormProps = {
   onSubmit: (input: PropertyInputDto, values: PropertyFormValues) => void;
 };
 
-const fields: PropertyFormField[] = ['name', 'depositAmount', 'monthlyRentAmount', 'discoverySource'];
+const fields: PropertyFormField[] = [
+  'name',
+  'depositAmount',
+  'monthlyRentAmount',
+  'maintenanceFeeAmount',
+  'discoverySource',
+];
 
 const PropertyForm = ({
   initialValues,
@@ -53,7 +59,7 @@ const PropertyForm = ({
     setErrors((current) => ({ ...current, [field]: undefined }));
   };
 
-  const setMoneyValue = (field: 'depositAmount' | 'monthlyRentAmount', value: string) => {
+  const setMoneyValue = (field: 'depositAmount' | 'monthlyRentAmount' | 'maintenanceFeeAmount', value: string) => {
     const formatted = formatMoneyInput(value);
     if (formatted !== null) setValue(field, formatted);
   };
@@ -79,8 +85,9 @@ const PropertyForm = ({
         id="property-name"
         name="name"
         label="이름"
+        requirement="필수"
         value={values.name}
-        maxLength={50}
+        maxLength={30}
         autoComplete="off"
         placeholder="예: 신림역 근처 원룸"
         fieldClassName={variant === 'detail' ? styles.detailField : styles.defaultField}
@@ -94,6 +101,7 @@ const PropertyForm = ({
           id="property-deposit"
           name="depositAmount"
           label="보증금"
+          requirement="필수"
           value={values.depositAmount}
           inputMode="numeric"
           autoComplete="off"
@@ -109,6 +117,7 @@ const PropertyForm = ({
           id="property-rent"
           name="monthlyRentAmount"
           label="월세"
+          requirement="필수"
           value={values.monthlyRentAmount}
           inputMode="numeric"
           autoComplete="off"
@@ -120,6 +129,22 @@ const PropertyForm = ({
           onChange={(event) => setMoneyValue('monthlyRentAmount', event.target.value)}
         />
       </div>
+
+      <TextField
+        id="property-maintenance-fee"
+        name="maintenanceFeeAmount"
+        label="관리비"
+        requirement="선택"
+        value={values.maintenanceFeeAmount}
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder="입력하지 않아도 돼요"
+        suffix="원"
+        fieldClassName={variant === 'detail' ? styles.detailField : styles.defaultField}
+        className={variant === 'detail' ? styles.detailInput : styles.defaultInput}
+        error={displayedErrors.maintenanceFeeAmount}
+        onChange={(event) => setMoneyValue('maintenanceFeeAmount', event.target.value)}
+      />
 
       {variant === 'detail' ? (
         <TextAreaField
@@ -133,6 +158,7 @@ const PropertyForm = ({
           fieldClassName={`${styles.detailField} ${styles.lastDetailField}`}
           className={styles.detailInput}
           error={displayedErrors.discoverySource}
+          helpText="선택 입력"
           onChange={(event) => setValue('discoverySource', event.target.value)}
         />
       ) : (
@@ -140,6 +166,7 @@ const PropertyForm = ({
           id="property-source"
           name="discoverySource"
           label="확인한 곳"
+          requirement="선택"
           value={values.discoverySource}
           maxLength={500}
           autoComplete="off"

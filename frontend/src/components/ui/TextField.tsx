@@ -4,6 +4,7 @@ import styles from './TextField.module.css';
 
 type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'children'> & {
   label: string;
+  requirement?: '필수' | '선택';
   helpText?: string;
   error?: string;
   suffix?: ReactNode;
@@ -12,6 +13,7 @@ type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'children'> & 
 
 const TextField = ({
   label,
+  requirement,
   helpText,
   error,
   suffix,
@@ -28,12 +30,20 @@ const TextField = ({
 
   return (
     <div className={`${styles.field} ${fieldClassName ?? ''}`}>
-      <label htmlFor={inputId}>{label}</label>
+      <label htmlFor={inputId}>
+        {label}
+        {requirement !== undefined && (
+          <span className={styles.requirement} aria-hidden="true">
+            {requirement}
+          </span>
+        )}
+      </label>
       <div className={styles.control}>
         <input
           {...inputProps}
           id={inputId}
           className={className}
+          aria-label={inputProps['aria-label'] ?? label}
           aria-invalid={error === undefined ? undefined : true}
           aria-describedby={describedBy}
         />

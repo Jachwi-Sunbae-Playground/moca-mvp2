@@ -6,7 +6,7 @@ import { parseMemberDto } from './dtoParsers';
 export const fetchCurrentMember = (config: PublicConfig, signal?: AbortSignal): Promise<Member> =>
   apiRequest({
     config,
-    path: '/api/members/me',
+    path: '/api/members',
     signal,
     parseData: parseMemberDto,
   });

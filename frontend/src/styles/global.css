@@ -15,19 +15,19 @@
 }
 
 html {
-  min-height: 100%;
-  background: var(--color-surface);
+  height: 100%;
+  background: #fff;
 }
 
 body {
-  min-height: 100vh;
+  height: 100%;
   margin: 0;
-  overflow-x: hidden;
-  background: var(--color-surface);
+  overflow: hidden;
+  background: #fff;
 }
 
 #root {
-  min-height: 100vh;
+  height: 100%;
 }
 
 button,
@@ -43,8 +43,8 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
+  outline: 2px solid color-mix(in srgb, var(--color-focus) 70%, transparent);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

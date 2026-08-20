@@ -23,7 +23,7 @@ const config: PublicConfig = {
 
 const renderAuthenticated = (path: string, history?: { initialEntries: string[]; initialIndex: number }) => {
   setAuthentication({ accessToken: 'memory-token', tokenType: 'Bearer', expiresIn: 60 });
-  server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.json(successEnvelope(memberFixture))));
+  server.use(http.get(`${config.apiBaseUrl}/api/members`, () => HttpResponse.json(successEnvelope(memberFixture))));
   const guardedHistory = createGuardedHistory(
     UNSAFE_createMemoryHistory({
       initialEntries: history?.initialEntries ?? [path],
@@ -78,8 +78,20 @@ const memoUpdateResult = (visitItemId: number, memo: string, version: number) =>
   memoSavedAt: `2026-08-11T04:0${Math.min(version + 1, 9)}:30Z`,
 });
 
+const openFirstMemo = async () => {
+  const opened = screen.queryAllByRole('textbox', { name: '한 줄 메모' })[0];
+  if (opened !== undefined) return opened;
+
+  const toggle = (await screen.findAllByRole('button', { name: /메모 열기$/ }))[0];
+  if (toggle === undefined) throw new Error('메모 열기 버튼을 찾지 못했습니다.');
+  await userEvent.setup().click(toggle);
+  const memo = screen.getAllByRole('textbox', { name: '한 줄 메모' })[0];
+  if (memo === undefined) throw new Error('메모 입력을 찾지 못했습니다.');
+  return memo;
+};
+
 describe('FE-4 방문 시작과 목록', () => {
-  it('연결된 체크리스트를 누르면 새 방문 상세로 이동한다', async () => {
+  it('연결된 체크리스트는 상세에서 체크 화면 링크로 제공한다', async () => {
     let startCalls = 0;
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
@@ -96,18 +108,65 @@ describe('FE-4 방문 시작과 목록', () => {
         return HttpResponse.json(successEnvelope(visitDetailFixture), { status: 201 });
       }),
       http.get(`${config.apiBaseUrl}/api/visits/31`, () => HttpResponse.json(successEnvelope(visitDetailFixture))),
+      http.get(`${config.apiBaseUrl}/api/properties/10/checklists`, () =>
+        HttpResponse.json(
+          successEnvelope({
+            propertyId: 10,
+            overallProgress: {
+              totalCount: 2,
+              completedCount: 0,
+              goodCount: 0,
+              cautionCount: 0,
+              unconfirmedCount: 2,
+              progressRate: 0,
+            },
+            stages: [
+              {
+                stage: 'ONLINE_PHONE',
+                applied: true,
+                propertyChecklistId: 47,
+                checklistName: '전화 문의 기본 목록',
+                sourceChecklistId: 7,
+                progress: {
+                  totalCount: 2,
+                  completedCount: 0,
+                  goodCount: 0,
+                  cautionCount: 0,
+                  unconfirmedCount: 2,
+                  progressRate: 0,
+                },
+              },
+              ...(['ON_SITE', 'PRE_CONTRACT'] as const).map((stage) => ({
+                stage,
+                applied: false,
+                propertyChecklistId: null,
+                checklistName: null,
+                sourceChecklistId: null,
+                progress: {
+                  totalCount: 0,
+                  completedCount: 0,
+                  goodCount: 0,
+                  cautionCount: 0,
+                  unconfirmedCount: 0,
+                  progressRate: 0,
+                },
+              })),
+            ],
+          }),
+        ),
+      ),
       http.get(
         `${config.apiBaseUrl}/api/properties/10/photos/81/content`,
         () => new HttpResponse(new Uint8Array([255, 216, 255]), { headers: { 'Content-Type': 'image/jpeg' } }),
       ),
     );
-    const user = userEvent.setup();
     renderAuthenticated('/properties/10');
 
-    await user.click(await screen.findByRole('button', { name: '온라인·전화 체크 시작' }));
-
-    expect(await screen.findByRole('heading', { name: '신림역 원룸 방문', level: 1 })).toBeInTheDocument();
-    expect(startCalls).toBe(1);
+    expect(await screen.findByRole('link', { name: /온라인·전화.*전화 문의 기본 목록/ })).toHaveAttribute(
+      'href',
+      '/properties/10/checklists/47',
+    );
+    expect(startCalls).toBe(0);
   });
 
   it('복수 방문을 표시하고 다음 페이지 실패를 기존 기록과 분리한다', async () => {
@@ -286,7 +345,7 @@ describe('FE-4 항목 자동 저장', () => {
 
     expect(await screen.findAllByText(/상태 v0/)).toHaveLength(2);
     expect(screen.getAllByText(/메모 v0 · 아직 저장하지 않음/)).toHaveLength(2);
-    expect(screen.getByRole('textbox', { name: '한 줄 메모' })).toHaveValue('');
+    expect(await openFirstMemo()).toHaveValue('');
 
     await userEvent.setup().click(screen.getByRole('tab', { name: /집에서 확인/ }));
     expect(screen.getByText(/상태 v2/)).toBeInTheDocument();
@@ -305,7 +364,7 @@ describe('FE-4 항목 자동 저장', () => {
       }),
     );
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '  현관 폭  ' } });
     expect(bodies).toHaveLength(0);
@@ -339,7 +398,7 @@ describe('FE-4 항목 자동 저장', () => {
   it('메모 입력은 CR·LF를 제거하고 Unicode 200 코드포인트까지만 보존한다', async () => {
     useVisitDetailHandlers();
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '🏠'.repeat(200) } });
     expect(memo).toHaveValue('🏠'.repeat(200));
@@ -397,7 +456,7 @@ describe('FE-4 항목 자동 저장', () => {
       }),
     );
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '첫 입력' } });
     fireEvent.blur(memo);
@@ -432,7 +491,7 @@ describe('FE-4 항목 자동 저장', () => {
     renderAuthenticated('/visits/31');
     await user.click(await screen.findByRole('radio', { name: /^괜찮음/ }));
     await waitFor(() => expect(statusActive).toBe(true));
-    const memo = screen.getByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
     fireEvent.change(memo, { target: { value: '동시 저장' } });
     fireEvent.blur(memo);
 
@@ -453,7 +512,7 @@ describe('FE-4 항목 자동 저장', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '현관 폭 재확인' } });
     await user.click(screen.getByRole('radio', { name: /^괜찮음/ }));
@@ -480,7 +539,7 @@ describe('FE-4 항목 자동 저장', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '보일러 위치' } });
     fireEvent.blur(memo);
@@ -564,7 +623,7 @@ describe('FE-4 항목 자동 저장', () => {
       }),
     );
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '내 현장 메모' } });
     fireEvent.blur(memo);
@@ -605,7 +664,7 @@ describe('FE-4 항목 자동 저장', () => {
       }),
     );
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '내 draft' } });
     latest = true;
@@ -643,7 +702,7 @@ describe('FE-4 항목 자동 저장', () => {
       }),
     );
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '내 draft' } });
     fireEvent.blur(memo);
@@ -669,7 +728,7 @@ describe('FE-4 완료와 마이페이지', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '단계 전환 전 저장' } });
     await user.click(screen.getByRole('tab', { name: /집에서 확인/ }));
@@ -691,7 +750,7 @@ describe('FE-4 완료와 마이페이지', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '이동 전 저장' } });
     await user.click(screen.getByRole('link', { name: '매물 상세로 돌아가기' }));
@@ -713,7 +772,7 @@ describe('FE-4 완료와 마이페이지', () => {
       initialEntries: ['/properties/10/visits', '/visits/31'],
       initialIndex: 1,
     });
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' }, { timeout: 15_000 });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '뒤로 가기 전 저장' } });
     history.go(-1);
@@ -735,7 +794,7 @@ describe('FE-4 완료와 마이페이지', () => {
       initialEntries: ['/properties/10/visits', '/visits/31'],
       initialIndex: 1,
     });
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' }, { timeout: 15_000 });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '뒤로 가도 잃으면 안 되는 메모' } });
     history.go(-1);
@@ -758,7 +817,7 @@ describe('FE-4 완료와 마이페이지', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '잃으면 안 되는 메모' } });
     await user.click(screen.getByRole('link', { name: '매물 상세로 돌아가기' }));
@@ -802,7 +861,7 @@ describe('FE-4 완료와 마이페이지', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     await user.click(screen.getByRole('radio', { name: /^괜찮음/ }));
     fireEvent.change(memo, { target: { value: '완료 전 메모' } });
@@ -830,7 +889,7 @@ describe('FE-4 완료와 마이페이지', () => {
     );
     const user = userEvent.setup();
     renderAuthenticated('/visits/31');
-    const memo = await screen.findByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
 
     fireEvent.change(memo, { target: { value: '완료 전에 꼭 저장' } });
     await user.click(screen.getByRole('button', { name: '모두 저장하고 체크 완료' }));
@@ -905,7 +964,7 @@ describe('FE-4 완료와 마이페이지', () => {
     await waitFor(() => expect(screen.getByRole('radio', { name: /^주의/ })).toBeChecked());
     expect(screen.getByText(/최초 완료/, { selector: 'time' })).toBeInTheDocument();
 
-    const memo = screen.getByRole('textbox', { name: '한 줄 메모' });
+    const memo = await openFirstMemo();
     fireEvent.change(memo, { target: { value: '완료 후 메모' } });
     fireEvent.blur(memo);
     await waitFor(() => expect(postCompletionMemoBody).toEqual({ memo: '완료 후 메모', expectedMemoVersion: 0 }));
@@ -916,14 +975,14 @@ describe('FE-4 완료와 마이페이지', () => {
     const user = userEvent.setup();
     renderAuthenticated('/me');
 
-    expect(await screen.findByRole('heading', { name: '마이페이지' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '마이' })).toBeInTheDocument();
     expect(screen.getByText(memberFixture.email)).toBeInTheDocument();
-    expect(screen.getByText('Google 계정으로 로그인됨')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /비교표/ })).toHaveAttribute('href', '/compare');
-    expect(screen.getByRole('link', { name: /내보내기/ })).toHaveAttribute('href', '/export');
-    expect(screen.getByRole('link', { name: /선배 팁/ })).toHaveAttribute('href', '/tips');
+    expect(screen.getByText('Google 계정 연결됨')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /내 매물 관리/ })).toHaveAttribute('href', '/properties');
+    expect(screen.getByRole('link', { name: /내 체크리스트 관리/ })).toHaveAttribute('href', '/checklists');
+    expect(screen.getByRole('link', { name: /내보낸 비교표/ })).toHaveAttribute('href', '/export');
     expect(screen.queryByRole('heading', { name: '현재 로그인' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '로그아웃' }));
-    expect(await screen.findByRole('button', { name: 'Google로 로그인하고 이용하기' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: '구글로 로그인하기' })).toBeInTheDocument();
   });
 });
