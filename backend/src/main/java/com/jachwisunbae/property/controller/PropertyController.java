@@ -100,6 +100,15 @@ public class PropertyController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{propertyId}/photos/{photoId}/representative")
+    public ResponseEntity<Void> designateRepresentativePhoto(
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId,
+            @PathVariable final Long photoId) {
+        propertyService.designateRepresentativePhoto(memberId, propertyId, photoId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{propertyId}/memo")
     public ApiResponse<PropertyMemoResponse> findMemo(
             @AuthenticatedMemberId final Long memberId,

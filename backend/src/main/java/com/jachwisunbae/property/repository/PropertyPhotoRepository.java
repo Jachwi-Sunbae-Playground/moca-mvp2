@@ -14,4 +14,6 @@ public interface PropertyPhotoRepository {
     void ensureRepresentative(long propertyId);
 
     Optional<Long> findRepresentativePhotoId(long propertyId);
+
+    void setRepresentative(long propertyId, long photoId);
 }

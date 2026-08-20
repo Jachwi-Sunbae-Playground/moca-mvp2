@@ -64,4 +64,11 @@ public class JdbcPropertyPhotoRepository implements PropertyPhotoRepository {
         return jdbcTemplate.query("SELECT property_photos_id FROM main_property_photos WHERE property_id = ?",
                 (rs, row) -> rs.getLong("property_photos_id"), propertyId).stream().findFirst();
     }
+
+    @Override
+    public void setRepresentative(final long propertyId, final long photoId) {
+        jdbcTemplate.update("DELETE FROM main_property_photos WHERE property_id = ?", propertyId);
+        jdbcTemplate.update("INSERT INTO main_property_photos (property_id, property_photos_id) VALUES (?, ?)",
+                propertyId, photoId);
+    }
 }

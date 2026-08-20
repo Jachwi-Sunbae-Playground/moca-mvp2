@@ -75,6 +75,17 @@ public class PropertyService {
     }
 
     @Transactional
+    public void designateRepresentativePhoto(final Long memberId, final Long propertyId, final Long photoId) {
+        propertyRepository.findByIdAndMemberId(propertyId, memberId)
+                .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND,
+                        "매물을 찾을 수 없습니다."));
+        propertyPhotoRepository.findByIdAndPropertyId(photoId, propertyId)
+                .orElseThrow(() -> new BusinessException(DomainErrorCode.PHOTO_NOT_FOUND,
+                        "사진을 찾을 수 없습니다."));
+        propertyPhotoRepository.setRepresentative(propertyId, photoId);
+    }
+
+    @Transactional
     public Property create(final Long memberId, final CreatePropertyRequest request) {
         memberRepository.findByIdForUpdate(memberId).orElseThrow(() -> new BusinessException(
                 DomainErrorCode.MEMBER_NOT_FOUND, "회원을 찾을 수 없습니다."));
