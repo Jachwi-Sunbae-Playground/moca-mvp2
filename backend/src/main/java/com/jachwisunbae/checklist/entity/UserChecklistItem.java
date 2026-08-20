@@ -43,10 +43,6 @@ public class UserChecklistItem {
                 itemType, question, validateOrder(displayOrder));
     }
 
-    public void reorder(final Integer displayOrder) {
-        this.displayOrder = validateOrder(displayOrder);
-    }
-
     private static Long validateId(final Long id) {
         return DomainPreconditions.requireNonNull(id, DomainErrorCode.CHECKLIST_ITEMS_INVALID,
                 "체크리스트 항목 ID는 필수입니다.");

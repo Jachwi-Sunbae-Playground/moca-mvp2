@@ -17,18 +17,6 @@ public record CreateUserChecklistResponse(
         int itemCount,
         List<UserChecklistItemResponse> items) {
 
-    public static CreateUserChecklistResponse from(final UserChecklist checklist,
-                                                    final List<UserChecklistItem> checklistItems,
-                                                    final List<SystemCheckItem> systemItems) {
-        Map<Long, SystemCheckItem> systemItemMap = systemItems.stream()
-                .collect(Collectors.toMap(SystemCheckItem::getId, item -> item));
-        return new CreateUserChecklistResponse(
-                checklist.getId(), checklist.getName(), checklist.getStage(), checklistItems.size(),
-                checklistItems.stream()
-                        .map(item -> UserChecklistItemResponse.from(item,
-                                systemItemMap.get(item.getSystemCheckItemId())))
-                        .toList());
-    }
 
     public static CreateUserChecklistResponse from(final UserChecklist checklist,
                                                     final List<UserChecklistItemDetail> details) {

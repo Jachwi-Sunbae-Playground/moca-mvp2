@@ -78,7 +78,7 @@ public class JdbcPropertyRepository implements PropertyRepository {
                 INSERT INTO properties
                     (member_id, name, deposit_amount, monthly_rent_amount,
                      discovery_source)
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?)
                 """;
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
