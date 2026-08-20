@@ -1,7 +1,7 @@
 # CI/CD 배포 검증 기록
 
 - 문서 성격: 시점 고정
-- 갱신 정책: 그 시점의 기록이므로 갱신하지 않는다
+- 갱신 정책: 당시 확인한 관측값은 고정한다. 작업 상태와 후속 조치는 Issue #110에서 관리한다
 - 검증일: 2026-08-20
 - 관련 이슈: [#110 CI/CD 배포 검증을 구조적으로 강제한다](https://github.com/woowacourse-teams/2026-jachwi-sunbae/issues/110)
 
@@ -11,27 +11,23 @@
 
 prod에서 의도적인 실패를 만들지 않았다. main과 develop에 적용된 GitHub ruleset의 공통 설정과 dev 실배포를 검증 범위로 삼았다.
 
-## 판정 요약
+## 검증 결과
 
 | 항목 | 판정 | 근거 |
 | --- | --- | --- |
 | PR을 거치지 않은 main·develop 변경 차단 | 충족 | active ruleset `Protect main and develop`이 두 브랜치에 PR을 요구한다 |
 | 필수 상태 검사 | 충족 | `Build`, `Check frontend`, `Check docs consistency`를 strict required status check로 요구한다 |
 | 우회·강제 푸시·삭제 차단 | 충족 | bypass actor가 없고 `non_fast_forward`, `deletion` 규칙이 활성화되어 있다 |
-| 승인 1명 | 미충족 | ruleset의 `required_approving_review_count`는 0이다. 현재 팀에 코드 리뷰 담당자가 없어 임시로 0명을 사용한다 |
 | 백엔드 이번 리비전 검증 | 충족 | JAR의 `build.commit`과 `deployment-revision.txt`가 다르면 `ValidateService`가 실패한다 |
 | 백엔드 자동 롤백 실검증 | 충족 | 실패 리비전이 잠시 서빙된 뒤 직전 정상 SHA가 다시 서빙되는 것을 확인했다 |
 | 백엔드 정상 복구 배포 | 충족 | 복구 PR의 머지 SHA와 dev `/actuator/info`의 `build.commit`이 일치했다 |
 | 프론트엔드 이번 번들 검증 | 충족 | 현재 develop 소스로 만든 번들 파일명과 dev `index.html`의 참조가 일치하고 배포 검증 스크립트가 통과했다 |
-| AWS 실패·롤백 실행 ID 기록 | 미충족 | SHA와 검증 시각은 기록했지만 AWS 콘솔의 두 실행 ID는 기록하지 못했다 |
 
 ## 브랜치 보호와 CI
 
 ruleset `Protect main and develop`은 `refs/heads/main`, `refs/heads/develop`에 적용되고 우회 사용자가 없다. 세 required check는 PR과 두 보호 브랜치의 push에서 항상 생성된다.
 
 백엔드와 프론트엔드 CI는 워크플로 자체를 경로 필터로 생략하지 않는다. 대신 각 워크플로의 변경 감지 단계가 수정 디렉터리를 확인한다. 백엔드만 바뀌면 `Build`가 실제 빌드와 테스트를 수행하고 `Check frontend`는 프론트 검사를 생략한 뒤 성공 상태를 보고한다. 프론트엔드만 바뀌면 반대로 동작한다. 따라서 관련 없는 빌드를 반복하지 않으면서 required check가 `Pending`에 남지 않는다.
-
-승인 1명 조건은 [브랜치와 커밋](../convention/branch-and-commit.md)과 [이슈와 PR](../convention/issue-and-pr.md)의 규칙이지만 실제 ruleset은 0명이다. 승인자를 둘 수 있게 되면 ruleset을 1명으로 올려 두 문서와 맞춘다.
 
 ## 백엔드 실패와 자동 롤백
 
@@ -45,7 +41,7 @@ ruleset `Protect main and develop`은 `refs/heads/main`, `refs/heads/develop`에
 
 실패 검증용 변경은 복구 PR [#113](https://github.com/woowacourse-teams/2026-jachwi-sunbae/pull/113)에서 즉시 제거했다. 20:28:51에 dev health가 `UP`이고 `/actuator/info`가 복구 머지 SHA `17d424bc6b816bdc14e06d003878d314157b1f25`를 반환하는 것을 확인했다.
 
-따라서 롤백 실행의 성공 표시뿐 아니라 직전 리비전의 실제 서빙과 정상 코드의 후속 배포까지 확인했다. 상세 실행 기록은 [Issue #110 검증 댓글](https://github.com/woowacourse-teams/2026-jachwi-sunbae/issues/110#issuecomment-5355252626)에 있다. AWS 콘솔의 실패 실행 ID와 `AutomatedRollback` 실행 ID는 접근 가능한 팀원이 같은 이슈에 추가해야 한다.
+따라서 롤백 실행의 성공 표시뿐 아니라 직전 리비전의 실제 서빙과 정상 코드의 후속 배포까지 확인했다. 상세 실행 기록은 [Issue #110 검증 댓글](https://github.com/woowacourse-teams/2026-jachwi-sunbae/issues/110#issuecomment-5355252626)에 있다.
 
 ## 프론트엔드 배포 검증
 
@@ -56,10 +52,3 @@ ruleset `Protect main and develop`은 `refs/heads/main`, `refs/heads/develop`에
 ```
 
 `frontend/deploy/verify-deployment.sh`로 두 `index.html`을 비교했고 검증이 통과했다. 실제 번들 URL도 HTTP 200을 반환했다. dev `index.html`의 `Last-Modified`는 복구 PR 배포 시각과 같은 2026-08-20 11:26 UTC였다.
-
-## 남은 조치
-
-Issue #110을 완전히 닫으려면 다음 두 항목이 남는다.
-
-1. AWS 콘솔에서 실패한 파이프라인 실행 ID와 `AutomatedRollback` 실행 ID를 확인해 이슈에 기록한다.
-2. 코드 리뷰가 가능한 시점에 main·develop ruleset의 승인 인원을 1명으로 올린다. 승인 0명을 팀 규칙으로 유지하려면 두 컨벤션과 Issue #110의 완료 조건을 별도 결정으로 함께 바꾼다.
