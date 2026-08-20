@@ -271,6 +271,8 @@ dnf install -y java-21-amazon-corretto ruby wget
 
 네 파이프라인은 제공된 CodePipeline service role로 동작한다. 백엔드와 프론트엔드를 별도 파이프라인으로 두어 한쪽 실패가 다른 쪽 배포를 막지 않게 한다.
 
+같은 환경의 백엔드와 프론트엔드 파이프라인은 같은 브랜치 push를 소스로 사용하고 AWS 트리거에 디렉터리 필터가 없다. 따라서 백엔드만 바뀐 병합도 두 파이프라인을 모두 시작한다. GitHub Actions의 내부 변경 감지는 병합 전 검사량만 줄이며 CodePipeline 실행 여부를 제어하지 않는다.
+
 PR 검증은 GitHub Actions가 맡고 배포용 산출물 생성과 실제 서비스 검증은 CodePipeline이 맡는다. 두 경계를 보호 규칙과 배포 리비전 비교로 연결한다.
 
 ## 6. 데이터베이스 변경이 포함된 배포

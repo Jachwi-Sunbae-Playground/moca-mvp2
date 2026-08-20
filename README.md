@@ -27,6 +27,7 @@
 ### 운영
 
 - [배포 아키텍처 설계](docs/operations/deployment-architecture.md) — 배포 대상, 플랫폼 선택과 근거, 비용 추정
+- [CI/CD 배포 검증 기록](docs/operations/2026-08-20-cicd-deployment-validation.md) — 브랜치 보호, 리비전 검증과 자동 롤백의 실측 결과
 
 ## 저장소 구조
 

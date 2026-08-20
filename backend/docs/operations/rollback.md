@@ -45,4 +45,6 @@ curl -fsS https://dev-api.jachwi-sunbae.kr/actuator/info
 
 이 절차는 dev에서만 실행한다. prod에서 의도적인 실패를 만들지 않는다.
 
+2026-08-20에 이 절차를 실행해 실패 리비전의 기동과 직전 정상 리비전의 실제 복구를 확인했다. SHA와 시각, 복구 PR은 [CI/CD 배포 검증 기록](../../../docs/operations/2026-08-20-cicd-deployment-validation.md)에 남긴다.
+
 데이터 손실 가능성이 있는 작업은 즉시 실행하지 않고 영향 범위와 복구 가능성을 먼저 확인한다.

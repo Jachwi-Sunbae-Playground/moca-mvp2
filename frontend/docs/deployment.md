@@ -102,6 +102,8 @@ assets/jachwi-sunbae-logo.2e4dac46707736dbc407.png
 ./frontend/deploy/verify-deployment.sh frontend/dist/index.html https://www.jachwi-sunbae.kr/index.html
 ```
 
+2026-08-20 dev 환경에서 현재 develop 빌드와 실제 `index.html`의 번들 파일명이 일치하는 것을 확인했다. 관측값은 [CI/CD 배포 검증 기록](../../docs/operations/2026-08-20-cicd-deployment-validation.md)에 남긴다.
+
 ## SPA 폴백
 
 react-router의 클라이언트 라우팅을 쓴다. `/properties/1` 같은 경로는 S3에 실제 객체가 없으므로, CloudFront에서 403·404 응답을 `/index.html`(상태 200)로 매핑해야 한다.
