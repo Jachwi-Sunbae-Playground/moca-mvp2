@@ -4,16 +4,12 @@ import com.jachwisunbae.property.repository.query.PropertyMemoRow;
 import java.util.List;
 
 public record PropertyMemoResponse(Long propertyId, List<PropertyMemoItemResponse> items, String freeMemo) {
-    public static PropertyMemoResponse from(final List<PropertyMemoRow> rows) {
-        if (rows.isEmpty()) {
-            return new PropertyMemoResponse(null, List.of(), "");
-        }
-        PropertyMemoRow first = rows.get(0);
-        List<PropertyMemoItemResponse> items = rows.stream()
-                .map(row -> new PropertyMemoItemResponse(row.propertyMemoItemId(), row.systemMemoItemId(), row.label(),
-                        row.displayOrder(), row.content()))
+    public static PropertyMemoResponse from(final PropertyMemoRow row) {
+        List<PropertyMemoItemResponse> items = row.items().stream()
+                .map(item -> new PropertyMemoItemResponse(item.propertyMemoItemId(), item.systemMemoItemId(),
+                        item.label(), item.displayOrder(), item.content()))
                 .toList();
-        return new PropertyMemoResponse(first.propertyId(), items,
-                first.freeMemo() == null ? "" : first.freeMemo());
+        return new PropertyMemoResponse(row.propertyId(), items,
+                row.freeMemo() == null ? "" : row.freeMemo());
     }
 }

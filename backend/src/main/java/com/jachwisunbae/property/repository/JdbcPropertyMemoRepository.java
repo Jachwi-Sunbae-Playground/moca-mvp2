@@ -3,6 +3,7 @@ package com.jachwisunbae.property.repository;
 import com.jachwisunbae.property.entity.PropertyMemo;
 import com.jachwisunbae.property.entity.PropertyMemoItem;
 import com.jachwisunbae.property.repository.query.PropertyMemoRow;
+import com.jachwisunbae.property.repository.query.PropertyMemoItemRow;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
@@ -16,9 +17,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JdbcPropertyMemoRepository implements PropertyMemoRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final RowMapper<PropertyMemoRow> rowMapper = (rs, rowNum) -> new PropertyMemoRow(
-            rs.getLong("property_id"), rs.getObject("property_memo_id", Long.class),
-            rs.getString("free_memo"), rs.getObject("property_memo_item_id", Long.class),
+    private final RowMapper<PropertyMemoItemRow> rowMapper = (rs, rowNum) -> new PropertyMemoItemRow(
+            rs.getObject("property_memo_item_id", Long.class),
             rs.getObject("system_memo_item_id", Long.class),
             rs.getString("label"), rs.getObject("display_order", Integer.class), rs.getString("content"));
 
@@ -27,7 +27,7 @@ public class JdbcPropertyMemoRepository implements PropertyMemoRepository {
     }
 
     @Override
-    public List<PropertyMemoRow> findRows(final long propertyId) {
+    public PropertyMemoRow findRows(final long propertyId) {
         String sql = """
                 SELECT ? AS property_id, pm.id AS property_memo_id, pm.free_memo,
                        pmi.id AS property_memo_item_id,
@@ -42,7 +42,10 @@ public class JdbcPropertyMemoRepository implements PropertyMemoRepository {
                 WHERE sm.deleted_at IS NULL
                 ORDER BY sm.display_order, sm.id
                 """;
-        return jdbcTemplate.query(sql, rowMapper, propertyId, propertyId);
+        List<PropertyMemoItemRow> items = jdbcTemplate.query(sql, rowMapper, propertyId, propertyId);
+        String freeMemo = jdbcTemplate.query("SELECT free_memo FROM property_memos WHERE property_id = ?",
+                (rs, rowNum) -> rs.getString("free_memo"), propertyId).stream().findFirst().orElse("");
+        return new PropertyMemoRow(propertyId, freeMemo, items);
     }
 
     @Override

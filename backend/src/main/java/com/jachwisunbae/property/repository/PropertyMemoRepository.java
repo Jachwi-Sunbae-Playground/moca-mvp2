@@ -3,11 +3,10 @@ package com.jachwisunbae.property.repository;
 import com.jachwisunbae.property.entity.PropertyMemo;
 import com.jachwisunbae.property.entity.PropertyMemoItem;
 import com.jachwisunbae.property.repository.query.PropertyMemoRow;
-import java.util.List;
 import java.util.Optional;
 
 public interface PropertyMemoRepository {
-    List<PropertyMemoRow> findRows(long propertyId);
+    PropertyMemoRow findRows(long propertyId);
 
     Optional<PropertyMemo> findByPropertyId(long propertyId);
 

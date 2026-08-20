@@ -29,13 +29,13 @@ public class PropertyMemoService {
         this.systemMemoItemRepository = systemMemoItemRepository;
     }
 
-    public List<PropertyMemoRow> find(final Long memberId, final Long propertyId) {
+    public PropertyMemoRow find(final Long memberId, final Long propertyId) {
         findOwnedProperty(memberId, propertyId);
         return propertyMemoRepository.findRows(propertyId);
     }
 
     @Transactional
-    public List<PropertyMemoRow> initialize(final Long memberId, final Long propertyId) {
+    public PropertyMemoRow initialize(final Long memberId, final Long propertyId) {
         findOwnedProperty(memberId, propertyId);
         if (propertyMemoRepository.findByPropertyId(propertyId).isEmpty()) {
             createMemoWithSnapshot(propertyId, "");
@@ -44,7 +44,7 @@ public class PropertyMemoService {
     }
 
     @Transactional
-    public List<PropertyMemoRow> update(final Long memberId, final Long propertyId,
+    public PropertyMemoRow update(final Long memberId, final Long propertyId,
                                         final UpdatePropertyMemoRequest request) {
         findOwnedProperty(memberId, propertyId);
         PropertyMemo memo = propertyMemoRepository.findByPropertyId(propertyId)
