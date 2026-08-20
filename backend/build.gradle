@@ -8,6 +8,20 @@ group = 'com.jachwisunbae'
 version = '0.0.1-SNAPSHOT'
 description = 'Jachwi Sunbae backend application'
 
+def sourceCommitId = providers.environmentVariable('SOURCE_COMMIT_ID')
+		.orElse(providers.environmentVariable('CODEBUILD_RESOLVED_SOURCE_VERSION'))
+		.orElse(providers.gradleProperty('sourceCommitId'))
+		.orElse('local')
+
+springBoot {
+	buildInfo {
+		properties {
+			excludes = ['time']
+			additional = [commit: sourceCommitId]
+		}
+	}
+}
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
