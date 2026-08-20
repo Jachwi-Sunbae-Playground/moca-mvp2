@@ -62,7 +62,7 @@ public class PropertyChecklistService {
                 propertyId, checklist.getId(), checklist.getName(), stage);
         propertyChecklistRepository.saveItems(propertyChecklistId,
                 createSnapshotItems(userChecklistRepository.findItems(checklist.getId()), previous));
-        return propertyChecklistRepository.findApplication(propertyChecklistId);
+        return findApplication(memberId, propertyId, propertyChecklistId);
     }
 
     private List<PropertyChecklistItemStateQuery> createSnapshotItems(final List<UserChecklistItem> sourceItems,
@@ -89,6 +89,13 @@ public class PropertyChecklistService {
             throw new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND, "매물을 찾을 수 없습니다.");
         }
         return propertyProgressRepository.findByPropertyIdAndStage(propertyId);
+    }
+
+    public PropertyChecklistApplicationQuery findApplication(final Long memberId, final Long propertyId,
+                                                              final Long propertyChecklistId) {
+        return propertyChecklistRepository.findApplication(memberId, propertyId, propertyChecklistId)
+                .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_CHECKLIST_NOT_FOUND,
+                        "매물 적용 체크리스트를 찾을 수 없습니다."));
     }
 
     @Transactional

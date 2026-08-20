@@ -18,7 +18,8 @@ public interface PropertyChecklistRepository {
 
     void saveItems(long propertyChecklistId, List<PropertyChecklistItemStateQuery> items);
 
-    PropertyChecklistApplicationQuery findApplication(long propertyChecklistId);
+    Optional<PropertyChecklistApplicationQuery> findApplication(long memberId, long propertyId,
+                                                                  long propertyChecklistId);
 
     int updateStatus(long memberId, long propertyId, long propertyChecklistId, long itemId, String status);
 

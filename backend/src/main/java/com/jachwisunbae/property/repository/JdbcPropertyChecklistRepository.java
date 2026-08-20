@@ -76,18 +76,30 @@ public class JdbcPropertyChecklistRepository implements PropertyChecklistReposit
     }
 
     @Override
-    public PropertyChecklistApplicationQuery findApplication(final long propertyChecklistId) {
+    public Optional<PropertyChecklistApplicationQuery> findApplication(final long memberId, final long propertyId,
+                                                                        final long propertyChecklistId) {
+        Optional<PropertyChecklistApplicationQuery> checklist = jdbcTemplate.query(
+                        "SELECT pc.id, pc.property_id, pc.user_checklist_id, pc.checklist_name, pc.stage "
+                                + "FROM property_checklists pc "
+                                + "JOIN properties p ON p.id = pc.property_id "
+                                + "WHERE p.id = ? AND p.member_id = ? AND pc.id = ?",
+                        (rs, row) -> new PropertyChecklistApplicationQuery(rs.getLong("id"),
+                                rs.getLong("property_id"), rs.getObject("user_checklist_id", Long.class),
+                                rs.getString("checklist_name"), CheckStage.valueOf(rs.getString("stage")), List.of()),
+                        propertyId, memberId, propertyChecklistId)
+                .stream().findFirst();
+        if (checklist.isEmpty()) {
+            return Optional.empty();
+        }
         List<PropertyChecklistItemQuery> savedItems = jdbcTemplate.query(
                 "SELECT id, system_check_item_id, question, display_order, status, memo "
                         + "FROM property_checklist_items WHERE property_checklist_id = ? ORDER BY display_order ASC, id ASC",
                 (rs, row) -> new PropertyChecklistItemQuery(rs.getLong("id"), rs.getLong("system_check_item_id"),
                         rs.getString("question"), rs.getInt("display_order"),
                         CheckStatus.valueOf(rs.getString("status")), rs.getString("memo")), propertyChecklistId);
-        return jdbcTemplate.queryForObject("SELECT id, property_id, user_checklist_id, checklist_name, stage "
-                        + "FROM property_checklists WHERE id = ?",
-                (rs, row) -> new PropertyChecklistApplicationQuery(rs.getLong("id"), rs.getLong("property_id"),
-                        rs.getLong("user_checklist_id"), rs.getString("checklist_name"),
-                CheckStage.valueOf(rs.getString("stage")), savedItems), propertyChecklistId);
+        PropertyChecklistApplicationQuery root = checklist.get();
+        return Optional.of(new PropertyChecklistApplicationQuery(root.id(), root.propertyId(), root.sourceChecklistId(),
+                root.checklistName(), root.stage(), savedItems));
     }
 
     @Override

@@ -7,6 +7,8 @@ import com.jachwisunbae.property.controller.dto.request.UpdatePropertyRequest;
 import com.jachwisunbae.property.controller.dto.request.ApplyPropertyChecklistRequest;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyChecklistMemoRequest;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyChecklistStatusRequest;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemMemoItem;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemStatusItem;
 import com.jachwisunbae.property.service.PropertyChecklistService;
 import com.jachwisunbae.checklist.type.CheckStage;
 import com.jachwisunbae.property.controller.dto.response.PropertyChecklistApplicationResponse;
@@ -139,6 +141,18 @@ public class PropertyController {
         return ApiResponse.of("매물 체크 현황을 조회했습니다.",
                 PropertyChecklistOverviewResponse.from(propertyId,
                         propertyChecklistService.findOverview(memberId, propertyId)));
+    }
+
+    @GetMapping("/{propertyId}/checklists/{propertyChecklistId}")
+    @Operation(summary = "매물 적용 체크리스트 상세 조회",
+            description = "매물에 적용된 체크리스트 스냅샷과 항목 상태·메모를 조회합니다.")
+    public ApiResponse<PropertyChecklistApplicationResponse> findAppliedChecklist(
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId,
+            @PathVariable final Long propertyChecklistId) {
+        return ApiResponse.of("적용 체크리스트를 조회했습니다.",
+                PropertyChecklistApplicationResponse.from(
+                        propertyChecklistService.findApplication(memberId, propertyId, propertyChecklistId)));
     }
 
     @PutMapping("/{propertyId}/checklists/{stage}")

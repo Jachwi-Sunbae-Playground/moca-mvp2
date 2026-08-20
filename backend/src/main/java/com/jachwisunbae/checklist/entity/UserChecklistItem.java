@@ -15,7 +15,7 @@ public class UserChecklistItem {
     private final CheckStage stage;
     private final CheckItemType itemType;
     private final String question;
-    private Integer displayOrder;
+    private final Integer displayOrder;
 
     private UserChecklistItem(final Long id, final Long userChecklistId, final Long systemCheckItemId,
                                final CheckStage stage, final CheckItemType itemType, final String question,
