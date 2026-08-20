@@ -57,11 +57,9 @@ CodeDeploy 배포 그룹이 **EC2 태그**로 대상을 고른다.
 | `backend/deploy/jachwi-sunbae.service` | systemd 유닛 |
 | `backend/deploy/scripts/` | 배포 훅 스크립트 |
 
-## 테스트를 어디서 실행하는가
+## 빌드 검증
 
-**빌드 단계는 테스트를 실행하지 않는다.** `clean bootJar -x test`만 실행한다. 테스트는 GitHub Actions(`.github/workflows/backend-ci.yml`)가 PR과 `main` push에서 실행하므로, 배포되는 커밋은 이미 검증을 통과한 상태다.
-
-같은 테스트를 두 곳에서 돌리지 않는 것이 첫 번째 이유다. 두 번째는 통합 테스트가 Testcontainers로 Docker를 요구해 관리형 빌드 환경에 특권 모드가 필요해지기 때문이다.
+배포 빌드는 `clean bootJar -x test`로 실행 가능한 JAR를 만든다. GitHub Actions(`.github/workflows/backend-ci.yml`)는 PR과 `main`·`develop` push에서 `clean build`를 실행한다. 현재 MVP 구현 단계에는 백엔드 테스트 소스가 없다.
 
 ## 배포 훅
 
@@ -106,18 +104,9 @@ CodeDeploy 배포 그룹이 **EC2 태그**로 대상을 고른다.
 
 **환경변수 파일은 배포 산출물에 넣지 않는다.** CodeDeploy가 덮어쓰는 경로 밖에 두어 배포마다 값이 사라지지 않게 한다. systemd가 `EnvironmentFile`로 root 권한에서 읽은 뒤 `jachwi`로 내려가므로 애플리케이션 계정에 읽기 권한을 주지 않는다.
 
-값의 목록과 운영에서 달라지는 부분은 [환경변수](../guides/environment-variables.md)에 있다.
+현재 초기화된 애플리케이션은 운영 비밀값을 사용하지 않는다. 다만 배포 훅과 systemd 유닛의 기존 계약을 유지하기 위해 환경변수 파일은 빈 파일로라도 둔다. 새 환경변수를 도입할 때 [환경변수](../guides/environment-variables.md)와 배포 환경을 함께 갱신한다.
 
-dev와 prod에서 달라지는 값은 여섯이다. 나머지는 같다.
-
-| 키 | 이유 |
-| --- | --- |
-| `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` | 같은 RDS 인스턴스의 다른 스키마를 쓴다 |
-| `JWT_SECRET_BASE64` | 같으면 dev에서 발급한 토큰이 prod에서도 통한다 |
-| `GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS`, `CORS_ALLOWED_ORIGINS` | 도메인이 다르다 |
-| `PHOTO_STORAGE_KEY_PREFIX` | 같으면 dev 테스트 사진이 prod 사진과 섞인다 |
-
-`SPRING_PROFILES_ACTIVE`는 **dev에서도 `prod`다.** 이 값은 환경 이름이 아니라 정적 자격증명을 쓰지 않는 운영 프로필을 뜻한다.
+`SPRING_PROFILES_ACTIVE`는 dev와 prod 모두 `prod`로 둔다. 이 프로필은 애플리케이션이 80 포트를 사용하게 한다.
 
 ## 빌드를 CodeBuild가 아니라 Commands로 하는 이유
 
@@ -143,18 +132,4 @@ sudo systemctl status jachwi-sunbae.service
 
 배포 자체가 실패했다면 EC2의 `/opt/codedeploy-agent/deployment-root/deployment-logs/`를 함께 본다.
 
-배포 결과와 사용자 관찰은 [지정 요구사항 2](../requirements/02-deploy-and-observe.md)에 증거와 함께 기록한다.
-
-## 데이터베이스 변경이 포함된 배포
-
-데이터베이스 변경 절차는 [데이터베이스 마이그레이션 가이드](../guides/database-migrations.md)를 따른다.
-
-1. 대상 환경과 DB를 교차 확인하고 애플리케이션 쓰기를 중단한다.
-2. pre-Flyway v1.0 DB라면 스키마·행 수를 기록하고 백업을 별도 DB에 복구해 검증한 뒤 버전 1을 명시적으로 baseline한다.
-3. V2~V4를 적용하고 Flyway history, 기존 데이터 보존, backfill과 제약을 검증한다.
-4. 애플리케이션을 배포하고 Actuator health와 핵심 smoke test를 확인한 뒤 쓰기를 재개한다.
-5. checksum 불일치나 마이그레이션 실패가 있으면 배포와 쓰기 재개를 중단하고 [롤백](rollback.md)의 데이터 유입 시점별 절차를 선택한다.
-
-`baseline-on-migrate`는 배포 환경의 상시 설정으로 두지 않는다. v1.1은 expand/backfill 단계이므로 이전 컬럼과 GOSHIWON 데이터 삭제를 같은 배포에 포함하지 않는다.
-
-운영 RDS는 새로 만든 빈 DB이므로 **첫 배포는 2단계의 baseline 대상이 아니다.** Flyway가 V1부터 최신까지 그대로 적용한다.
+배포 결과는 관련 GitHub 이슈 또는 PR에 기록한다.

@@ -5,12 +5,14 @@
 
 ## 관리 원칙
 
+현재 초기화된 Spring Boot 애플리케이션은 환경변수를 사용하지 않는다. 아래 값은 저장소에 남아 있는 로컬 MySQL·MinIO Compose 구성을 위한 값이며, 새 백엔드 구현에서 사용할지는 다시 결정한다.
+
 - 예시와 기본값은 `backend/.env.example`에 기록하고 Git에 커밋한다.
 - 개인 값은 `backend/.env`에 기록하며 Git에 커밋하지 않는다.
 - 실제 비밀번호, 토큰과 운영 비밀값은 문서, 코드, 예시 파일에 기록하지 않는다.
 - 환경변수를 추가하거나 이름을 변경하면 애플리케이션 설정, Compose, `.env.example`과 이 문서를 같은 PR에서 수정한다.
 
-## 현재 환경변수
+## 로컬 인프라용 환경변수
 
 | 환경변수 | 로컬 기본값 | 용도 |
 | --- | --- | --- |
@@ -42,33 +44,10 @@
 cp .env.example .env
 ```
 
-`JWT_SECRET_BASE64`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`의 placeholder를 실제 로컬 값으로 바꾼다. 사진 저장소의 로컬 예시 자격증명은 Compose 전용이며 운영에서 재사용하지 않는다. JWT 비밀키는 Base64 디코딩 후 32바이트 이상이어야 한다. 예를 들어 다음 명령으로 로컬 키를 만들 수 있다.
-
-```bash
-openssl rand -base64 32
-```
-
-Docker Compose는 같은 디렉터리의 `.env`를 자동으로 읽는다. Spring Boot 프로세스는 `.env`를 자동으로 읽지 않으므로 기본값이 아닌 값을 사용할 때는 실행 전에 환경변수를 전달한다.
-
-```bash
-set -a
-source .env
-set +a
-./gradlew bootRun
-```
+Docker Compose는 같은 디렉터리의 `.env`를 자동으로 읽는다. 현재 Spring Boot 프로세스는 이 파일을 사용하지 않는다.
 
 ## 운영 프로필
 
-운영은 `prod` 프로필로 기동하며 값은 EC2의 `/etc/jachwi-sunbae/app.env`(`0600`)에서 주입한다. 구성은 [배포 아키텍처 설계](../../../docs/operations/deployment-architecture.md)를 따르고, 주입 절차는 [배포](../operations/deployment.md)에 있다.
+운영은 `prod` 프로필로 기동한다. 현재 애플리케이션은 운영 환경변수를 요구하지 않지만 배포 계약상 EC2의 `/etc/jachwi-sunbae/app.env` 파일은 유지한다. 새 환경변수를 도입할 때 구성은 [배포 아키텍처 설계](../../../docs/operations/deployment-architecture.md)와 [배포](../operations/deployment.md)에 함께 반영한다.
 
-로컬과 달라지는 부분은 다음과 같다.
-
-| 환경변수 | 운영에서의 차이 |
-| --- | --- |
-| `DB_*` | 기본값이 없다. 비어 있으면 기동에 실패한다 |
-| `PHOTO_STORAGE_ENDPOINT`·`PHOTO_STORAGE_ACCESS_KEY`·`PHOTO_STORAGE_SECRET_KEY` | **설정하지 않는다.** EC2 인스턴스 role로 접속하므로 정적 자격증명을 두지 않는다 |
-| `PHOTO_STORAGE_KEY_PREFIX` | 버킷을 다른 팀과 공유하므로 팀 폴더를 지정한다 |
-
-`prod`에서 정적 자격증명을 설정해도 무시된다. 자격증명 방식은 프로필로 갈리며 값의 유무로 갈리지 않는다.
-
-실제 JWT 비밀키, Google 인증정보와 운영 객체 저장소 자격증명은 `.env.example`, 애플리케이션 설정, 문서와 Git에 커밋하지 않는다. 목록형 환경변수에는 정확한 Origin과 redirect URI만 입력하며 wildcard를 사용하지 않는다.
+실제 비밀값은 `.env.example`, 애플리케이션 설정, 문서와 Git에 커밋하지 않는다.

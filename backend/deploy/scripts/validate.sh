@@ -7,7 +7,6 @@ HEALTH_URL=http://127.0.0.1:80/actuator/health
 ATTEMPTS=48
 INTERVAL=5
 
-# Flyway 마이그레이션이 포함된 첫 기동은 시간이 걸린다. 넉넉히 기다리되 무한정 기다리지는 않는다.
 for attempt in $(seq 1 "${ATTEMPTS}"); do
     if ! systemctl is-active --quiet "${SERVICE}"; then
         echo "${SERVICE} 가 실행 중이 아니다. 기동에 실패했다." >&2
