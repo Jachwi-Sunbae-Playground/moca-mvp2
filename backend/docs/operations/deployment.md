@@ -126,19 +126,27 @@ CodeDeploy 배포 그룹이 **EC2 태그**로 대상을 고른다.
 빌드 명령은 다음을 한다.
 
 1. Corretto 21을 설치하고 `JAVA_HOME`을 잡는다. **관리형 환경의 기본 Java가 17일 수 있어 버전을 명시한다.**
-2. `CODEBUILD_RESOLVED_SOURCE_VERSION`이 40자리 Git SHA인지 확인한다.
+2. Source 작업이 출력한 `CommitId`를 `SOURCE_COMMIT_ID`로 전달받아 40자리 Git SHA인지 확인한다.
 3. 그 SHA를 `build.commit`으로 넣고 `clean bootJar -x test`로 실행 가능한 jar를 만든다.
 4. 같은 SHA를 `deployment-revision.txt`에 기록한다.
 5. `-plain.jar`가 아닌 jar를 `app.jar`로 복사한다.
 6. `backend/deploy/`의 내용을 작업 디렉터리 루트로 옮긴다. **`appspec.yml`이 아티팩트 최상단에 없으면 CodeDeploy가 배포를 시작하지 못한다.**
 
-기존 명령에 다음 검증과 파일 생성을 포함한다. `CODEBUILD_RESOLVED_SOURCE_VERSION`은 CodePipeline이 Commands 실행 환경에 제공한 소스 리비전이다.
+Commands 액션은 GitHub 소스를 직접 받는 CodeBuild 프로젝트가 아니라 `SourceArtifact`를 입력으로 받는다. 이 구성에서는 `CODEBUILD_RESOLVED_SOURCE_VERSION`이 자동으로 제공되지 않으므로 Source 작업의 출력 변수를 Build 작업에 명시적으로 연결한다.
+
+| 설정 위치 | 값 |
+| --- | --- |
+| Source 작업 변수 네임스페이스 | `SourceVariables` |
+| Build 작업 환경 변수 이름 | `SOURCE_COMMIT_ID` |
+| Build 작업 환경 변수 값 | `#{SourceVariables.CommitId}` |
+
+빌드 명령에는 다음 검증과 파일 생성을 포함한다.
 
 ```bash
-test -n "${CODEBUILD_RESOLVED_SOURCE_VERSION:-}"
-printf '%s' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" | grep -Eq '^[0-9a-f]{40}$'
-SOURCE_COMMIT_ID="${CODEBUILD_RESOLVED_SOURCE_VERSION}" ./backend/gradlew -p backend --no-daemon --max-workers=1 clean bootJar -x test
-printf '%s\n' "${CODEBUILD_RESOLVED_SOURCE_VERSION}" > deployment-revision.txt
+REVISION="${SOURCE_COMMIT_ID:?source revision is missing}"
+printf '%s' "${REVISION}" | grep -Eq '^[0-9a-f]{40}$'
+SOURCE_COMMIT_ID="${REVISION}" ./backend/gradlew -p backend --no-daemon --max-workers=1 clean bootJar -x test
+printf '%s\n' "${REVISION}" > deployment-revision.txt
 ```
 
 출력 아티팩트 `BuildArtifact`에는 `app.jar`, `deployment-revision.txt`, `appspec.yml`, `jachwi-sunbae.service`, `scripts/**/*`가 들어간다. 이 목록을 비워두면 Deploy 단계의 입력이 저장소 원본으로 잡혀 배포가 실패한다.
