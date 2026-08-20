@@ -18,7 +18,7 @@ import com.jachwisunbae.common.exception.DomainErrorCode;
 import com.jachwisunbae.property.repository.query.PropertyListItemQuery;
 import com.jachwisunbae.property.repository.query.PropertyProgressSummary;
 import com.jachwisunbae.property.repository.query.PropertyPhotosQuery;
-import com.jachwisunbae.property.controller.dto.response.PropertyChecklistOverviewResponse;
+import com.jachwisunbae.property.repository.query.PropertyChecklistProgressQuery;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -109,12 +109,11 @@ public class PropertyService {
             propertyPhotoRepository.findRepresentativePhotoId(propertyId).orElse(null));
     }
 
-    public PropertyChecklistOverviewResponse findChecklistOverview(final Long memberId, final Long propertyId) {
+    public List<PropertyChecklistProgressQuery> findChecklistOverview(final Long memberId, final Long propertyId) {
         propertyRepository.findByIdAndMemberId(propertyId, memberId)
                 .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND,
                         "매물을 찾을 수 없습니다."));
-        return PropertyChecklistOverviewResponse.from(propertyId,
-                propertyProgressRepository.findByPropertyIdAndStage(propertyId));
+        return propertyProgressRepository.findByPropertyIdAndStage(propertyId);
     }
 
     @Transactional

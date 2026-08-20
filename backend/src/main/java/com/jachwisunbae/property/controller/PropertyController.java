@@ -116,7 +116,8 @@ public class PropertyController {
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
         return ApiResponse.of("매물 체크 현황을 조회했습니다.",
-                propertyService.findChecklistOverview(memberId, propertyId));
+                PropertyChecklistOverviewResponse.from(propertyId,
+                        propertyService.findChecklistOverview(memberId, propertyId)));
     }
 
     @GetMapping("/{propertyId}/memo")
