@@ -26,8 +26,8 @@ ALTER TABLE property_photos
 CREATE TABLE main_property_photos
 (
     id                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    property_id        BIGINT UNSIGNED NOT NULL,
-    property_photos_id BIGINT UNSIGNED NOT NULL,
+    property_id        BIGINT NOT NULL,
+    property_photos_id BIGINT NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT uk_main_property_photos_pair UNIQUE (property_id, property_photos_id),
     CONSTRAINT fk_main_property_photos_property
@@ -52,7 +52,7 @@ CREATE TABLE system_memo_items
 CREATE TABLE property_memos
 (
     id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    property_id BIGINT UNSIGNED NOT NULL,
+    property_id BIGINT NOT NULL,
     free_memo   VARCHAR(2000)   NOT NULL DEFAULT '',
     PRIMARY KEY (id),
     CONSTRAINT uk_property_memos_property UNIQUE (property_id),
@@ -94,7 +94,7 @@ CREATE TABLE system_check_items
 CREATE TABLE user_checklists
 (
     id        BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    member_id BIGINT UNSIGNED NOT NULL,
+    member_id BIGINT NOT NULL,
     name      VARCHAR(50)    NOT NULL,
     stage     VARCHAR(30)    NOT NULL,
     PRIMARY KEY (id),
@@ -125,7 +125,7 @@ CREATE TABLE user_checklist_items
 CREATE TABLE property_checklists
 (
     id                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    property_id       BIGINT UNSIGNED NOT NULL,
+    property_id       BIGINT NOT NULL,
     user_checklist_id BIGINT UNSIGNED NULL,
     checklist_name    VARCHAR(50)    NOT NULL,
     stage             VARCHAR(30)    NOT NULL,
