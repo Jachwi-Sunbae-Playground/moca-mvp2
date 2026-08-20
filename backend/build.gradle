@@ -17,7 +17,7 @@ springBoot {
 	buildInfo {
 		properties {
 			excludes = ['time']
-			additional = [commit: sourceCommitId]
+			additional = [commit: '0000000000000000000000000000000000000000']
 		}
 	}
 }
