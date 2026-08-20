@@ -45,9 +45,8 @@ Skill은 규칙이 아니라 **검토하는 방법과 순서**를 담는다. 컨
 
 | Skill | 만드는 시점 | 담을 내용 |
 | --- | --- | --- |
-| `test-review` | **첫 도메인 테스트를 작성할 때** | [테스트 전략](../../backend/docs/conventions/test-strategy.md)의 6가지 테스트 종류 중 무엇으로 검증할지 정하는 판단 순서. 특히 Service 단위 테스트의 사용·미사용 조건 |
-| `api-design` | **첫 Controller를 구현할 때** | 명세 작성 → 프론트엔드 검토 → 구현 → Swagger 동기화 절차와, [API 컨벤션](../../backend/docs/conventions/api-convention.md)·[예외 컨벤션](../../backend/docs/conventions/exception-convention.md)을 오가는 순서 |
-| `new-domain` | **첫 도메인 패키지를 만들 때** | [패키지 구조](../../backend/docs/architecture/backend-package-structure.md)·레이어 책임·DTO·예외·테스트를 한 번에 훑는 순서 |
+| `api-design` | **첫 Controller를 구현할 때** | 계약 합의 → 프론트엔드 검토 → 구현 → Swagger 동기화 절차와, [API 컨벤션](../../backend/docs/conventions/api-convention.md)·[예외 컨벤션](../../backend/docs/conventions/exception-convention.md)을 오가는 순서 |
+| `new-domain` | **첫 도메인 패키지를 만들 때** | [패키지 구조](../../backend/docs/architecture/backend-package-structure.md)·레이어 책임·DTO·예외를 한 번에 훑는 순서 |
 
 ### 만들지 않는 Skill
 

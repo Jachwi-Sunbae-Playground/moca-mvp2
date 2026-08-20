@@ -22,7 +22,7 @@
 
 ### 목표
 
-외부 사용자가 접근할 수 있도록 백엔드와 프론트엔드를 배포하고([지정 요구사항 2](../../backend/docs/requirements/02-deploy-and-observe.md)), `main` 병합에서 검증·배포까지 자동으로 이어지게 한다. 프론트엔드는 React 19 + TypeScript + Webpack 5(Node 22.23.1)로 이미 개발되어 있으므로 이번 설계의 실행 범위는 백엔드와 프론트엔드 배포, 진입 계층을 모두 포함한다.
+외부 사용자가 접근할 수 있도록 백엔드와 프론트엔드를 배포하고, `main` 병합에서 검증·배포까지 자동으로 이어지게 한다. 프론트엔드는 React 19 + TypeScript + Webpack 5(Node 22.23.1)로 이미 개발되어 있으므로 이번 설계의 실행 범위는 백엔드와 프론트엔드 배포, 진입 계층을 모두 포함한다.
 
 [시스템 개요](../../backend/docs/architecture/system-overview.md)에는 프론트엔드가 "개발 예정"으로 적혀 있으나 실제 `frontend/`에는 코드가 있다. 배포 착수와 함께 해당 문서의 표기를 실제 상태로 맞춘다.
 
@@ -42,7 +42,7 @@
 | 항목 | 결정 | 핵심 이유 |
 | --- | --- | --- |
 | 컴퓨트 | EC2 1대, `t4g.small`, `project-app` 서브넷 | 백엔드 전용. 예산 안에서 JVM에 필요한 메모리(2GB) 확보 |
-| 데이터베이스 | RDS MySQL, `db.t4g.micro`, `project-storage` 서브넷 | 자동 백업·스냅샷이 Flyway 롤백 절차의 "검증된 백업 복구" 전제와 맞음 |
+| 데이터베이스 | RDS MySQL, `db.t4g.micro`, `project-storage` 서브넷 | 자동 백업과 스냅샷으로 데이터 복구 기반을 제공함 |
 | 사진 저장소 | S3 `techcourse-project-2026` 팀 폴더 | 로컬 MinIO와 같은 S3 API 경계([ADR-0006](../../backend/docs/adr/0006-use-private-s3-compatible-photo-storage.md)). EC2 인스턴스 role로 접근 |
 | 프론트 서빙 | S3 + CloudFront | 정적 SPA(React 19/Webpack). CDN 캐싱·백엔드와 분리. 환경변수는 빌드 타임 주입이라 운영 값으로 재빌드 필요 |
 | 진입·HTTPS | ALB + WAF(`techcourse-project-waf`) + ACM | LB에 WAF 연결이 필수. WAF 요금은 팀 예산에서 제외되고 ACM 퍼블릭 인증서는 무료 |
@@ -74,10 +74,10 @@
                         ↓ HTTP
                      EC2(project-app 서브넷, t4g.small)
                      Spring Boot, prod 프로필
-                        ├─ JDBC ─ RDS MySQL(project-storage 서브넷)
-                        ├─ S3 API ─ techcourse-project-2026 버킷(사진)  ← EC2 ec2-project role
+                        ├─ 연동 예정 ─ RDS MySQL(project-storage 서브넷)
+                        ├─ 연동 예정 ─ techcourse-project-2026 버킷(사진)  ← EC2 ec2-project role
                         ├─ /etc/jachwi-sunbae/app.env (운영 비밀, 0600)
-                        └─ HTTPS ─ Google token endpoint·JWK
+                        └─ 연동 예정 ─ Google OAuth
 ```
 
 배포 경로(코드 → 서비스)는 애플리케이션 트래픽과 분리된다.
@@ -85,9 +85,9 @@
 ```text
 GitHub(main 병합)
   → CodePipeline(소스: GitHub 버전 1)
-    → CodeBuild(codebuild-project role) ─ 빌드·테스트 ─ 산출물 → S3 techcourse-project-2026-artifacts
+    → CodeBuild(codebuild-project role) ─ 빌드 ─ 산출물 → S3 techcourse-project-2026-artifacts
     → CodeDeploy(codedeploy-project role) ─ EC2(ec2-project role, CodeDeploy 에이전트)에 배포
-    → 배포 후 Actuator health·smoke test 확인
+    → 배포 후 Actuator health 확인
 ```
 
 ## 4. 구성 요소별 설계
@@ -251,25 +251,20 @@ dnf install -y java-21-amazon-corretto ruby wget
 - 실제 비밀은 저장소·문서·`.env.example`에 커밋하지 않는다는 원칙을 그대로 유지한다.
 - **사용자 데이터에 비밀을 넣지 않는다.** 사용자 데이터는 인스턴스 메타데이터로 노출되어 인스턴스 안의 무엇이든 읽을 수 있다.
 
-| 구분 | 환경변수 |
-| --- | --- |
-| 비밀 | `DB_PASSWORD`, `JWT_SECRET_BASE64`, `GOOGLE_OAUTH_CLIENT_SECRET` |
-| 비밀 아님 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS`, `CORS_ALLOWED_ORIGINS`, `PHOTO_STORAGE_REGION`, `PHOTO_STORAGE_BUCKET` |
+현재 초기화된 백엔드 애플리케이션은 운영 비밀값을 사용하지 않는다. systemd 계약을 유지하기 위해 파일은 빈 상태로 둘 수 있으며, 실제 연동을 추가할 때 필요한 값과 비밀 여부를 다시 정한다.
 
 이 방식의 대가를 분명히 해둔다. 값을 바꾸려면 사람이 서버에 접속해야 하고, 비밀이 서버 디스크에 평문으로 남으며, 인스턴스를 다시 만들면 파일을 다시 만들어야 한다. 이력도 남지 않는다. 대신 파일 권한이 곧 경계이므로 다른 팀이 읽을 수 없다. 팀 전용 비밀 저장소를 쓸 수 있게 되면 다시 판단한다.
 
 **셸 접속이 전제 조건이다.** 이 파일을 두려면 인스턴스에 들어가야 한다. 세션 관리자로 접속되는 것을 확인했다([4.2 컴퓨트](#42-컴퓨트-ec2)).
-
-**사진 저장소 자격증명은 그대로 옮길 수 없다.** 현재 `application.yml`은 `PHOTO_STORAGE_ACCESS_KEY`·`PHOTO_STORAGE_SECRET_KEY`를 필수로 요구하지만, 운영에서는 정적 키를 두지 않고 EC2 인스턴스 role로 접근한다([4.4 사진 저장소](#44-사진-저장소-s3)). `prod` 프로필에서는 이 두 값을 설정 파일에 두지 말고, 기본 자격증명 공급자 체인을 쓰도록 설정을 분기한다. `PHOTO_STORAGE_ENDPOINT`도 MinIO 주소가 아니라 실제 S3 엔드포인트여야 한다.
 
 ## 5. 배포 자동화 파이프라인
 
 액세스 키를 만들 수 없으므로 **AWS 네이티브 파이프라인**으로 구성한다. 모든 단계가 제공된 service role로 동작한다.
 
 1. **소스**: CodePipeline 소스 공급자는 GitHub(버전 1). `main` 병합을 트리거로 한다.
-2. **빌드·검증**: CodeBuild(service role `codebuild-project`)가 Gradle 빌드와 테스트를 실행한다. 산출물은 `techcourse-project-2026-artifacts`에 저장하고, 로그는 CloudWatch 그룹 `/aws/codebuild/project-2026`을 사용한다.
+2. **빌드·검증**: CodeBuild(service role `codebuild-project`)가 Gradle 빌드를 실행한다. 산출물은 `techcourse-project-2026-artifacts`에 저장하고, 로그는 CloudWatch 그룹 `/aws/codebuild/project-2026`을 사용한다.
 3. **배포**: CodeDeploy(service role `codedeploy-project`)가 EC2에 배포한다. EC2에는 CodeDeploy 에이전트가 있고 `ec2-project` role로 산출물을 받는다. `appspec.yml`과 배포 훅 스크립트로 기동·전환을 정의한다.
-4. **배포 후 검증**: 배포 훅에서 Actuator health(`{"status":"UP"}`)와 핵심 smoke test(로그인·매물 조회 등 대표 흐름)를 확인한다. 실패하면 배포를 중단한다.
+4. **배포 후 검증**: 배포 훅에서 Actuator health(`{"status":"UP"}`)를 확인한다. 실패하면 배포를 중단한다.
 
 프론트엔드 파이프라인도 같은 원칙(액세스 키 없이 service role) 위에 구성한다. CodeBuild(Node 22.23.1)가 운영 환경변수로 `npm ci && npm run build`를 수행해 `dist/`를 만들고, 결과를 S3 `techcourse-project-2026` 팀 폴더에 동기화한 뒤 CloudFront 캐시를 무효화한다. 백엔드와 별도 파이프라인으로 두어 한쪽 실패가 다른 쪽 배포를 막지 않게 한다.
 
@@ -277,16 +272,11 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 
 ## 6. 데이터베이스 변경이 포함된 배포
 
-절차는 [배포](../../backend/docs/operations/deployment.md), [데이터베이스 마이그레이션 가이드](../../backend/docs/guides/database-migrations.md), [ADR-0007](../../backend/docs/adr/0007-use-flyway-for-database-migrations.md)이 정본이다. 여기서는 이번 배포 환경에서 달라지는 점만 적는다.
-
-- **첫 배포는 baseline 대상이 아니다.** [배포](../../backend/docs/operations/deployment.md)의 baseline 단계는 pre-Flyway v1.0 DB를 전제한다. 새로 만드는 RDS는 빈 DB이므로 Flyway가 V1부터 최신까지 그대로 적용한다. `baseline-on-migrate`는 상시 설정으로 두지 않는다.
-- **대상 DB 교차 확인의 기준이 생긴다.** 지금까지 로컬 MySQL뿐이었으나 운영 RDS가 추가되므로, 마이그레이션 전 접속 대상이 의도한 RDS인지 확인한다.
-- 이후 DB 변경 배포는 정본 문서의 절차를 그대로 따른다.
+현재 백엔드는 데이터베이스에 연결하지 않으며 마이그레이션 도구를 사용하지 않는다. 데이터베이스 연동과 변경 절차는 실제 구현을 시작할 때 다시 결정한다.
 
 ## 7. 롤백
 
 - 애플리케이션 롤백은 CodeDeploy의 직전 정상 리비전으로 되돌린다. 판단 기준과 승인자는 [롤백](../../backend/docs/operations/rollback.md)을 따른다.
-- 데이터베이스는 자동 down migration을 두지 않는다. 데이터 유입 시점에 따라 검증된 백업 복구 또는 후속 순방향 마이그레이션 중 안전한 방법을 선택한다.
 
 ## 8. 비용 추정
 
