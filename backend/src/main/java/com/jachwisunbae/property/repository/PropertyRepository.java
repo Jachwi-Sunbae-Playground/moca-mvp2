@@ -1,0 +1,19 @@
+package com.jachwisunbae.property.repository;
+
+import com.jachwisunbae.property.repository.query.PropertyListItemQuery;
+import java.util.List;
+import java.util.Optional;
+import com.jachwisunbae.property.entity.Property;
+
+public interface PropertyRepository {
+    List<PropertyListItemQuery> findListByMemberId(long memberId);
+
+    int countByMemberId(long memberId);
+
+    Property save(Property property);
+    Optional<Property> findByIdAndMemberId(long propertyId, long memberId);
+
+    Property update(Property property);
+
+    void deleteById(long propertyId);
+}

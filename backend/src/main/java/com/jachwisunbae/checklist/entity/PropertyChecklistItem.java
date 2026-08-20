@@ -70,10 +70,17 @@ public class PropertyChecklistItem {
     }
 
     private static String validateMemo(final String memo) {
-        String value = memo == null ? "" : memo;
+        String value = defaultMemo(memo);
         DomainPreconditions.require(value.length() <= 500, DomainErrorCode.PROPERTY_CHECK_RESULT_INVALID,
                 "항목 메모는 500자 이하여야 합니다.");
         return value;
+    }
+
+    private static String defaultMemo(final String memo) {
+        if (memo == null) {
+            return "";
+        }
+        return memo;
     }
 
     private static String validateQuestion(final String question) {

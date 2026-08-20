@@ -1,14 +1,13 @@
 package com.jachwisunbae.property.entity;
 
 import lombok.Getter;
-import com.jachwisunbae.common.entity.BaseTimeEntity;
 import com.jachwisunbae.common.exception.DomainErrorCode;
 import com.jachwisunbae.common.validation.DomainPreconditions;
 
 import java.time.LocalDateTime;
 
 @Getter
-public class Property extends BaseTimeEntity {
+public class Property {
 
     private final Long id;
     private final Long memberId;
@@ -19,9 +18,7 @@ public class Property extends BaseTimeEntity {
 
     private Property(final Long id, final Long memberId, final String name,
                      final Long depositAmount, final Long monthlyRentAmount,
-                     final String discoverySource, final LocalDateTime createdAt,
-                     final LocalDateTime updatedAt) {
-        super(createdAt, updatedAt);
+                     final String discoverySource) {
         this.id = id;
         this.memberId = memberId;
         this.name = name;
@@ -31,27 +28,25 @@ public class Property extends BaseTimeEntity {
     }
 
     public static Property create(final Long memberId, final String name, final Long depositAmount,
-                                  final Long monthlyRentAmount, final String discoverySource,
-                                  final LocalDateTime now) {
+                                  final Long monthlyRentAmount,
+                                  final String discoverySource) {
         return new Property(null, validateMemberId(memberId), validateName(name), validateAmount(depositAmount),
-                validateAmount(monthlyRentAmount), validateSource(discoverySource), now, now);
+                validateAmount(monthlyRentAmount), validateSource(discoverySource));
     }
 
     public static Property reconstruct(final Long id, final Long memberId, final String name,
                                        final Long depositAmount, final Long monthlyRentAmount,
-                                       final String discoverySource, final LocalDateTime createdAt,
-                                       final LocalDateTime updatedAt) {
+                                       final String discoverySource) {
         return new Property(id, validateMemberId(memberId), validateName(name), validateAmount(depositAmount),
-                validateAmount(monthlyRentAmount), validateSource(discoverySource), createdAt, updatedAt);
+                validateAmount(monthlyRentAmount), validateSource(discoverySource));
     }
 
     public void replaceBasicInfo(final String name, final Long depositAmount, final Long monthlyRentAmount,
-                                 final String discoverySource, final LocalDateTime now) {
+                                 final String discoverySource) {
         this.name = validateName(name);
         this.depositAmount = validateAmount(depositAmount);
         this.monthlyRentAmount = validateAmount(monthlyRentAmount);
         this.discoverySource = validateSource(discoverySource);
-        updateUpdatedAt(now);
     }
 
     private static Long validateMemberId(final Long memberId) {
@@ -66,7 +61,7 @@ public class Property extends BaseTimeEntity {
 
     private static Long validateAmount(final Long amount) {
         if (amount == null) {
-            return null;
+            return 0L;
         }
         return DomainPreconditions.requireNonNegative(amount, DomainErrorCode.PROPERTY_INPUT_INVALID,
                 "보증금과 월세는 0 이상의 정수여야 합니다.");
@@ -74,7 +69,7 @@ public class Property extends BaseTimeEntity {
 
     private static String validateSource(final String source) {
         if (source == null) {
-            return null;
+            return "";
         }
         DomainPreconditions.require(source.length() <= 500, DomainErrorCode.PROPERTY_INPUT_INVALID,
                 "발견 경로는 500자 이하여야 합니다.");

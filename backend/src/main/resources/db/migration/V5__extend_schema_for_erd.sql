@@ -14,7 +14,10 @@ ALTER TABLE members
 ALTER TABLE properties
     MODIFY COLUMN deposit_amount BIGINT NULL,
     MODIFY COLUMN monthly_rent_amount BIGINT NULL,
-    MODIFY COLUMN discovery_source VARCHAR(500) NULL;
+    MODIFY COLUMN discovery_source VARCHAR(500) NULL,
+    MODIFY COLUMN last_activity_at DATETIME(6) NULL,
+    MODIFY COLUMN created_at DATETIME(6) NULL,
+    MODIFY COLUMN updated_at DATETIME(6) NULL;
 
 ALTER TABLE property_photos
     DROP CHECK ck_property_photos_content_type,

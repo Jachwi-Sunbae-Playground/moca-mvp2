@@ -4,6 +4,7 @@ import com.jachwisunbae.checklist.controller.dto.request.SystemCheckItemSearchRe
 import com.jachwisunbae.checklist.controller.dto.response.SystemCheckItemResponse;
 import com.jachwisunbae.checklist.service.SystemCheckItemService;
 import com.jachwisunbae.common.web.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/check-items")
+@Tag(name = "System check items", description = "시스템 체크 항목 조회 API")
 public class SystemCheckItemController {
 
     private final SystemCheckItemService systemCheckItemService;
@@ -25,8 +27,11 @@ public class SystemCheckItemController {
     @GetMapping
     public ApiResponse<List<SystemCheckItemResponse>> search(
             @Valid @ModelAttribute final SystemCheckItemSearchRequest request) {
-        return ApiResponse.of(systemCheckItemService.search(request.stage(), request.query()).stream()
+        List<SystemCheckItemResponse> response = systemCheckItemService.search(request.stage(), request.query())
+                .stream()
                 .map(SystemCheckItemResponse::from)
-                .toList());
+                .toList();
+
+        return ApiResponse.of(response);
     }
 }

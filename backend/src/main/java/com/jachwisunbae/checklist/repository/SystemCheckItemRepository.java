@@ -8,4 +8,8 @@ import java.util.List;
 public interface SystemCheckItemRepository {
 
     List<SystemCheckItem> findActiveByStage(CheckStage stage, String question);
+
+    List<SystemCheckItem> findActiveCoreByStage(CheckStage stage);
+
+    List<SystemCheckItem> findByIdsInOrder(List<Long> ids);
 }

@@ -34,6 +34,17 @@ public class JdbcMemberRepository implements MemberRepository {
     }
 
     @Override
+    public Optional<Member> findByIdForUpdate(final Long memberId) {
+        String sql = """
+                SELECT id, email, name, created_at, updated_at
+                FROM members
+                WHERE id = ?
+                FOR UPDATE
+                """;
+        return jdbcTemplate.query(sql, memberRowMapper(), memberId).stream().findFirst();
+    }
+
+    @Override
     public Optional<Member> findByEmail(final String email) {
         String sql = """
                 SELECT id, email, name, created_at, updated_at

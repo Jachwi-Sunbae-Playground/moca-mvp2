@@ -35,9 +35,16 @@ public class PropertyMemo {
     }
 
     private static String validateFreeMemo(final String freeMemo) {
-        String value = freeMemo == null ? "" : freeMemo;
+        String value = defaultMemo(freeMemo);
         DomainPreconditions.require(value.length() <= 2000, DomainErrorCode.PROPERTY_MEMO_INVALID,
                 "자유 메모는 2,000자 이하여야 합니다.");
         return value;
+    }
+
+    private static String defaultMemo(final String memo) {
+        if (memo == null) {
+            return "";
+        }
+        return memo;
     }
 }
