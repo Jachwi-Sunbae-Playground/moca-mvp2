@@ -100,6 +100,7 @@ public class UserChecklistService {
     @Transactional
     public void delete(final Long memberId, final long checklistId) {
         findOwnedChecklist(memberId, checklistId);
+        userChecklistRepository.deleteItems(checklistId);
         userChecklistRepository.delete(checklistId);
     }
 
