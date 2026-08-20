@@ -12,7 +12,9 @@ import com.jachwisunbae.property.controller.dto.response.UpdatePropertyResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyMemoResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyPhotoListResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyPhotoResponse;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistOverviewResponse;
 import com.jachwisunbae.property.entity.Property;
+import com.jachwisunbae.property.repository.query.PropertyPhotosQuery;
 import com.jachwisunbae.property.service.PropertyService;
 import com.jachwisunbae.property.service.PropertyMemoService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -83,8 +85,8 @@ public class PropertyController {
     public ApiResponse<PropertyPhotoListResponse> findPhotos(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
-        var query = propertyService.findPhotos(memberId, propertyId);
-        List<PropertyPhotoResponse> items = query.photos().stream()
+        PropertyPhotosQuery query = propertyService.findPhotos(memberId, propertyId);
+        List<PropertyPhotoResponse> items =  query.photos().stream()
                 .map(photo -> PropertyPhotoResponse.from(photo, photo.getId().equals(query.representativePhotoId())))
                 .toList();
         return ApiResponse.of("사진 목록을 조회했습니다.",
@@ -107,6 +109,14 @@ public class PropertyController {
             @PathVariable final Long photoId) {
         propertyService.designateRepresentativePhoto(memberId, propertyId, photoId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{propertyId}/checklists")
+    public ApiResponse<PropertyChecklistOverviewResponse> findChecklistOverview(
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId) {
+        return ApiResponse.of("매물 체크 현황을 조회했습니다.",
+                propertyService.findChecklistOverview(memberId, propertyId));
     }
 
     @GetMapping("/{propertyId}/memo")

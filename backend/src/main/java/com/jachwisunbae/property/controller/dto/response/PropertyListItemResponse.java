@@ -4,7 +4,7 @@ import com.jachwisunbae.property.repository.query.PropertyListItemQuery;
 
 public record PropertyListItemResponse(Long id, String name, Long depositAmount, Long monthlyRentAmount,
                                        String discoverySource, PropertyRepresentativePhoto representativePhoto,
-                                       PropertyProgress progress) {
+                                       PropertyProgress overallProgress) {
     public static PropertyListItemResponse from(final PropertyListItemQuery row) {
         return from(row, null, progressFrom(row));
     }
