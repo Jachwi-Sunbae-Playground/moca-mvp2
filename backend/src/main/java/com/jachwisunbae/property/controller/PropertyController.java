@@ -4,6 +4,10 @@ import com.jachwisunbae.auth.web.AuthenticatedMemberId;
 import com.jachwisunbae.common.web.ApiResponse;
 import com.jachwisunbae.property.controller.dto.request.CreatePropertyRequest;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyRequest;
+import com.jachwisunbae.property.controller.dto.request.ApplyPropertyChecklistRequest;
+import com.jachwisunbae.checklist.service.PropertyChecklistService;
+import com.jachwisunbae.checklist.type.CheckStage;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistApplicationResponse;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyMemoRequest;
 import com.jachwisunbae.property.controller.dto.response.CreatePropertyResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyDetailResponse;
@@ -37,11 +41,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class PropertyController {
     private final PropertyService propertyService;
     private final PropertyMemoService propertyMemoService;
+    private final PropertyChecklistService propertyChecklistService;
 
     public PropertyController(final PropertyService propertyService,
-                              final PropertyMemoService propertyMemoService) {
+                              final PropertyMemoService propertyMemoService,
+                              final PropertyChecklistService propertyChecklistService) {
         this.propertyService = propertyService;
         this.propertyMemoService = propertyMemoService;
+        this.propertyChecklistService = propertyChecklistService;
     }
 
     @GetMapping
@@ -118,6 +125,17 @@ public class PropertyController {
         return ApiResponse.of("매물 체크 현황을 조회했습니다.",
                 PropertyChecklistOverviewResponse.from(propertyId,
                         propertyService.findChecklistOverview(memberId, propertyId)));
+    }
+
+    @PutMapping("/{propertyId}/checklists/{stage}")
+    public ApiResponse<PropertyChecklistApplicationResponse> applyChecklist(
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId,
+            @PathVariable final CheckStage stage,
+            @Valid @RequestBody final ApplyPropertyChecklistRequest request) {
+        return ApiResponse.of("매물 단계 체크리스트를 적용했습니다.",
+                PropertyChecklistApplicationResponse.from(
+                        propertyChecklistService.apply(memberId, propertyId, stage, request)));
     }
 
     @GetMapping("/{propertyId}/memo")
