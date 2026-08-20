@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import logo from '../assets/jachwi-sunbae-logo.png';
 import GoogleIcon from '../components/GoogleIcon';
 import Icon from '../components/ui/Icon';
 import type { PublicConfig } from '../types/PublicConfig';
@@ -49,7 +50,9 @@ const LoginPage = ({ config, storage, navigateExternally }: LoginPageProps) => {
   return (
     <main className={styles.page}>
       <section className={styles.card} aria-labelledby="login-heading">
-        <div className={styles.heroPlaceholder} aria-hidden="true" />
+        <div className={styles.heroLogo}>
+          <img src={logo} alt="자취선배" />
+        </div>
         <header className={styles.brandHeader}>
           <p>처음 방을 보는 날부터, 떠나는 날까지.</p>
           <h1 id="login-heading">자취방 결정 가이드</h1>

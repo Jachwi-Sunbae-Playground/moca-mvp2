@@ -19,20 +19,21 @@
   text-align: left;
 }
 
-.heroPlaceholder {
+.heroLogo {
+  display: grid;
   width: calc(100% + 2rem);
   height: 11rem;
   margin-left: -1rem;
-  background-color: #fff;
-  background-image:
-    linear-gradient(45deg, #e7e3d8 25%, transparent 25%), linear-gradient(-45deg, #e7e3d8 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #e7e3d8 75%), linear-gradient(-45deg, transparent 75%, #e7e3d8 75%);
-  background-position:
-    0 0,
-    0 6px,
-    6px -6px,
-    -6px 0;
-  background-size: 12px 12px;
+  padding: 1.5rem 1.25rem 1rem;
+  background: var(--color-canvas);
+  place-items: center;
+}
+
+.heroLogo img {
+  display: block;
+  width: min(100%, 20rem);
+  height: 100%;
+  object-fit: contain;
 }
 
 .brandHeader p {

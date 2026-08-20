@@ -74,6 +74,7 @@ describe('FE-1 인증 흐름', () => {
   it('비인증 사용자에게 로그인 화면을 표시한다', () => {
     renderRoutes('/login');
 
+    expect(screen.getByRole('img', { name: '자취선배' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '자취방 결정 가이드' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '구글로 로그인하기' })).toBeInTheDocument();
   });
