@@ -26,10 +26,13 @@ import java.util.List;
 import com.jachwisunbae.checklist.controller.dto.request.UpdateUserChecklistRequest;
 import com.jachwisunbae.checklist.type.CheckStage;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api/checklists")
 @Tag(name = "Checklists", description = "사용자 체크리스트 관리 API")
+@SecurityRequirement(name = "bearerAuth")
 public class UserChecklistController {
 
     private final UserChecklistService userChecklistService;
@@ -39,6 +42,8 @@ public class UserChecklistController {
     }
 
     @PostMapping
+    @Operation(summary = "사용자 체크리스트 생성",
+            description = "선택한 단계의 기본 항목과 요청 항목으로 사용자 체크리스트를 생성합니다.")
     public ResponseEntity<ApiResponse<CreateUserChecklistResponse>> create(
             @AuthenticatedMemberId final Long memberId,
             @Valid @RequestBody final CreateUserChecklistRequest request) {
@@ -49,6 +54,7 @@ public class UserChecklistController {
     }
 
     @GetMapping
+    @Operation(summary = "사용자 체크리스트 목록 조회", description = "로그인 회원의 체크리스트를 단계 조건으로 조회합니다.")
     public ApiResponse<UserChecklistListResponse> findAll(
             @AuthenticatedMemberId final Long memberId,
             @RequestParam(required = false) final CheckStage stage) {
@@ -61,6 +67,7 @@ public class UserChecklistController {
     }
 
     @GetMapping("/{checklistId}")
+    @Operation(summary = "사용자 체크리스트 상세 조회", description = "체크리스트와 표시 순서대로 정렬된 항목을 조회합니다.")
     public ApiResponse<CreateUserChecklistResponse> find(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final long checklistId) {
@@ -69,6 +76,7 @@ public class UserChecklistController {
     }
 
     @PutMapping("/{checklistId}")
+    @Operation(summary = "사용자 체크리스트 전체 수정", description = "이름과 전체 항목 및 표시 순서를 교체합니다.")
     public ApiResponse<CreateUserChecklistResponse> update(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final long checklistId,
@@ -79,6 +87,7 @@ public class UserChecklistController {
     }
 
     @DeleteMapping("/{checklistId}")
+    @Operation(summary = "사용자 체크리스트 삭제", description = "항목을 먼저 삭제한 후 사용자 체크리스트를 삭제합니다.")
     public ResponseEntity<Void> delete(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final long checklistId) {

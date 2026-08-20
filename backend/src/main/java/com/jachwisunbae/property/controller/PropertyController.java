@@ -31,6 +31,7 @@ import com.jachwisunbae.property.service.PropertyPhotoService;
 import com.jachwisunbae.property.service.PropertyDeletionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -48,6 +49,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/properties")
 @Tag(name = "Properties", description = "후보 매물 관리 API")
+@SecurityRequirement(name = "bearerAuth")
 public class PropertyController {
     private final PropertyService propertyService;
     private final PropertyMemoService propertyMemoService;
@@ -68,11 +70,13 @@ public class PropertyController {
     }
 
     @GetMapping
+    @Operation(summary = "매물 목록 조회", description = "로그인 회원의 매물과 대표 사진 및 전체 체크 진행 현황을 조회합니다.")
     public ApiResponse<PropertyListResponse> findList(@AuthenticatedMemberId final Long memberId) {
         return ApiResponse.of("매물 목록을 조회했습니다.", propertyService.findList(memberId));
     }
 
     @PostMapping
+    @Operation(summary = "매물 생성", description = "후보 매물을 생성합니다. 회원당 최대 30개까지 등록할 수 있습니다.")
     public ResponseEntity<ApiResponse<CreatePropertyResponse>> create(
             @AuthenticatedMemberId final Long memberId,
             @Valid @RequestBody final CreatePropertyRequest request) {
@@ -82,12 +86,14 @@ public class PropertyController {
     }
 
     @GetMapping("{propertyId}")
+    @Operation(summary = "매물 상세 조회", description = "매물 기본 정보와 사진 및 전체 체크 진행 현황을 조회합니다.")
     public ApiResponse<PropertyDetailResponse> findDetail(@AuthenticatedMemberId final Long memberId, @PathVariable final Long propertyId) {
         return ApiResponse.of("매물 상세 정보를 조회했습니다.",
                 propertyService.findDetail(memberId, propertyId));
     }
 
     @PutMapping("{propertyId}")
+    @Operation(summary = "매물 기본 정보 수정", description = "매물 이름과 금액 및 발견 경로를 전체 수정합니다.")
     public ApiResponse<UpdatePropertyResponse> update(
         @AuthenticatedMemberId final Long memberId,
         @PathVariable final Long propertyId,
@@ -97,6 +103,7 @@ public class PropertyController {
     }
 
     @DeleteMapping("/{propertyId}")
+    @Operation(summary = "매물 삭제", description = "메모·체크리스트·사진 메타데이터를 포함한 매물 종속 데이터를 삭제합니다.")
     public ResponseEntity<Void> delete(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
@@ -105,6 +112,7 @@ public class PropertyController {
     }
 
     @GetMapping("/{propertyId}/photos")
+    @Operation(summary = "매물 사진 목록 조회", description = "업로드 시각과 사진 ID 순서로 사진 목록을 조회합니다.")
     public ApiResponse<PropertyPhotoListResponse> findPhotos(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
@@ -117,6 +125,7 @@ public class PropertyController {
     }
 
     @DeleteMapping("/{propertyId}/photos/{photoId}")
+    @Operation(summary = "매물 사진 삭제", description = "매물에 속한 사진을 삭제하고 필요한 경우 대표 사진을 다시 지정합니다.")
     public ResponseEntity<Void> deletePhoto(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId,
@@ -126,6 +135,7 @@ public class PropertyController {
     }
 
     @PutMapping("/{propertyId}/photos/{photoId}/representative")
+    @Operation(summary = "대표 사진 지정", description = "매물에 속한 사진을 대표 사진으로 지정합니다.")
     public ResponseEntity<Void> designateRepresentativePhoto(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId,
@@ -135,6 +145,7 @@ public class PropertyController {
     }
 
     @GetMapping("/{propertyId}/checklists")
+    @Operation(summary = "매물 체크 현황 조회", description = "세 단계의 적용 여부와 단계별·전체 진행 현황을 조회합니다.")
     public ApiResponse<PropertyChecklistOverviewResponse> findChecklistOverview(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
@@ -156,6 +167,8 @@ public class PropertyController {
     }
 
     @PutMapping("/{propertyId}/checklists/{stage}")
+    @Operation(summary = "매물 단계 체크리스트 적용 또는 교체",
+            description = "사용자 체크리스트를 스냅샷으로 적용하고 공통 항목의 상태와 메모를 승계합니다.")
     public ApiResponse<PropertyChecklistApplicationResponse> applyChecklist(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId,
@@ -194,6 +207,7 @@ public class PropertyController {
     }
 
     @GetMapping("/{propertyId}/memo")
+    @Operation(summary = "매물 메모 조회", description = "구조화 메모 항목과 자유 메모를 조회합니다.")
     public ApiResponse<PropertyMemoResponse> findMemo(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
@@ -202,6 +216,7 @@ public class PropertyController {
     }
 
     @PostMapping("/{propertyId}/memo")
+    @Operation(summary = "매물 메모 초기 생성", description = "활성 시스템 메모 항목을 빈 내용의 스냅샷으로 생성합니다.")
     public ApiResponse<PropertyMemoResponse> initializeMemo(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
@@ -210,6 +225,7 @@ public class PropertyController {
     }
 
     @PutMapping("/{propertyId}/memo")
+    @Operation(summary = "매물 메모 저장", description = "구조화 메모 내용과 자유 메모를 하나의 트랜잭션으로 저장합니다.")
     public ApiResponse<PropertyMemoResponse> updateMemo(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId,
