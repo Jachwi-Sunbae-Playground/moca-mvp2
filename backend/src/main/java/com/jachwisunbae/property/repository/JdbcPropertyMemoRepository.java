@@ -29,23 +29,19 @@ public class JdbcPropertyMemoRepository implements PropertyMemoRepository {
     @Override
     public PropertyMemoQuery findQuery(final long propertyId) {
         String sql = """
-                SELECT ? AS property_id, pm.id AS property_memo_id, pm.free_memo,
+                SELECT pm.property_id, pm.free_memo,
                        pmi.id AS property_memo_item_id,
-                       sm.id AS system_memo_item_id,
-                       COALESCE(pmi.label, sm.label) AS label,
-                       COALESCE(pmi.display_order, sm.display_order) AS display_order,
-                       COALESCE(pmi.content, '') AS content
-                FROM system_memo_items sm
-                LEFT JOIN property_memos pm ON pm.property_id = ?
-                LEFT JOIN property_memo_items pmi
-                    ON pmi.property_memo_id = pm.id AND pmi.system_meno_id = sm.id
-                WHERE sm.deleted_at IS NULL
-                ORDER BY sm.display_order, sm.id
+                       pmi.system_meno_id AS system_memo_item_id,
+                       pmi.label, pmi.display_order, pmi.content
+                FROM property_memos pm
+                JOIN property_memo_items pmi ON pmi.property_memo_id = pm.id
+                WHERE pm.property_id = ?
+                ORDER BY pmi.display_order, pmi.id
                 """;
-        List<PropertyMemoItemQuery> items = jdbcTemplate.query(sql, rowMapper, propertyId, propertyId);
-        String freeMemo = jdbcTemplate.query("SELECT free_memo FROM property_memos WHERE property_id = ?",
-                (rs, rowNum) -> rs.getString("free_memo"), propertyId).stream().findFirst().orElse("");
-        return new PropertyMemoQuery(propertyId, freeMemo, items);
+        List<PropertyMemoItemQuery> items = jdbcTemplate.query(sql, rowMapper, propertyId);
+        String freeMemo = items.isEmpty() ? "" : jdbcTemplate.queryForObject(
+                "SELECT free_memo FROM property_memos WHERE property_id = ?", String.class, propertyId);
+        return new PropertyMemoQuery(propertyId, freeMemo == null ? "" : freeMemo, items);
     }
 
     @Override
