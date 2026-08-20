@@ -8,6 +8,8 @@ group = 'com.jachwisunbae'
 version = '0.0.1-SNAPSHOT'
 description = 'Jachwi Sunbae backend application'
 
+def flywayVersion = '13.0.0'
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
@@ -19,8 +21,40 @@ repositories {
 }
 
 dependencies {
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'com.nimbusds:nimbus-jose-jwt:10.9'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation "org.flywaydb:flyway-core:${flywayVersion}"
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.9.0'
+	implementation platform('software.amazon.awssdk:bom:2.41.24')
+	implementation 'software.amazon.awssdk:s3'
+	implementation 'com.twelvemonkeys.imageio:imageio-webp:3.13.1'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly "org.flywaydb:flyway-mysql:${flywayVersion}"
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.testcontainers:mysql'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'com.google.api-client:google-api-client:2.8.1'
+}
+
+tasks.named('test') {
+	useJUnitPlatform {
+		excludeTags 'acceptance'
+	}
+}
+
+tasks.register('testAll', Test) {
+	group = 'verification'
+	description = '인수 테스트를 포함한 모든 테스트를 실행한다.'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform()
 }
