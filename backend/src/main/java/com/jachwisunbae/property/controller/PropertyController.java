@@ -10,12 +10,15 @@ import com.jachwisunbae.property.controller.dto.response.PropertyDetailResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyListResponse;
 import com.jachwisunbae.property.controller.dto.response.UpdatePropertyResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyMemoResponse;
+import com.jachwisunbae.property.controller.dto.response.PropertyPhotoListResponse;
+import com.jachwisunbae.property.controller.dto.response.PropertyPhotoResponse;
 import com.jachwisunbae.property.entity.Property;
 import com.jachwisunbae.property.service.PropertyService;
 import com.jachwisunbae.property.service.PropertyMemoService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -73,6 +76,27 @@ public class PropertyController {
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
         propertyService.delete(memberId, propertyId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{propertyId}/photos")
+    public ApiResponse<PropertyPhotoListResponse> findPhotos(
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId) {
+        var query = propertyService.findPhotos(memberId, propertyId);
+        List<PropertyPhotoResponse> items = query.photos().stream()
+                .map(photo -> PropertyPhotoResponse.from(photo, photo.getId().equals(query.representativePhotoId())))
+                .toList();
+        return ApiResponse.of("사진 목록을 조회했습니다.",
+                new PropertyPhotoListResponse(query.propertyId(), items.size(), items));
+    }
+
+    @DeleteMapping("/{propertyId}/photos/{photoId}")
+    public ResponseEntity<Void> deletePhoto(
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId,
+            @PathVariable final Long photoId) {
+        propertyService.deletePhoto(memberId, propertyId, photoId);
         return ResponseEntity.noContent().build();
     }
 

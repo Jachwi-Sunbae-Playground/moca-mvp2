@@ -34,6 +34,7 @@ public class DomainErrorHttpMapper {
                     CHECKLIST_NOT_FOUND,
                     CHECKLIST_ITEM_NOT_FOUND,
                     PROPERTY_NOT_FOUND,
+                    PHOTO_NOT_FOUND,
                     PROPERTY_CHECKLIST_NOT_FOUND,
                     PROPERTY_CHECKLIST_ITEM_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case ACCESS_TOKEN_INVALID,
