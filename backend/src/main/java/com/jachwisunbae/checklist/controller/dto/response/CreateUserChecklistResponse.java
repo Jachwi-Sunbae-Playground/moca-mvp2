@@ -35,8 +35,7 @@ public record CreateUserChecklistResponse(
         return new CreateUserChecklistResponse(
                 checklist.getId(), checklist.getName(), checklist.getStage(), details.size(),
                 details.stream()
-                        .map(detail -> UserChecklistItemResponse.from(
-                                detail.getItem(), detail.getSystemCheckItem()))
+                        .map(detail -> UserChecklistItemResponse.from(detail.getItem()))
                         .toList());
     }
 }

@@ -137,7 +137,7 @@ public class UserChecklistService {
                                                 final List<SystemCheckItem> systemItems) {
         List<UserChecklistItem> items = new ArrayList<>();
         for (int index = 0; index < systemItems.size(); index++) {
-            items.add(UserChecklistItem.create(checklistId, systemItems.get(index).getId(), index + 1));
+            items.add(UserChecklistItem.create(checklistId, systemItems.get(index), index + 1));
         }
         return items;
     }

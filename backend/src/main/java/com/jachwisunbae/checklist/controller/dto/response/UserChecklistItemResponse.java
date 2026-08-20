@@ -20,4 +20,9 @@ public record UserChecklistItemResponse(
                 item.getDisplayOrder(),
                 systemCheckItem.getDeletedAt() == null);
     }
+
+    public static UserChecklistItemResponse from(final UserChecklistItem item) {
+        return new UserChecklistItemResponse(item.getSystemCheckItemId(), item.getItemType(),
+                item.getQuestion(), item.getDisplayOrder(), true);
+    }
 }

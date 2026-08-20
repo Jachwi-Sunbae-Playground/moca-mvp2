@@ -2,7 +2,6 @@ package com.jachwisunbae.checklist.repository;
 
 import com.jachwisunbae.checklist.entity.UserChecklist;
 import com.jachwisunbae.checklist.entity.UserChecklistItem;
-import com.jachwisunbae.checklist.entity.SystemCheckItem;
 import com.jachwisunbae.checklist.repository.query.UserChecklistItemDetail;
 import com.jachwisunbae.checklist.type.CheckStage;
 import com.jachwisunbae.checklist.type.CheckItemType;
@@ -27,14 +26,14 @@ public class JdbcUserChecklistRepository implements UserChecklistRepository {
             CheckStage.valueOf(rs.getString("stage")));
     private final RowMapper<UserChecklistItem> itemRowMapper = (rs, row) -> UserChecklistItem.reconstruct(
             rs.getLong("id"), rs.getLong("user_checklist_id"),
-            rs.getLong("system_check_item_id"), rs.getInt("display_order"));
+            rs.getLong("system_check_item_id"), CheckStage.valueOf(rs.getString("stage")),
+            CheckItemType.valueOf(rs.getString("item_type")), rs.getString("question"),
+            rs.getInt("display_order"));
     private final RowMapper<UserChecklistItemDetail> itemDetailRowMapper = (rs, row) ->
-            new UserChecklistItemDetail(
-                    UserChecklistItem.reconstruct(rs.getLong("id"), rs.getLong("user_checklist_id"),
-                            rs.getLong("system_check_item_id"), rs.getInt("display_order")),
-                    SystemCheckItem.reconstruct(rs.getLong("s_id"), CheckStage.valueOf(rs.getString("stage")),
-                            CheckItemType.valueOf(rs.getString("item_type")), rs.getString("question"),
-                            deletedAt(rs.getTimestamp("deleted_at"))));
+            new UserChecklistItemDetail(UserChecklistItem.reconstruct(rs.getLong("id"),
+                    rs.getLong("user_checklist_id"), rs.getLong("system_check_item_id"),
+                    CheckStage.valueOf(rs.getString("stage")), CheckItemType.valueOf(rs.getString("item_type")),
+                    rs.getString("question"), rs.getInt("display_order")));
 
     public JdbcUserChecklistRepository(final JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -63,13 +62,16 @@ public class JdbcUserChecklistRepository implements UserChecklistRepository {
     public void saveItems(final long checklistId, final List<UserChecklistItem> items) {
         String sql = """
                 INSERT INTO user_checklist_items
-                    (user_checklist_id, system_check_item_id, display_order)
-                VALUES (?, ?, ?)
+                    (user_checklist_id, system_check_item_id, stage, item_type, question, display_order)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """;
         List<Object[]> parameters = items.stream()
                 .map(item -> new Object[]{
                         checklistId,
                         item.getSystemCheckItemId(),
+                        item.getStage().name(),
+                        item.getItemType().name(),
+                        item.getQuestion(),
                         item.getDisplayOrder()
                 })
                 .toList();
@@ -110,7 +112,7 @@ public class JdbcUserChecklistRepository implements UserChecklistRepository {
     @Override
     public List<UserChecklistItem> findItems(final long checklistId) {
         String sql = """
-                SELECT id, user_checklist_id, system_check_item_id, display_order
+                SELECT id, user_checklist_id, system_check_item_id, stage, item_type, question, display_order
                 FROM user_checklist_items WHERE user_checklist_id = ? ORDER BY display_order
                 """;
         return jdbcTemplate.query(sql, itemRowMapper, checklistId);
@@ -119,12 +121,10 @@ public class JdbcUserChecklistRepository implements UserChecklistRepository {
     @Override
     public List<UserChecklistItemDetail> findItemDetails(final long checklistId) {
         String sql = """
-                SELECT u.id, u.user_checklist_id, u.system_check_item_id, u.display_order,
-                       s.id AS s_id, s.stage, s.item_type, s.question, s.deleted_at
-                FROM user_checklist_items u
-                JOIN system_check_items s ON s.id = u.system_check_item_id
-                WHERE u.user_checklist_id = ?
-                ORDER BY u.display_order
+                SELECT id, user_checklist_id, system_check_item_id, stage, item_type, question, display_order
+                FROM user_checklist_items
+                WHERE user_checklist_id = ?
+                ORDER BY display_order
                 """;
         return jdbcTemplate.query(sql, itemDetailRowMapper, checklistId);
     }
