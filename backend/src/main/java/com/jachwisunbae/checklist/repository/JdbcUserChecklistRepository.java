@@ -113,7 +113,9 @@ public class JdbcUserChecklistRepository implements UserChecklistRepository {
     public List<UserChecklistItem> findItems(final long checklistId) {
         String sql = """
                 SELECT id, user_checklist_id, system_check_item_id, stage, item_type, question, display_order
-                FROM user_checklist_items WHERE user_checklist_id = ? ORDER BY display_order
+                FROM user_checklist_items
+                WHERE user_checklist_id = ?
+                ORDER BY display_order ASC, id ASC
                 """;
         return jdbcTemplate.query(sql, itemRowMapper, checklistId);
     }
@@ -124,7 +126,7 @@ public class JdbcUserChecklistRepository implements UserChecklistRepository {
                 SELECT id, user_checklist_id, system_check_item_id, stage, item_type, question, display_order
                 FROM user_checklist_items
                 WHERE user_checklist_id = ?
-                ORDER BY display_order
+                ORDER BY display_order ASC, id ASC
                 """;
         return jdbcTemplate.query(sql, itemDetailRowMapper, checklistId);
     }
