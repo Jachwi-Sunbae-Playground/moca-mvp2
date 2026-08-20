@@ -117,6 +117,7 @@ public class PropertyService {
         propertyRepository.findByIdAndMemberId(propertyId, memberId)
                 .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND,
                         "매물을 찾을 수 없습니다."));
+        propertyRepository.deleteRelatedData(propertyId);
         propertyRepository.deleteById(propertyId);
     }
 }
