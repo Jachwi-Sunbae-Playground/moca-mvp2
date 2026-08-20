@@ -14,14 +14,23 @@ develop 병합                          main 병합
   → jachwi-sunbae-dev-web-line          → jachwi-sunbae-web-line
     → Commands 액션                       → Commands 액션
         npm ci && npm run build               npm ci && npm run build
-        s3 sync → jachwi-sunbae/web-dev/      s3 sync → jachwi-sunbae/web/
-        무효화 → ETE1HH7V9K0PO                무효화 → E3LI41UZ24V9WD
+        publish.sh dev                       publish.sh prod
+          → S3 sync                            → S3 sync
+          → index.html 무효화·완료 대기         → index.html 무효화·완료 대기
+          → 실제 번들 파일명 확인               → 실제 번들 파일명 확인
   → dev CloudFront                      → prod CloudFront
 ```
 
 백엔드와 **별도 파이프라인**이다. 한쪽 실패가 다른 쪽 배포를 막지 않는다. 환경끼리도 별도다.
 
-두 파이프라인은 같은 명령을 쓰고 **마지막 두 줄만 다르다.** 배포 대상 경로와 CloudFront 배포 ID다.
+두 파이프라인은 같은 빌드 명령을 쓰고 마지막 배포 명령의 환경 인자만 다르다.
+
+```bash
+./frontend/deploy/publish.sh dev
+./frontend/deploy/publish.sh prod
+```
+
+스크립트가 환경별 S3 경로, CloudFront 배포 ID, 서비스 URL의 조합을 고정한다. 세 값을 콘솔에 각각 적지 않아 환경끼리 섞이는 설정을 줄인다.
 
 **`s3 sync`의 대상 경로를 틀리면 상대 환경을 덮어쓴다.** `--delete`가 붙어 있어 dev 빌드가 prod 사이트를 통째로 바꿔버린다. 이 한 줄이 가장 위험한 지점이다.
 
@@ -76,6 +85,23 @@ assets/jachwi-sunbae-logo.2e4dac46707736dbc407.png
 
 개발 빌드에는 해시를 붙이지 않는다. 파일명이 매번 바뀌면 dev-server의 HMR이 불편하다.
 
+## 배포 성공 판정
+
+`aws cloudfront create-invalidation`이 성공한 것만으로 배포 성공을 판정하지 않는다. `publish.sh`는 다음 순서를 모두 통과해야 성공한다.
+
+1. 빌드된 `dist/index.html`이 있는지 확인한다.
+2. S3의 환경별 경로에 `sync --delete`로 업로드한다.
+3. `/index.html` 무효화를 만들고 `invalidation-completed`까지 기다린다.
+4. 서비스 URL에서 `index.html`을 다시 받는다.
+5. 로컬 `dist/index.html`이 참조하는 모든 JS·CSS 파일명이 서비스 응답에도 있는지 비교한다.
+
+옛 `index.html`이 응답하면 새 번들 파일명이 없으므로 Commands 액션이 실패한다. 검증만 다시 실행할 때는 다음 명령을 쓴다.
+
+```bash
+./frontend/deploy/verify-deployment.sh frontend/dist/index.html https://dev.jachwi-sunbae.kr/index.html
+./frontend/deploy/verify-deployment.sh frontend/dist/index.html https://www.jachwi-sunbae.kr/index.html
+```
+
 ## SPA 폴백
 
 react-router의 클라이언트 라우팅을 쓴다. `/properties/1` 같은 경로는 S3에 실제 객체가 없으므로, CloudFront에서 403·404 응답을 `/index.html`(상태 200)로 매핑해야 한다.
@@ -95,7 +121,7 @@ curl -I https://www.jachwi-sunbae.kr
 curl -I https://www.jachwi-sunbae.kr/properties
 ```
 
-둘 다 200이어야 한다. 두 번째가 404면 SPA 폴백이 빠진 것이다.
+둘 다 200이어야 한다. 두 번째가 404면 SPA 폴백이 빠진 것이다. 이 확인은 접근 가능성과 SPA 폴백을 보는 smoke test이며, 이번 번들 여부는 `verify-deployment.sh`가 판정한다.
 
 ## 실제 구성
 

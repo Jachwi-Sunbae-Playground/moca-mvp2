@@ -47,7 +47,7 @@
 | 프론트 서빙 | S3 + CloudFront | 정적 SPA(React 19/Webpack). CDN 캐싱·백엔드와 분리. 환경변수는 빌드 타임 주입이라 운영 값으로 재빌드 필요 |
 | 진입·HTTPS | ALB + WAF(`techcourse-project-waf`) + ACM | LB에 WAF 연결이 필수. WAF 요금은 팀 예산에서 제외되고 ACM 퍼블릭 인증서는 무료 |
 | 도메인 | 가비아에서 구매한 `jachwi-sunbae.kr` | DNS 검증과 레코드는 가비아 DNS에서 설정 |
-| 배포 자동화 | CodePipeline + CodeBuild + CodeDeploy | 액세스 키 없이 제공된 service role로 배포 |
+| 배포 자동화 | CodePipeline `Commands` + CodeDeploy | 액세스 키 없이 제공된 service role로 배포 |
 | 비밀 관리 | EC2 로컬 설정 파일(`0600`) + CodeDeploy 훅 | 액세스 키를 만들 수 없고, SSM Parameter Store는 계정 전체가 한 범위라 팀 간 격리가 되지 않음 |
 
 확정된 식별자는 다음과 같다. 팀 서비스 영문명은 도메인과 맞춰 `jachwi-sunbae`로 두고 태그·S3 폴더명·설정 경로에 일관되게 쓴다.
@@ -80,14 +80,16 @@
                         └─ 연동 예정 ─ Google OAuth
 ```
 
-배포 경로(코드 → 서비스)는 애플리케이션 트래픽과 분리된다.
+배포 경로(코드 → 서비스)는 애플리케이션 트래픽과 분리된다. 상세 명령과 훅은 [백엔드 배포](../../backend/docs/operations/deployment.md)와 [프론트엔드 배포](../../frontend/docs/deployment.md)가 정본이다.
 
 ```text
-GitHub(main 병합)
-  → CodePipeline(소스: GitHub 버전 1)
-    → CodeBuild(codebuild-project role) ─ 빌드 ─ 산출물 → S3 techcourse-project-2026-artifacts
-    → CodeDeploy(codedeploy-project role) ─ EC2(ec2-project role, CodeDeploy 에이전트)에 배포
-    → 배포 후 Actuator health 확인
+PR → GitHub Actions 필수 검사 → 보호 브랜치 병합
+  ├─ develop → dev 파이프라인
+  └─ main    → prod 파이프라인
+       ├─ 백엔드 Commands ─ jar 빌드(-x test) ─ CodeDeploy
+       │    └─ Actuator health와 소스 SHA 확인
+       └─ 프론트 Commands ─ build ─ S3 sync ─ CloudFront 무효화 완료
+            └─ 실제 index.html의 번들 파일명 확인
 ```
 
 ## 4. 구성 요소별 설계
@@ -204,7 +206,7 @@ dnf install -y java-21-amazon-corretto ruby wget
 - CloudFront OAC는 인프라 안내가 지정한 `techcourse-project-2026.s3.ap-northeast-2.amazonaws.com`을 origin으로 사용한다.
 - 캐시는 Policy를 새로 만들지 않는다. 새 콘솔에는 레거시 캐시 설정 항목이 없어 관리형 정책 `CachingOptimized`를 쓴다. 관리형이므로 새 정책을 만들지 않는다는 안내의 의도에 맞는다. 기본 TTL이 24시간이라 이름이 고정인 `index.html`은 배포마다 무효화한다.
 - **SPA 폴백**: react-router 클라이언트 라우팅이므로 CloudFront에서 403·404 응답을 `/index.html`(200)로 매핑해 새로고침·딥링크가 깨지지 않게 한다. Google 콜백 경로 `/oauth/google/callback`도 프론트 라우트다.
-- **환경변수는 빌드 타임에 주입된다.** `webpack.config.js`의 `DefinePlugin`이 `API_BASE_URL`·`GOOGLE_CLIENT_ID`·`GOOGLE_REDIRECT_URI`를 번들에 박아넣는다. 런타임 설정이 아니므로 운영 배포는 CodeBuild가 운영 값(`API_BASE_URL=https://api.<도메인>`, `GOOGLE_REDIRECT_URI=https://www.<도메인>/oauth/google/callback`)으로 **다시 빌드**해야 한다. 이 값들은 CodeBuild 프로젝트의 환경변수로 전달한다. 어차피 번들에 박혀 공개되는 값이므로 비밀이 아니다.
+- **환경변수는 빌드 타임에 주입된다.** `webpack.config.js`의 `DefinePlugin`이 `API_BASE_URL`·`GOOGLE_CLIENT_ID`·`GOOGLE_REDIRECT_URI`를 번들에 박아넣는다. 런타임 설정이 아니므로 운영 배포는 CodePipeline `Commands` 액션이 운영 값(`API_BASE_URL=https://api.<도메인>`, `GOOGLE_REDIRECT_URI=https://www.<도메인>/oauth/google/callback`)으로 **다시 빌드**해야 한다. 이 값들은 액션의 실행 환경변수로 전달한다. 어차피 번들에 박혀 공개되는 값이므로 비밀이 아니다.
 - **캐시 무효화는 `contenthash`로 한다.** 운영 빌드의 파일명에 해시를 붙여 내용이 바뀌면 파일명이 바뀌게 한다. 배포마다 전체 무효화(`/*`)를 걸 필요가 없고, 이름이 고정인 `index.html`만 무효화하면 나머지는 자동으로 새 파일을 가리킨다. 개발 빌드에는 붙이지 않는다.
 - **CloudFront origin path를 `/jachwi-sunbae/web`으로 지정한다.** 같은 버킷의 `jachwi-sunbae/` 아래에 비공개 사진 객체가 있다. origin path를 비워 두면 CloudFront가 버킷 전체를 공개해 사진이 인증 없이 노출된다.
 - 절차는 [프론트엔드 배포](../../frontend/docs/deployment.md)에 있다.
@@ -261,14 +263,15 @@ dnf install -y java-21-amazon-corretto ruby wget
 
 액세스 키를 만들 수 없으므로 **AWS 네이티브 파이프라인**으로 구성한다. 모든 단계가 제공된 service role로 동작한다.
 
-1. **소스**: CodePipeline 소스 공급자는 GitHub(버전 1). `main` 병합을 트리거로 한다.
-2. **빌드·검증**: CodeBuild(service role `codebuild-project`)가 Gradle 빌드를 실행한다. 산출물은 `techcourse-project-2026-artifacts`에 저장하고, 로그는 CloudWatch 그룹 `/aws/codebuild/project-2026`을 사용한다.
-3. **배포**: CodeDeploy(service role `codedeploy-project`)가 EC2에 배포한다. EC2에는 CodeDeploy 에이전트가 있고 `ec2-project` role로 산출물을 받는다. `appspec.yml`과 배포 훅 스크립트로 기동·전환을 정의한다.
-4. **배포 후 검증**: 배포 훅에서 Actuator health(`{"status":"UP"}`)를 확인한다. 실패하면 배포를 중단한다.
+1. **병합 전 검증**: `main`과 `develop`의 보호 규칙이 GitHub Actions의 백엔드·프론트엔드·문서 검사를 필수로 요구한다.
+2. **소스**: CodePipeline 소스 공급자는 GitHub(버전 1). `main`은 prod, `develop`은 dev 파이프라인을 트리거한다.
+3. **백엔드 빌드**: CodePipeline `Commands`가 테스트를 제외하고 jar를 만든다. GitHub Actions에서 이미 검사한 커밋만 병합되므로 테스트를 반복하지 않는다. 소스 SHA는 jar의 build-info와 배포 리비전 파일에 함께 기록한다.
+4. **백엔드 배포·검증**: CodeDeploy가 EC2에 배포한다. `appspec.yml`과 훅 스크립트가 프로세스를 재시작하고 Actuator health와 실행 중인 소스 SHA를 확인한다.
+5. **프론트엔드 배포·검증**: 별도 `Commands` 액션이 빌드 결과를 환경별 S3 경로에 동기화한다. CloudFront `index.html` 무효화가 끝난 뒤 실제 응답이 이번 번들 파일명을 참조하는지 확인한다.
 
-프론트엔드 파이프라인도 같은 원칙(액세스 키 없이 service role) 위에 구성한다. CodeBuild(Node 22.23.1)가 운영 환경변수로 `npm ci && npm run build`를 수행해 `dist/`를 만들고, 결과를 S3 `techcourse-project-2026` 팀 폴더에 동기화한 뒤 CloudFront 캐시를 무효화한다. 백엔드와 별도 파이프라인으로 두어 한쪽 실패가 다른 쪽 배포를 막지 않게 한다.
+네 파이프라인은 제공된 CodePipeline service role로 동작한다. 백엔드와 프론트엔드를 별도 파이프라인으로 두어 한쪽 실패가 다른 쪽 배포를 막지 않게 한다.
 
-PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고, 배포용 빌드는 CodeBuild가 맡는다. 두 경계를 구분해 유지한다.
+PR 검증은 GitHub Actions가 맡고 배포용 산출물 생성과 실제 서비스 검증은 CodePipeline이 맡는다. 두 경계를 보호 규칙과 배포 리비전 비교로 연결한다.
 
 ## 6. 데이터베이스 변경이 포함된 배포
 
@@ -276,7 +279,7 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 
 ## 7. 롤백
 
-- 애플리케이션 롤백은 CodeDeploy의 직전 정상 리비전으로 되돌린다. 판단 기준과 승인자는 [롤백](../../backend/docs/operations/rollback.md)을 따른다.
+- 애플리케이션 자동 롤백은 CodePipeline 스테이지가 직전 정상 실행을 다시 배포한다. 롤백 실행의 초록불 뒤에도 실제 `/actuator/info`가 직전 정상 SHA를 반환해야 완료다. 판단 기준과 검증 절차는 [롤백](../../backend/docs/operations/rollback.md)을 따른다.
 
 ## 8. 비용 추정
 
@@ -311,7 +314,7 @@ PR 검증은 기존 GitHub Actions(`.github/workflows/backend-ci.yml`)가 맡고
 
 | 결정 | 채택 | 검토한 대안 | 채택하지 않은 이유 |
 | --- | --- | --- | --- |
-| 배포 자동화 | CodePipeline+CodeBuild+CodeDeploy | GitHub Actions self-hosted runner를 EC2에 설치 | 셋업은 더 단순하나, 팀이 AWS 네이티브 CI/CD 학습을 자율 요구사항으로 가져갈 수 있어 학습 가치가 큰 쪽을 택함. 러너 방식은 축소 대안으로 유지 |
+| 배포 자동화 | CodePipeline `Commands`+CodeDeploy | GitHub Actions self-hosted runner를 EC2에 설치 | 셋업은 더 단순하나, 팀이 AWS 네이티브 CI/CD 학습을 자율 요구사항으로 가져갈 수 있어 학습 가치가 큰 쪽을 택함. 러너 방식은 축소 대안으로 유지 |
 | 데이터베이스 | RDS MySQL | EC2에 MySQL 직접 설치 | 비용은 낮으나 백업·복구·운영 부담이 크고, 롤백 절차의 백업 복구 전제와 맞지 않음 |
 | 비밀 관리 | EC2 로컬 설정 파일 | SSM Parameter Store(SecureString), AWS Secrets Manager | Parameter Store는 인스턴스 role로 동작하지만 계정 전체가 한 범위라 다른 팀 파라미터까지 보인다. 팀 간 격리가 없어 운영 비밀을 두기에 맞지 않다. Secrets Manager는 시크릿당 월 요금이 붙어 예산에 부담이 된다 |
 | EC2 운영체제 | Amazon Linux 2023 (arm64) | Ubuntu (arm64) | 팀에 익숙하고 참고 자료가 많아 우분투를 먼저 택했으나, 빠른 시작 목록에 26.04만 있었다. CodeDeploy 에이전트는 AWS가 지원 목록에 올린 배포판에서만 검증되고 26.04는 갓 나온 버전이라 확인되지 않았다. 파이프라인 전체를 막을 수 있는 위험이라 검증된 조합을 택했다. SSM 에이전트와 AWS CLI v2가 기본 설치되는 이점도 있다 |
