@@ -97,18 +97,6 @@ const ResolvedEditPropertyPage = ({ config, propertyId }: { config: PublicConfig
           variant="detail"
           onSubmit={(input) => {
             const changes: UpdatePropertyRequestDto = input;
-            const isUnchanged =
-              input.name === initial.name &&
-              input.depositAmount === initial.depositAmount &&
-              input.monthlyRentAmount === initial.monthlyRentAmount &&
-              input.maintenanceFeeAmount === initial.maintenanceFeeAmount &&
-              (input.discoverySource ?? '') === initial.discoverySource.value;
-
-            if (isUnchanged) {
-              setFormNotice('변경된 내용이 없어 서버에 요청하지 않았어요.');
-              return;
-            }
-
             setFormNotice(null);
             void updateMutation
               .mutateAsync(changes)

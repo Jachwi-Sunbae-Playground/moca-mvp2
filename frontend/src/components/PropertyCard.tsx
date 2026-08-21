@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { PropertySummary } from '../types/Property';
-import { formatWon } from '../utils/propertyFormat';
+import { formatManwon } from '../utils/propertyFormat';
 import Icon from './ui/Icon';
 import ChecklistProgressBar from './ChecklistProgressBar';
 import styles from './PropertyCard.module.css';
@@ -33,7 +33,7 @@ const PropertyCard = ({ property, thumbnailUrl }: PropertyCardProps) => {
           <div className={styles.details}>
             <h2>{property.name}</h2>
             <p className={styles.price}>
-              보증금 {formatWon(property.depositAmount)} / 월세 {formatWon(property.monthlyRentAmount)}
+              보증금 {formatManwon(property.depositAmount)} / 월세 {formatManwon(property.monthlyRentAmount)}
             </p>
           </div>
         </div>

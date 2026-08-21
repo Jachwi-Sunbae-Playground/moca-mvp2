@@ -4,14 +4,13 @@ import { ApiError } from '../apis/apiClient';
 import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import ChecklistStartOptions from '../components/ChecklistStartOptions';
 import type { ChecklistStartMode } from '../components/ChecklistStartOptions';
-import ChecklistStageTabs from '../components/ChecklistStageTabs';
+import ChecklistPageLayout from '../components/ChecklistPageLayout';
 import BottomActionArea from '../components/ui/BottomActionArea';
 import { Button } from '../components/ui/Button';
-import TopNavigation from '../components/ui/TopNavigation';
 import { isChecklistStage } from '../constants/checklist';
 import { useAssignActiveChecklist } from '../hooks/query/useChecklistMutations';
 import { useChecklistList } from '../hooks/query/useChecklists';
-import { usePropertyChecklistOverview } from '../hooks/query/useProperties';
+import { usePropertyChecklistOverview, usePropertyDetail } from '../hooks/query/useProperties';
 import type { ChecklistStage } from '../types/Checklist';
 import type { PublicConfig } from '../types/PublicConfig';
 import { parsePositiveId } from '../utils/propertyFormat';
@@ -58,11 +57,13 @@ const ResolvedPropertyActiveChecklist = ({
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const property = usePropertyDetail(config, propertyId);
   const overview = usePropertyChecklistOverview(config, propertyId);
   const list = useChecklistList(config, stage);
   const assign = useAssignActiveChecklist(config, propertyId, stage);
   const newlyCreatedId = readNewChecklistId(location.state);
   const fromPropertyDetail = isFromPropertyDetail(location.state) || searchParams.get('from') === 'property-detail';
+  const isReplacing = searchParams.get('mode') === 'replace';
   const overviewStage = overview.data?.stages.find((item) => item.stage === stage);
   const current =
     overviewStage?.applied === true && overviewStage.sourceChecklistId !== null && overviewStage.checklistName !== null
@@ -75,19 +76,31 @@ const ResolvedPropertyActiveChecklist = ({
   const items = useMemo(() => list.data?.pages.flatMap((page) => page.content) ?? [], [list.data]);
 
   useEffect(() => {
-    if (fromPropertyDetail && overviewStage?.applied === true && overviewStage.propertyChecklistId !== null) {
+    if (
+      fromPropertyDetail &&
+      !isReplacing &&
+      overviewStage?.applied === true &&
+      overviewStage.propertyChecklistId !== null
+    ) {
       navigate(`/properties/${propertyId}/checklists/${overviewStage.propertyChecklistId}`, {
         replace: true,
         state: { from: 'property-detail' },
       });
     }
-  }, [fromPropertyDetail, navigate, overviewStage?.applied, overviewStage?.propertyChecklistId, propertyId]);
+  }, [
+    fromPropertyDetail,
+    isReplacing,
+    navigate,
+    overviewStage?.applied,
+    overviewStage?.propertyChecklistId,
+    propertyId,
+  ]);
 
   useEffect(() => {
     if (selectedId === null && current !== null) setSelectedId(current.checklistId);
   }, [current, selectedId]);
 
-  if (overview.isPending || list.isPending)
+  if (property.isPending || overview.isPending || list.isPending)
     return (
       <main className="property-page">
         <div className="page-container">
@@ -99,8 +112,8 @@ const ResolvedPropertyActiveChecklist = ({
       </main>
     );
 
-  if (overview.isError || list.isError) {
-    const error = overview.error ?? list.error;
+  if (property.isError || overview.isError || list.isError) {
+    const error = property.error ?? overview.error ?? list.error;
     const propertyNotFound = error instanceof ApiError && error.code === 'PROPERTY_NOT_FOUND';
     return (
       <main className="property-page">
@@ -113,6 +126,7 @@ const ResolvedPropertyActiveChecklist = ({
                 type="button"
                 className="inline-button"
                 onClick={() => {
+                  void property.refetch();
                   void overview.refetch();
                   void list.refetch();
                 }}
@@ -127,8 +141,12 @@ const ResolvedPropertyActiveChecklist = ({
     );
   }
 
+  const returnQuery = new URLSearchParams();
+  if (fromPropertyDetail) returnQuery.set('from', 'property-detail');
+  if (isReplacing) returnQuery.set('mode', 'replace');
+  const returnSearch = returnQuery.toString();
   const returnPath = `/properties/${propertyId}/active-checklists/${stage}${
-    fromPropertyDetail ? '?from=property-detail' : ''
+    returnSearch.length > 0 ? `?${returnSearch}` : ''
   }`;
   const createPath = (startMode?: ChecklistStartMode) => {
     const query = new URLSearchParams({ stage, returnTo: returnPath });
@@ -161,106 +179,106 @@ const ResolvedPropertyActiveChecklist = ({
   };
 
   return (
-    <main className={`${styles.page} property-page checklist-page active-checklist-page`}>
-      <div className="page-container checklist-page__narrow">
-        <TopNavigation title="내 체크리스트" backTo={`/properties/${propertyId}`} backLabel="매물 상세로 돌아가기" />
-        <h1 className="sr-only">매물 체크리스트 연결</h1>
-        <ChecklistStageTabs
-          stage={stage}
-          fullBleed
-          getTo={(nextStage) => {
-            const next = overview.data.stages.find((item) => item.stage === nextStage);
-            if (next?.applied === true && next.propertyChecklistId !== null) {
-              return `/properties/${propertyId}/checklists/${next.propertyChecklistId}`;
-            }
-            const query = fromPropertyDetail ? '?from=property-detail' : '';
-            return `/properties/${propertyId}/active-checklists/${nextStage}${query}`;
-          }}
-        />
+    <ChecklistPageLayout
+      title="내 체크리스트"
+      backTo={`/properties/${propertyId}`}
+      backLabel="매물 상세로 돌아가기"
+      stage={stage}
+      getStageTo={(nextStage) => {
+        const next = overview.data.stages.find((item) => item.stage === nextStage);
+        if (next?.applied === true && next.propertyChecklistId !== null) {
+          return `/properties/${propertyId}/checklists/${next.propertyChecklistId}`;
+        }
+        const query = fromPropertyDetail ? '?from=property-detail' : '';
+        return `/properties/${propertyId}/active-checklists/${nextStage}${query}`;
+      }}
+      className={`${styles.page} property-page checklist-page active-checklist-page`}
+      containerClassName="page-container checklist-page__narrow"
+    >
+      <h1 className="sr-only">{property.data.name} 체크리스트 연결</h1>
 
-        <p className={styles.description}>이 단계에서 사용할 체크리스트를 선택해요.</p>
+      <p className={styles.description}>이 단계에서 사용할 체크리스트를 선택해요.</p>
 
-        {items.length === 0 ? (
-          <section className={styles.startOptions} aria-label="새 체크리스트 시작 방식">
-            <p>바로 사용할 구성을 선택해 체크리스트를 만들어 주세요.</p>
-            <ChecklistStartOptions onSelect={(mode) => navigate(createPath(mode))} />
-          </section>
-        ) : (
-          <fieldset className="active-checklist-options">
-            <legend className="sr-only">연결할 체크리스트</legend>
-            {items.map((item) => (
-              <label key={item.checklistId} className={selectedId === item.checklistId ? 'is-selected' : undefined}>
-                <input
-                  type="checkbox"
-                  name="active-checklist"
-                  value={item.checklistId}
-                  checked={selectedId === item.checklistId}
-                  disabled={assign.isPending}
-                  onChange={() => toggleSelection(item.checklistId)}
-                />
-                <span>
-                  <strong>{item.name}</strong>
-                  <small>
-                    {item.itemCount}개 항목 · 매물 {item.assignedPropertyCount}곳에서 사용
-                  </small>
-                </span>
-                {newlyCreatedId === item.checklistId && <em>방금 생성</em>}
-              </label>
-            ))}
-          </fieldset>
-        )}
-
-        <Link className={styles.createCard} to={createPath()}>
-          <span aria-hidden="true">+</span> 새 체크리스트 만들기
-        </Link>
-
-        {list.hasNextPage && (
-          <div className={styles.loadMore}>
-            {list.isFetchNextPageError && (
-              <p role="alert">추가 목록을 불러오지 못했어요. 기존 선택지는 그대로 유지됩니다.</p>
-            )}
-            <Button
-              variant="secondary"
-              fullWidth
-              type="button"
-              disabled={list.isFetchingNextPage}
-              onClick={() => void list.fetchNextPage()}
-            >
-              {list.isFetchingNextPage
-                ? '불러오는 중…'
-                : list.isFetchNextPageError
-                  ? '다시 불러오기'
-                  : '체크리스트 더 보기'}
-            </Button>
-          </div>
-        )}
-        {selectionChanged && current !== null && (
-          <p className="form-notice">확인하면 현재 연결을 선택한 체크리스트로 교체합니다.</p>
-        )}
-        {assign.isError && (
-          <p className="form-error" role="alert">
-            {getChecklistErrorMessage(assign.error)} 기존 연결은 유지됩니다.
-          </p>
-        )}
-        {selectedId !== null && selectionChanged && (
-          <div className={styles.bottomAction}>
-            <BottomActionArea divider={false}>
-              <Button
-                variant="soft"
-                fullWidth
-                isLoading={assign.isPending}
-                loadingLabel="연결 중…"
-                type="button"
+      {items.length === 0 ? (
+        <section className={styles.startOptions} aria-label="새 체크리스트 시작 방식">
+          <p>바로 사용할 구성을 선택해 체크리스트를 만들어 주세요.</p>
+          <ChecklistStartOptions onSelect={(mode) => navigate(createPath(mode))} />
+        </section>
+      ) : (
+        <fieldset className="active-checklist-options">
+          <legend className="sr-only">연결할 체크리스트</legend>
+          {items.map((item) => (
+            <label key={item.checklistId} className={selectedId === item.checklistId ? 'is-selected' : undefined}>
+              <input
+                type="checkbox"
+                name="active-checklist"
+                value={item.checklistId}
+                checked={selectedId === item.checklistId}
                 disabled={assign.isPending}
-                onClick={() => void saveSelection()}
-              >
-                {current === null ? '이 체크리스트 연결' : '선택한 체크리스트로 교체'}
-              </Button>
-            </BottomActionArea>
-          </div>
-        )}
-      </div>
-    </main>
+                onChange={() => toggleSelection(item.checklistId)}
+              />
+              <span>
+                <strong>{item.name}</strong>
+                <small>
+                  {item.itemCount}개 항목 · 매물 {item.assignedPropertyCount}곳에서 사용
+                </small>
+              </span>
+              {newlyCreatedId === item.checklistId && <em>방금 생성</em>}
+            </label>
+          ))}
+        </fieldset>
+      )}
+
+      <Link className={styles.createCard} to={createPath()}>
+        <span aria-hidden="true">+</span> 새 체크리스트 만들기
+      </Link>
+
+      {list.hasNextPage && (
+        <div className={styles.loadMore}>
+          {list.isFetchNextPageError && (
+            <p role="alert">추가 목록을 불러오지 못했어요. 기존 선택지는 그대로 유지됩니다.</p>
+          )}
+          <Button
+            variant="secondary"
+            fullWidth
+            type="button"
+            disabled={list.isFetchingNextPage}
+            onClick={() => void list.fetchNextPage()}
+          >
+            {list.isFetchingNextPage
+              ? '불러오는 중…'
+              : list.isFetchNextPageError
+                ? '다시 불러오기'
+                : '체크리스트 더 보기'}
+          </Button>
+        </div>
+      )}
+      {selectionChanged && current !== null && (
+        <p className="form-notice">확인하면 현재 연결을 선택한 체크리스트로 교체합니다.</p>
+      )}
+      {assign.isError && (
+        <p className="form-error" role="alert">
+          {getChecklistErrorMessage(assign.error)} 기존 연결은 유지됩니다.
+        </p>
+      )}
+      {selectedId !== null && selectionChanged && (
+        <div className={styles.bottomAction}>
+          <BottomActionArea divider={false}>
+            <Button
+              variant="soft"
+              fullWidth
+              isLoading={assign.isPending}
+              loadingLabel="연결 중…"
+              type="button"
+              disabled={assign.isPending}
+              onClick={() => void saveSelection()}
+            >
+              {current === null ? '이 체크리스트 연결' : '선택한 체크리스트로 교체'}
+            </Button>
+          </BottomActionArea>
+        </div>
+      )}
+    </ChecklistPageLayout>
   );
 };
 

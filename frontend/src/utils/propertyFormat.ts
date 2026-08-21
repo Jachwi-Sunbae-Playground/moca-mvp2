@@ -3,6 +3,9 @@ import type { ChecklistStage } from '../types/Checklist';
 
 export const formatWon = (amount: number): string => `${new Intl.NumberFormat('ko-KR').format(amount)}원`;
 
+export const formatManwon = (amount: number): string =>
+  `${new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 }).format(amount / 10_000)}만원`;
+
 export const formatDateTime = (value: string): string =>
   new Intl.DateTimeFormat('ko-KR', {
     year: 'numeric',

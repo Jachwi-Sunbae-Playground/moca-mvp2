@@ -1,6 +1,7 @@
 import type { PropertyInputDto } from '../apis/dtos/PropertyDto';
 
 export const MAX_PROPERTY_AMOUNT = Number.MAX_SAFE_INTEGER;
+export const WON_PER_MANWON = 10_000;
 
 export type PropertyFormValues = {
   name: string;
@@ -34,7 +35,8 @@ export const formatMoneyInput = (value: string): string | null => {
   return normalizedDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
-export const formatAmountForInput = (amount: number): string => new Intl.NumberFormat('ko-KR').format(amount);
+export const formatAmountForInput = (amount: number): string =>
+  new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 }).format(amount / WON_PER_MANWON);
 
 export const parseMoneyInput = (value: string): number | null => {
   const digits = value.replace(/,/g, '');
@@ -45,6 +47,11 @@ export const parseMoneyInput = (value: string): number | null => {
 
   const amount = Number(digits);
   return Number.isSafeInteger(amount) && amount >= 0 && amount <= MAX_PROPERTY_AMOUNT ? amount : null;
+};
+
+const toWon = (manwon: number): number | null => {
+  const amount = manwon * WON_PER_MANWON;
+  return Number.isSafeInteger(amount) && amount <= MAX_PROPERTY_AMOUNT ? amount : null;
 };
 
 export const validatePropertyForm = (values: PropertyFormValues): PropertyFormErrors => {
@@ -78,9 +85,12 @@ export const validatePropertyForm = (values: PropertyFormValues): PropertyFormEr
 };
 
 export const toPropertyInputDto = (values: PropertyFormValues): PropertyInputDto | null => {
-  const depositAmount = parseMoneyInput(values.depositAmount);
-  const monthlyRentAmount = parseMoneyInput(values.monthlyRentAmount);
-  const maintenanceFeeAmount = values.maintenanceFeeAmount === '' ? null : parseMoneyInput(values.maintenanceFeeAmount);
+  const depositInput = parseMoneyInput(values.depositAmount);
+  const monthlyRentInput = parseMoneyInput(values.monthlyRentAmount);
+  const maintenanceFeeInput = values.maintenanceFeeAmount === '' ? null : parseMoneyInput(values.maintenanceFeeAmount);
+  const depositAmount = depositInput === null ? null : toWon(depositInput);
+  const monthlyRentAmount = monthlyRentInput === null ? null : toWon(monthlyRentInput);
+  const maintenanceFeeAmount = maintenanceFeeInput === null ? null : toWon(maintenanceFeeInput);
 
   if (
     depositAmount === null ||

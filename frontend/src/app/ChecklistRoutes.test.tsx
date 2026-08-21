@@ -417,6 +417,62 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
     expect(screen.queryByRole('button', { name: '이 체크리스트 연결' })).not.toBeInTheDocument();
   });
 
+  it('적용된 체크리스트에서 변경을 누르면 현재 연결을 유지한 채 교체 목록을 보여준다', async () => {
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
+        HttpResponse.json(successEnvelope(propertyDetailResponseFixture())),
+      ),
+      http.get(`${config.apiBaseUrl}/api/properties/10/checklists`, () =>
+        HttpResponse.json(
+          successEnvelope({
+            propertyId: 10,
+            overallProgress: {
+              totalCount: 2,
+              completedCount: 1,
+              goodCount: 1,
+              cautionCount: 0,
+              unconfirmedCount: 1,
+              progressRate: 50,
+            },
+            stages: [
+              {
+                stage: 'ONLINE_PHONE',
+                applied: true,
+                propertyChecklistId: 47,
+                checklistName: '전화 문의 기본 목록',
+                sourceChecklistId: 7,
+                progress: {
+                  totalCount: 2,
+                  completedCount: 1,
+                  goodCount: 1,
+                  cautionCount: 0,
+                  unconfirmedCount: 1,
+                  progressRate: 50,
+                },
+              },
+              emptyStageProgress('ON_SITE'),
+              emptyStageProgress('PRE_CONTRACT'),
+            ],
+          }),
+        ),
+      ),
+      http.get(`${config.apiBaseUrl}/api/checklists`, () =>
+        HttpResponse.json(
+          successEnvelope(checklistPageFixture([checklistSummaryFixture, secondChecklistSummaryFixture])),
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    renderAuthenticated('/properties/10/active-checklists/ONLINE_PHONE?from=property-detail&mode=replace');
+
+    const current = await screen.findByRole('checkbox', { name: /전화 문의 기본 목록/ });
+    expect(current).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /직방 매물 문의 목록/ })).not.toBeChecked();
+
+    await user.click(screen.getByRole('checkbox', { name: /직방 매물 문의 목록/ }));
+    expect(screen.getByRole('button', { name: '선택한 체크리스트로 교체' })).toBeEnabled();
+  });
+
   it('상태는 선택 즉시, 메모는 포커스가 빠질 때 자동 저장한다', async () => {
     let statusRequest: unknown;
     let memoRequest: unknown;
@@ -499,6 +555,10 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
     expect(screen.getByRole('link', { name: '집에서 확인' })).toHaveAttribute(
       'href',
       '/properties/10/active-checklists/ON_SITE?from=property-detail',
+    );
+    expect(screen.getByRole('link', { name: '체크리스트 변경' })).toHaveAttribute(
+      'href',
+      '/properties/10/active-checklists/ONLINE_PHONE?from=property-detail&mode=replace',
     );
 
     await user.click(screen.getByRole('radio', { name: '주의' }));

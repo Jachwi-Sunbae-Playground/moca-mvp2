@@ -25,7 +25,6 @@ const ChecklistListCard = ({ config, checklist }: { config: PublicConfig; checkl
   return (
     <li className={styles.card}>
       <Link className={styles.main} to={`/checklists/${checklist.checklistId}`}>
-        <span className={styles.icon} aria-hidden="true" />
         <span className={styles.copy}>
           <strong>{checklist.name}</strong>
           <span>{checklist.itemCount}개 항목</span>

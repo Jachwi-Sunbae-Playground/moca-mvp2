@@ -106,7 +106,7 @@ const PropertyForm = ({
           inputMode="numeric"
           autoComplete="off"
           placeholder="0"
-          suffix="원"
+          suffix="만원"
           fieldClassName={variant === 'detail' ? styles.detailField : styles.defaultField}
           className={variant === 'detail' ? styles.detailInput : styles.defaultInput}
           error={displayedErrors.depositAmount}
@@ -122,7 +122,7 @@ const PropertyForm = ({
           inputMode="numeric"
           autoComplete="off"
           placeholder="0"
-          suffix="원"
+          suffix="만원"
           fieldClassName={variant === 'detail' ? styles.detailField : styles.defaultField}
           className={variant === 'detail' ? styles.detailInput : styles.defaultInput}
           error={displayedErrors.monthlyRentAmount}
@@ -139,7 +139,7 @@ const PropertyForm = ({
         inputMode="numeric"
         autoComplete="off"
         placeholder="입력하지 않아도 돼요"
-        suffix="원"
+        suffix="만원"
         fieldClassName={variant === 'detail' ? styles.detailField : styles.defaultField}
         className={variant === 'detail' ? styles.detailInput : styles.defaultInput}
         error={displayedErrors.maintenanceFeeAmount}

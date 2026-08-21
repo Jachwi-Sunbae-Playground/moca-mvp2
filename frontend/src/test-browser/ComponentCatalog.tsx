@@ -65,7 +65,7 @@ const ComponentCatalog = () => {
           <section className={styles.section}>
             <h2>Field</h2>
             <TextField label="매물 이름" placeholder="예: 신림역 원룸" />
-            <TextField label="보증금" defaultValue="10,000,000" suffix="원" helpText="숫자만 입력해 주세요." />
+            <TextField label="보증금" defaultValue="1,000" suffix="만원" helpText="만원 단위로 입력해 주세요." />
             <TextField label="오류 상태" defaultValue="" error="필수 입력값입니다." />
             <TextAreaField label="확인한 곳" rows={3} placeholder="URL이나 중개사 정보를 입력해 주세요." />
           </section>

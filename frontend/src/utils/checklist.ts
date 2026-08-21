@@ -25,7 +25,10 @@ export type ChecklistReturnTarget = { propertyId: number; stage: ChecklistStage;
 
 export const parseChecklistReturnTo = (value: string | null): ChecklistReturnTarget | null => {
   if (value === null) return null;
-  const match = /^\/properties\/(\d+)\/active-checklists\/(ONLINE_PHONE|ON_SITE|PRE_CONTRACT)$/.exec(value);
+  const match =
+    /^\/properties\/(\d+)\/active-checklists\/(ONLINE_PHONE|ON_SITE|PRE_CONTRACT)(?:\?from=property-detail)?$/.exec(
+      value,
+    );
   if (match === null || !isChecklistStage(match[2])) return null;
   const propertyId = Number(match[1]);
   if (!Number.isSafeInteger(propertyId) || propertyId < 1) return null;
