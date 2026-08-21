@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react';
 import type { ReactNode, RefObject } from 'react';
+import { Button } from './ui/Button';
 import styles from './ConfirmDialog.module.css';
 
 type ConfirmDialogProps = {
@@ -80,23 +81,17 @@ const ConfirmDialog = ({
       </div>
       {children}
       <div className={styles.actions}>
-        <button
-          ref={cancelButtonRef}
-          className="secondary-button"
-          type="button"
-          disabled={isConfirming}
-          onClick={onCancel}
-        >
+        <Button ref={cancelButtonRef} variant="secondary" disabled={isConfirming} onClick={onCancel}>
           취소
-        </button>
-        <button
-          className={tone === 'danger' ? 'danger-button' : 'primary-button'}
-          type="button"
-          disabled={isConfirming}
+        </Button>
+        <Button
+          variant={tone === 'danger' ? 'danger' : 'primary'}
+          isLoading={isConfirming}
+          loadingLabel="처리 중…"
           onClick={onConfirm}
         >
-          {isConfirming ? '처리 중…' : confirmLabel}
-        </button>
+          {confirmLabel}
+        </Button>
       </div>
     </dialog>
   );

@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import PageHeading from '../components/PageHeading';
+import { ButtonLink } from '../components/ui/Button';
 import './UpcomingFeaturePage.css';
 
 type UpcomingFeature = 'compare' | 'export' | 'tips';
@@ -33,12 +33,10 @@ const UpcomingFeaturePage = ({ feature }: { feature: UpcomingFeature }) => {
           <h2 id="upcoming-feature-heading">1차 MVP에서는 안내만 제공해요</h2>
           <p>{content.description}</p>
           <div className="upcoming-feature-card__actions">
-            <Link className="primary-link" to="/properties">
-              내 매물 보기
-            </Link>
-            <Link className="secondary-link" to="/checklists">
+            <ButtonLink to="/properties">내 매물 보기</ButtonLink>
+            <ButtonLink variant="secondary" to="/checklists">
               체크리스트 보기
-            </Link>
+            </ButtonLink>
           </div>
         </section>
       </div>
