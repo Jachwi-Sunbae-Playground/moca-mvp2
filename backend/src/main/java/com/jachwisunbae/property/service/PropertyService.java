@@ -28,17 +28,14 @@ public class PropertyService {
     private final MemberRepository memberRepository;
     private final PropertyPhotoRepository propertyPhotoRepository;
     private final PropertyProgressRepository propertyProgressRepository;
-    private final PropertyMemoInitializer propertyMemoInitializer;
 
     public PropertyService(final PropertyRepository propertyRepository, final MemberRepository memberRepository,
                            final PropertyPhotoRepository propertyPhotoRepository,
-                           final PropertyProgressRepository propertyProgressRepository,
-                           final PropertyMemoInitializer propertyMemoInitializer) {
+                           final PropertyProgressRepository propertyProgressRepository) {
         this.propertyRepository = propertyRepository;
         this.memberRepository = memberRepository;
         this.propertyPhotoRepository = propertyPhotoRepository;
         this.propertyProgressRepository = propertyProgressRepository;
-        this.propertyMemoInitializer = propertyMemoInitializer;
     }
 
     public PropertyListResponse findList(final Long memberId) {
@@ -62,10 +59,8 @@ public class PropertyService {
                 DomainErrorCode.MEMBER_NOT_FOUND, "회원을 찾을 수 없습니다."));
         validatePropertyCount(memberId);
 
-        Property property = propertyRepository.save(Property.create(memberId, request.name(), request.depositAmount(),
+        return propertyRepository.save(Property.create(memberId, request.name(), request.depositAmount(),
                 request.monthlyRentAmount(), request.discoverySource()));
-        propertyMemoInitializer.initialize(property.getId());
-        return property;
     }
 
     private void validatePropertyCount(final Long memberId) {
