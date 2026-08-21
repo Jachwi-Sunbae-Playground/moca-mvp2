@@ -5,7 +5,7 @@
 
 ## 관리 원칙
 
-현재 초기화된 Spring Boot 애플리케이션은 환경변수를 사용하지 않는다. 아래 값은 저장소에 남아 있는 로컬 MySQL·MinIO Compose 구성을 위한 값이며, 새 백엔드 구현에서 사용할지는 다시 결정한다.
+Spring Boot 애플리케이션은 CORS 허용 Origin과 인증·저장소 설정을 환경변수로 주입받는다. 아래 값 중 로컬 인프라용 값은 Docker Compose에서 사용하고, 애플리케이션 설정에 연결된 값은 실행 환경에 맞게 제공한다.
 
 - 예시와 기본값은 `backend/.env.example`에 기록하고 Git에 커밋한다.
 - 개인 값은 `backend/.env`에 기록하며 Git에 커밋하지 않는다.
@@ -44,10 +44,10 @@
 cp .env.example .env
 ```
 
-Docker Compose는 같은 디렉터리의 `.env`를 자동으로 읽는다. 현재 Spring Boot 프로세스는 이 파일을 사용하지 않는다.
+Docker Compose는 같은 디렉터리의 `.env`를 자동으로 읽는다. Spring Boot를 직접 실행할 때는 셸 또는 실행 환경에 필요한 값을 주입한다.
 
 ## 운영 프로필
 
-운영은 `prod` 프로필로 기동한다. 현재 애플리케이션은 운영 환경변수를 요구하지 않지만 배포 계약상 EC2의 `/etc/jachwi-sunbae/app.env` 파일은 유지한다. 새 환경변수를 도입할 때 구성은 [배포 아키텍처 설계](../../../docs/operations/deployment-architecture.md)와 [배포](../operations/deployment.md)에 함께 반영한다.
+운영은 `prod` 프로필로 기동한다. 운영 환경변수는 EC2의 `/etc/jachwi-sunbae/app.env` 파일로 주입한다. `CORS_ALLOWED_ORIGINS`에는 해당 프론트엔드 Origin을 포함해야 한다. 새 환경변수를 도입할 때 구성은 [배포 아키텍처 설계](../../../docs/operations/deployment-architecture.md)와 [배포](../operations/deployment.md)에 함께 반영한다.
 
 실제 비밀값은 `.env.example`, 애플리케이션 설정, 문서와 Git에 커밋하지 않는다.
