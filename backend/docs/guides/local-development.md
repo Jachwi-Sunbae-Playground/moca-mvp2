@@ -18,7 +18,7 @@ Gradle은 별도로 설치하지 않는다. 저장소의 Gradle Wrapper를 사�
 ./gradlew bootRun
 ```
 
-현재 초기화된 애플리케이션은 데이터베이스와 외부 시스템에 연결하지 않으므로 별도 환경변수나 Docker가 필요하지 않다.
+로컬 실행에는 Java 21과 애플리케이션 환경변수가 필요하다. 개인 값은 `backend/.env`에 두고 저장소에 커밋하지 않는다. CORS를 확인하려면 `CORS_ALLOWED_ORIGINS=http://localhost:3000`을 사용한다.
 
 | 확인 항목 | 주소 |
 | --- | --- |

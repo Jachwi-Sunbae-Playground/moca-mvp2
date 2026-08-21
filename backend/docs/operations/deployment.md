@@ -113,7 +113,7 @@ CodeDeploy 배포 그룹이 **EC2 태그**로 대상을 고른다.
 
 **환경변수 파일은 배포 산출물에 넣지 않는다.** CodeDeploy가 덮어쓰는 경로 밖에 두어 배포마다 값이 사라지지 않게 한다. systemd가 `EnvironmentFile`로 root 권한에서 읽은 뒤 `jachwi`로 내려가므로 애플리케이션 계정에 읽기 권한을 주지 않는다.
 
-현재 초기화된 애플리케이션은 운영 비밀값을 사용하지 않는다. 다만 배포 훅과 systemd 유닛의 기존 계약을 유지하기 위해 환경변수 파일은 빈 파일로라도 둔다. 새 환경변수를 도입할 때 [환경변수](../guides/environment-variables.md)와 배포 환경을 함께 갱신한다.
+애플리케이션은 CORS 허용 Origin과 인증·저장소 설정을 환경변수로 사용한다. 배포 전에 [환경변수](../guides/environment-variables.md)에 정의된 값을 환경변수 파일에 채우고, 새 환경변수를 도입할 때 배포 환경도 함께 갱신한다.
 
 `SPRING_PROFILES_ACTIVE`는 dev와 prod 모두 `prod`로 둔다. 이 프로필은 애플리케이션이 80 포트를 사용하게 한다.
 
