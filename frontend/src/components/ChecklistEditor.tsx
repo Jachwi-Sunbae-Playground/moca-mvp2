@@ -136,7 +136,7 @@ const ChecklistEditor = ({
 
   if (viewMode === 'ADD_ITEMS') {
     return (
-      <div className={`${styles['checklist-editor']} ${styles['checklist-item-picker-view']}`}>
+      <div className={`${styles.checklistEditor} ${styles.checklistItemPickerView}`}>
         <CheckItemPicker
           config={config}
           stage={stage}
@@ -151,7 +151,7 @@ const ChecklistEditor = ({
 
   return (
     <form
-      className={styles['checklist-editor']}
+      className={styles.checklistEditor}
       onSubmit={async (event) => {
         event.preventDefault();
         setHasSubmitted(true);
@@ -177,10 +177,10 @@ const ChecklistEditor = ({
         }
       }}
     >
-      <section className={styles['editor-section']}>
+      <section className={styles.editorSection}>
         <TextField
           id="checklist-name"
-          fieldClassName={styles['checklist-editor__name-field']}
+          fieldClassName={styles.nameField}
           label="체크리스트 이름"
           value={name}
           maxLength={50}
@@ -194,18 +194,18 @@ const ChecklistEditor = ({
         />
       </section>
 
-      <section className={styles['editor-section']} aria-labelledby="selected-items-heading">
-        <div className={styles['section-heading-row']}>
+      <section className={styles.editorSection} aria-labelledby="selected-items-heading">
+        <div className={styles.sectionHeadingRow}>
           <div>
             <h2 id="selected-items-heading">확인 순서</h2>
           </div>
-          <span className={styles['selection-count']}>{items.length}개</span>
+          <span className={styles.selectionCount}>{items.length}개</span>
         </div>
         <p className="field-help">제공 항목을 원하는 확인 순서로 저장할 수 있어요.</p>
         {items.length === 0 ? (
-          <p className={styles['checklist-editor__empty-items']}>체크 항목을 한 개 이상 추가해 주세요.</p>
+          <p className={styles.emptyItems}>체크 항목을 한 개 이상 추가해 주세요.</p>
         ) : (
-          <ol className={styles['selected-check-items']}>
+          <ol className={styles.selectedCheckItems}>
             {items.map((item, index) => {
               const isInactiveProvided =
                 item.origin === 'PROVIDED' && activeCatalog.isSuccess && !activeSourceIds.has(item.sourceCheckItemId);
@@ -218,7 +218,7 @@ const ChecklistEditor = ({
                 >
                   <button
                     type="button"
-                    className={styles['selected-check-items__drag-handle']}
+                    className={styles.dragHandle}
                     disabled={isSubmitting}
                     aria-label={`${item.question} 순서 변경`}
                     onKeyDown={(event) => {
@@ -277,7 +277,7 @@ const ChecklistEditor = ({
                   >
                     <span aria-hidden="true">≡</span>
                   </button>
-                  <div className={styles['selected-check-items__copy']}>
+                  <div className={styles.itemCopy}>
                     <span className={`sr-only item-origin item-origin--${item.origin.toLowerCase()}`}>
                       {item.origin === 'PROVIDED' ? '제공 항목' : '직접 추가'}
                     </span>
@@ -292,15 +292,15 @@ const ChecklistEditor = ({
                     </strong>
                     {item.guide !== null && <small>{item.guide}</small>}
                     {isInactiveProvided && (
-                      <small className={styles['inactive-item-note']}>
+                      <small className={styles.inactiveItemNote}>
                         더 이상 제공되지 않음 · 유지, 이동 또는 제거 가능
                       </small>
                     )}
                   </div>
-                  <span className={styles['selected-check-items__actions']}>
+                  <span className={styles.itemActions}>
                     <button
                       type="button"
-                      className={styles['remove-item-button']}
+                      className={styles.removeItemButton}
                       disabled={isSubmitting}
                       aria-label={`${item.question} 제거`}
                       onClick={() => remove(index)}
@@ -322,16 +322,16 @@ const ChecklistEditor = ({
 
       <Button
         type="button"
-        variant="neutral"
+        variant="secondary"
         fullWidth
-        className={styles['checklist-editor__open-picker']}
+        className={styles.openPicker}
         disabled={isSubmitting}
         onClick={() => onViewModeChange?.('ADD_ITEMS')}
       >
         + 체크 항목 추가
       </Button>
 
-      <p className={styles['editor-save-status']} role="status" aria-live="polite">
+      <p className={styles.editorSaveStatus} role="status" aria-live="polite">
         {announcement}
       </p>
       {serverError !== undefined && (
@@ -339,7 +339,7 @@ const ChecklistEditor = ({
           {serverError} 작성한 내용은 그대로 유지됩니다. 같은 버튼으로 다시 시도할 수 있어요.
         </p>
       )}
-      <div className={styles['checklist-editor__actions']}>
+      <div className={styles.editorActions}>
         <BottomActionArea divider={actionDivider}>
           <Button type="submit" variant="soft" fullWidth isLoading={isSubmitting} loadingLabel="저장 중…">
             {submitLabel}

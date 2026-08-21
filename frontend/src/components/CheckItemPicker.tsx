@@ -38,16 +38,16 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
   };
 
   return (
-    <section className={styles['item-picker']} aria-labelledby="item-picker-heading">
-      <div className={styles['section-heading-row']}>
+    <section className={styles.itemPicker} aria-labelledby="item-picker-heading">
+      <div className={styles.sectionHeadingRow}>
         <div>
           <h2 id="item-picker-heading">체크 항목 검색</h2>
         </div>
-        <span className={styles['selection-count']} aria-live="polite">
+        <span className={styles.selectionCount} aria-live="polite">
           {selectedIds.size}개 선택
         </span>
       </div>
-      <div className={styles['check-item-search']}>
+      <div className={styles.checkItemSearch}>
         <SearchField
           label="제공 항목 검색"
           value={input}
@@ -65,14 +65,14 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
       </div>
 
       {result.isPending ? (
-        <div className={styles['compact-state']} role="status">
+        <div className={styles.compactState} role="status">
           <span className="spinner" /> 항목을 불러오는 중이에요.
         </div>
       ) : result.isError ? (
-        <div className={styles['item-picker__error']} role="alert">
+        <div className={styles.pickerError} role="alert">
           <span>{getChecklistErrorMessage(result.error)}</span>
           <Button
-            className={styles['item-picker__retry']}
+            className={styles.pickerRetry}
             type="button"
             variant="text"
             disabled={disabled}
@@ -82,11 +82,11 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
           </Button>
         </div>
       ) : items.length === 0 ? (
-        <p className={styles['compact-state']}>검색 결과가 없어요.</p>
+        <p className={styles.compactState}>검색 결과가 없어요.</p>
       ) : (
-        <div className={styles['check-item-results']}>
+        <div className={styles.checkItemResults}>
           <h3>검색 결과</h3>
-          <ul className={styles['check-item-search-results']}>
+          <ul className={styles.checkItemSearchResults}>
             {items.map((item) => {
               const exists = existingIds.has(item.checkItemId);
               const checked = exists || selectedIds.has(item.checkItemId);
@@ -105,15 +105,15 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
                         setSelectedIds(next);
                       }}
                     />
-                    <span className={styles['check-item-search-results__control']} data-selected={checked || undefined}>
+                    <span className={styles.resultControl} data-selected={checked || undefined}>
                       {checked && <span aria-hidden="true">✓</span>}
                     </span>
-                    <span className={styles['check-item-search-results__copy']}>
+                    <span className={styles.resultCopy}>
                       <strong>{item.question}</strong>
                       {item.guide !== null && <small>{item.guide}</small>}
                     </span>
                   </label>
-                  {exists && <small className={styles['already-added']}>이미 추가됨</small>}
+                  {exists && <small className={styles.alreadyAdded}>이미 추가됨</small>}
                 </li>
               );
             })}
@@ -125,7 +125,7 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
         <Button
           variant="secondary"
           fullWidth
-          className={styles['compact-button']}
+          className={styles.compactButton}
           type="button"
           disabled={disabled || result.isFetchingNextPage}
           onClick={() => void result.fetchNextPage()}
@@ -133,14 +133,14 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
           {result.isFetchingNextPage ? '불러오는 중…' : '항목 더 보기'}
         </Button>
       )}
-      <div className={styles['item-picker__bottom-actions']}>
+      <div className={styles.pickerActions}>
         <BottomActionArea sticky={false} divider={false}>
           <Button variant="secondary" type="button" disabled={disabled} onClick={onCancel}>
             취소
           </Button>
           <Button
             fullWidth
-            className={styles['item-picker__add']}
+            className={styles.pickerAdd}
             type="button"
             disabled={disabled || selectedIds.size === 0}
             onClick={addSelected}
