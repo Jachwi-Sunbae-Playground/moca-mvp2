@@ -2,17 +2,10 @@ import { useMutation } from '@tanstack/react-query';
 import type {
   PropertyInputDto,
   SavePropertyMemoDocumentRequestDto,
-  SavePropertyPreVisitMemoRequestDto,
   UpdatePropertyRequestDto,
 } from '../../apis/dtos/PropertyDto';
 import { removePropertyPhoto, setRepresentativePropertyPhoto, uploadPropertyPhoto } from '../../apis/photoApi';
-import {
-  createProperty,
-  removeProperty,
-  savePropertyMemoDocument,
-  savePropertyPreVisitMemo,
-  updateProperty,
-} from '../../apis/propertyApi';
+import { createProperty, removeProperty, savePropertyMemoDocument, updateProperty } from '../../apis/propertyApi';
 import { propertyQueryKeys } from '../../app/propertyQueryKeys';
 import { queryClient } from '../../app/queryClient';
 import type { PublicConfig } from '../../types/PublicConfig';
@@ -51,27 +44,6 @@ export const useSavePropertyMemoDocument = (config: PublicConfig, propertyId: nu
     mutationFn: (request: SavePropertyMemoDocumentRequestDto) => savePropertyMemoDocument(config, propertyId, request),
     onSuccess: (memo) => {
       queryClient.setQueryData(propertyQueryKeys.memo(propertyId), memo);
-    },
-  });
-
-export const useSavePropertyPreVisitMemo = (config: PublicConfig, propertyId: number) =>
-  useMutation({
-    mutationFn: (request: SavePropertyPreVisitMemoRequestDto) => savePropertyPreVisitMemo(config, propertyId, request),
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: propertyQueryKeys.detail(propertyId), exact: true });
-    },
-    onSuccess: async (memo) => {
-      queryClient.setQueryData<PropertyDetail>(propertyQueryKeys.detail(propertyId), (current) =>
-        current === undefined
-          ? current
-          : {
-              ...current,
-              memo: { ...memo, content: memo.additionalMemo },
-              updatedAt: memo.savedAt ?? current.updatedAt,
-              lastActivityAt: memo.savedAt ?? current.lastActivityAt,
-            },
-      );
-      await queryClient.invalidateQueries({ queryKey: propertyQueryKeys.lists() });
     },
   });
 

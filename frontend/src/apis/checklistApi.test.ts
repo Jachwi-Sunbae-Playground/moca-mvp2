@@ -24,15 +24,10 @@ const config: PublicConfig = {
 
 const authenticate = () => setAuthentication({ accessToken: 'memory-token', tokenType: 'Bearer', expiresIn: 60 });
 
-const checkItemsResponse = {
-  stage: 'ONLINE_PHONE',
-  keyword: '',
-  totalCount: 2,
-  items: [
-    { id: 101, stage: 'ONLINE_PHONE', itemType: 'CORE', question: '관리비를 확인했나요?' },
-    { id: 102, stage: 'ONLINE_PHONE', itemType: 'OPTIONAL', question: '입주일을 확인했나요?' },
-  ],
-};
+const checkItemsResponse = [
+  { id: 101, stage: 'ONLINE_PHONE', itemType: 'CORE', question: '관리비를 확인했나요?' },
+  { id: 102, stage: 'ONLINE_PHONE', itemType: 'OPTIONAL', question: '입주일을 확인했나요?' },
+];
 
 const checklistDetailResponse = {
   id: 7,
@@ -58,20 +53,13 @@ const checklistDetailResponse = {
 };
 
 describe('최종 체크리스트 API 계약', () => {
-  it('시스템 체크 항목은 stage와 trim한 keyword만 보내며 인증 없이 조회한다', async () => {
+  it('시스템 체크 항목은 stage와 trim한 query만 보내며 인증 없이 조회한다', async () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/check-items`, ({ request }) => {
         const url = new URL(request.url);
-        expect(Object.fromEntries(url.searchParams)).toEqual({ stage: 'ONLINE_PHONE', keyword: '관리비' });
+        expect(Object.fromEntries(url.searchParams)).toEqual({ stage: 'ONLINE_PHONE', query: '관리비' });
         expect(request.headers.get('Authorization')).toBeNull();
-        return HttpResponse.json(
-          successEnvelope({
-            ...checkItemsResponse,
-            keyword: '관리비',
-            totalCount: 1,
-            items: [checkItemsResponse.items[0]],
-          }),
-        );
+        return HttpResponse.json(successEnvelope([checkItemsResponse[0]]));
       }),
     );
 
@@ -157,9 +145,9 @@ describe('최종 체크리스트 API 계약', () => {
     expect(body).toEqual({ name: '전화 문의 기본 목록', systemCheckItemIds: [101, 102] });
   });
 
-  it('체크리스트 삭제는 204 본문을 읽지 않는다', async () => {
+  it('체크리스트 삭제는 200 빈 본문을 읽지 않는다', async () => {
     authenticate();
-    server.use(http.delete(`${config.apiBaseUrl}/api/checklists/7`, () => new HttpResponse(null, { status: 204 })));
+    server.use(http.delete(`${config.apiBaseUrl}/api/checklists/7`, () => new HttpResponse(null, { status: 200 })));
 
     await expect(removeChecklist(config, 7)).resolves.toBeUndefined();
   });

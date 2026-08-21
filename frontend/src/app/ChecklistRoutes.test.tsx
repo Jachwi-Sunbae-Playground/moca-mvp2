@@ -13,7 +13,7 @@ import {
   secondChecklistSummaryFixture,
   secondOnlineItemFixture,
 } from '../test/checklistFixtures';
-import { propertyDetailFixture, successEnvelope } from '../test/propertyFixtures';
+import { propertyDetailResponseFixture, successEnvelope } from '../test/propertyFixtures';
 import { server } from '../test/server';
 import type { PublicConfig } from '../types/PublicConfig';
 import AppRoutes from './AppRoutes';
@@ -187,7 +187,7 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
   it('연결된 단계는 적용 체크리스트로, 미연결 단계는 연결 화면으로 이동한다', async () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
-        HttpResponse.json(successEnvelope({ ...propertyDetailFixture, photoPreview: { totalCount: 0, photos: [] } })),
+        HttpResponse.json(successEnvelope({ ...propertyDetailResponseFixture(), photos: [] })),
       ),
       http.get(`${config.apiBaseUrl}/api/properties/10/checklists`, () =>
         HttpResponse.json(
@@ -234,14 +234,14 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
     ).toHaveAttribute('href', '/properties/10/checklists/47');
     expect(
       within(section as HTMLElement).getByRole('link', { name: /계약 전.*연결된 체크리스트 없음/ }),
-    ).toHaveAttribute('href', '/properties/10/active-checklists/PRE_CONTRACT');
+    ).toHaveAttribute('href', '/properties/10/active-checklists/PRE_CONTRACT?from=property-detail');
   });
 
   it('목록을 고른 뒤 확인할 때 최종 연결 API를 호출하고 적용 상세로 이동한다', async () => {
     let requestBody: unknown;
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
-        HttpResponse.json(successEnvelope({ ...propertyDetailFixture, activeChecklists: [] })),
+        HttpResponse.json(successEnvelope(propertyDetailResponseFixture())),
       ),
       http.get(`${config.apiBaseUrl}/api/properties/10/checklists`, () =>
         HttpResponse.json(
@@ -333,9 +333,12 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
       ),
     );
     const user = userEvent.setup();
-    renderAuthenticated('/properties/10/active-checklists/ONLINE_PHONE');
+    renderAuthenticated('/properties/10/active-checklists/ONLINE_PHONE?from=property-detail');
 
-    await user.click(await screen.findByRole('checkbox', { name: /전화 문의 기본 목록/ }));
+    expect(await screen.findByRole('checkbox', { name: /전화 문의 기본 목록/ })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: '온라인·전화' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: /전화 문의 기본 목록/ }));
     expect(requestBody).toBeUndefined();
     await user.click(screen.getByRole('button', { name: '이 체크리스트 연결' }));
 
@@ -348,7 +351,7 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
     let memoRequest: unknown;
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
-        HttpResponse.json(successEnvelope({ ...propertyDetailFixture, photoPreview: { totalCount: 0, photos: [] } })),
+        HttpResponse.json(successEnvelope({ ...propertyDetailResponseFixture(), photos: [] })),
       ),
       http.get(`${config.apiBaseUrl}/api/properties/10/checklists/47`, () =>
         HttpResponse.json(

@@ -53,7 +53,7 @@ const ChecklistListCard = ({ config, checklist }: { config: PublicConfig; checkl
             <p>
               {checklist.itemCount}개 항목과 매물 {checklist.assignedPropertyCount}곳의 활성 연결이 함께 삭제됩니다.
             </p>
-            <p>완료한 방문 기록의 스냅샷은 유지됩니다.</p>
+            <p>매물에 적용된 체크 결과는 유지됩니다.</p>
           </>
         }
         confirmLabel="체크리스트 삭제"

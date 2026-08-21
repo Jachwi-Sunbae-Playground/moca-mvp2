@@ -1,17 +1,8 @@
 import type { ChecklistStage } from './Checklist';
-import type { VisitStatus, VisitSummary } from './Visit';
 
 export type DiscoverySource = {
   type: 'URL' | 'TEXT';
   value: string;
-};
-
-export type RecentVisit = {
-  visitId: number;
-  status: VisitStatus;
-  startedAt: string;
-  completedAt: string | null;
-  summary: VisitSummary;
 };
 
 export type PropertySummary = {
@@ -26,8 +17,6 @@ export type PropertySummary = {
     contentType: 'image/jpeg' | 'image/png' | 'image/webp';
   } | null;
   progress: PropertyChecklistProgress;
-  /** @deprecated 최종 목록 API에서는 progress를 사용한다. */
-  recentVisit: RecentVisit | null;
   /** @deprecated 최종 목록 API는 전체 사진 수를 반환하지 않는다. */
   photoCount: number;
   /** @deprecated 최종 목록 API는 활동 시각을 반환하지 않는다. */
@@ -43,40 +32,10 @@ export type PropertyPage = {
   hasNext: boolean;
 };
 
-export type PropertyPreVisitMemo = {
-  viewingSchedule: string;
-  moveInAvailability: string;
-  provisionalDeposit: string;
-  roomOptions: string;
-  maintenanceAndUtilities: string;
-  commuteTime: string;
-  governmentSupport: string;
-  additionalMemo: string;
-  savedAt: string | null;
-};
-
-/** @deprecated content는 v1.0 화면 호환 별칭이다. 신규 코드는 additionalMemo를 사용한다. */
-export type PropertyMemo = PropertyPreVisitMemo & {
-  content: string;
-};
-
-export type PropertyActiveChecklist = {
-  stage: ChecklistStage;
-  checklistId: number;
-  name: string;
-  itemCount: number;
-};
-
 export type PropertyPhotoPreview = {
   photoId: number;
   contentUrl: string;
   createdAt: string;
-};
-
-export type DeletionImpact = {
-  visitCount: number;
-  photoCount: number;
-  activeChecklistCount: number;
 };
 
 export type PropertyDetail = {
@@ -86,14 +45,10 @@ export type PropertyDetail = {
   monthlyRentAmount: number;
   maintenanceFeeAmount: number | null;
   discoverySource: DiscoverySource;
-  memo: PropertyMemo;
-  activeChecklists: PropertyActiveChecklist[];
-  recentVisit: RecentVisit | null;
   photoPreview: {
     totalCount: number;
     photos: PropertyPhotoPreview[];
   };
-  deletionImpact: DeletionImpact;
   createdAt: string;
   updatedAt: string;
   lastActivityAt: string;
@@ -124,6 +79,7 @@ export type PropertyPhotoList = {
 };
 
 export type PropertyMemoItem = {
+  propertyMemoItemId: number;
   systemMemoItemId: number;
   label: string;
   displayOrder: number;

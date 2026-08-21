@@ -18,9 +18,9 @@ export const checklistHandlers = [
     const url = new URL(request.url);
     const stage = url.searchParams.get('stage');
     if (!isChecklistStage(stage)) return failure('INVALID_REQUEST', 400);
-    const keyword = url.searchParams.get('keyword')?.trim() ?? '';
-    const items = checkItems.filter((item) => item.stage === stage && item.question.includes(keyword));
-    return success({ stage, keyword, totalCount: items.length, items });
+    const query = url.searchParams.get('query')?.trim() ?? '';
+    const items = checkItems.filter((item) => item.stage === stage && item.question.includes(query));
+    return success(items);
   }),
   http.get('*/api/checklist-presets', obsoleteEndpoint),
   http.get('*/api/checklists', ({ request }) => {
@@ -109,6 +109,6 @@ export const checklistHandlers = [
       return failure('CHECKLIST_NOT_FOUND', 404);
     }
     setMockChecklists(getMockChecklists().filter((checklist) => checklist.id !== checklistId));
-    return new HttpResponse(null, { status: 204 });
+    return new HttpResponse(null, { status: 200 });
   }),
 ];

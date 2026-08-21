@@ -67,9 +67,10 @@ const getInvalidFields = (value: unknown): string[] => {
   ];
 };
 
-const readJson = async (response: Response): Promise<unknown> => {
+const readJson = async (response: Response): Promise<unknown | undefined> => {
   try {
-    return await response.json();
+    const text = await response.text();
+    return text.length === 0 ? undefined : JSON.parse(text);
   } catch {
     throw new ApiError({ kind: 'invalid-response', status: response.status });
   }
@@ -198,6 +199,14 @@ export const apiRequest = async <T>({
   }
 
   const payload = await readJson(response);
+
+  if (payload === undefined) {
+    try {
+      return parseData(undefined);
+    } catch {
+      throw new ApiError({ kind: 'invalid-response', status: response.status });
+    }
+  }
 
   if (!isSuccessEnvelope(payload)) {
     throw new ApiError({ kind: 'invalid-response', status: response.status });

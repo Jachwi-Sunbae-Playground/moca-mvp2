@@ -35,15 +35,15 @@ export const fetchCheckItems = (
   signal?: AbortSignal,
 ) => {
   const search = new URLSearchParams({ stage: input.stage });
-  const keyword = input.query.trim();
-  if (keyword.length > 0) search.set('keyword', keyword);
+  const query = input.query.trim();
+  if (query.length > 0) search.set('query', query);
   return apiRequest({
     config,
     path: `/api/check-items?${search}`,
     signal,
     requiresAuthentication: false,
     parseData: (value) => {
-      const result = parseCheckItemPage(value);
+      const result = parseCheckItemPage(value, input.stage);
       if (result.content.some((item) => item.stage !== input.stage)) throw new Error('stage');
       return result;
     },

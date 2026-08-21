@@ -1,27 +1,27 @@
-import type { VisitSummary } from '../types/Visit';
-import styles from './VisitResultBar.module.css';
+import type { PropertyChecklistProgress } from '../types/Property';
+import styles from './ChecklistProgressBar.module.css';
 
-type VisitResultBarProps = {
-  summary: VisitSummary;
+type ChecklistProgressBarProps = {
+  progress: Pick<PropertyChecklistProgress, 'goodCount' | 'cautionCount' | 'unconfirmedCount'>;
 };
 
-const VisitResultBar = ({ summary }: VisitResultBarProps) => {
+const ChecklistProgressBar = ({ progress }: ChecklistProgressBarProps) => {
   const results = [
     {
       label: '괜찮음',
-      count: summary.goodCount,
+      count: progress.goodCount,
       segmentClassName: styles.goodSegment,
       itemClassName: styles.goodResult,
     },
     {
       label: '주의',
-      count: summary.cautionCount,
+      count: progress.cautionCount,
       segmentClassName: styles.cautionSegment,
       itemClassName: styles.cautionResult,
     },
     {
       label: '미확인',
-      count: summary.unconfirmedCount,
+      count: progress.unconfirmedCount,
       segmentClassName: styles.unconfirmedSegment,
       itemClassName: styles.unconfirmedResult,
     },
@@ -36,7 +36,7 @@ const VisitResultBar = ({ summary }: VisitResultBarProps) => {
             <span key={result.label} className={result.segmentClassName} style={{ flexGrow: result.count }} />
           ))}
       </div>
-      <ul aria-label="최근 방문 결과 집계">
+      <ul aria-label="체크리스트 진행 결과 집계">
         {results.map((result) => (
           <li key={result.label} className={result.itemClassName} data-empty={result.count === 0 || undefined}>
             <span className={styles.resultText}>
@@ -50,4 +50,4 @@ const VisitResultBar = ({ summary }: VisitResultBarProps) => {
   );
 };
 
-export default VisitResultBar;
+export default ChecklistProgressBar;

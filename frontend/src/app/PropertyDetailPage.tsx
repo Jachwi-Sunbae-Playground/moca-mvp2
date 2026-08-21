@@ -232,7 +232,7 @@ const ResolvedPropertyDetailPage = ({ config, propertyId }: { config: PublicConf
                 const checklistPath =
                   item?.applied === true && item.propertyChecklistId !== null
                     ? `/properties/${propertyId}/checklists/${item.propertyChecklistId}`
-                    : `/properties/${propertyId}/active-checklists/${stage}`;
+                    : `/properties/${propertyId}/active-checklists/${stage}?from=property-detail`;
                 return (
                   <li key={stage}>
                     <Link to={checklistPath} state={{ from: 'property-detail' }}>

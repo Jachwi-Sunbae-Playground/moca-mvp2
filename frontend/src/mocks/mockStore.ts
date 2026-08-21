@@ -85,11 +85,12 @@ export const checklistDetail = (checklist: MockChecklist) => ({
 
 export type MockPhoto = {
   id: number;
+  propertyId: number;
   url: string;
   contentType: 'image/png';
   sizeBytes: number;
   representative: boolean;
-  created_at: string;
+  createdAt: string;
 };
 
 export type MockProperty = {
@@ -122,11 +123,12 @@ let properties: MockProperty[] = [
 
 export const createMockPhoto = (propertyId: number, photoId: number, representative = false): MockPhoto => ({
   id: photoId,
+  propertyId,
   url: `/api/properties/${propertyId}/photos/${photoId}/content`,
   contentType: 'image/png',
   sizeBytes: createMockPhotoBytes(photoId).byteLength,
   representative,
-  created_at: now,
+  createdAt: now,
 });
 
 let photosByProperty = new Map<number, MockPhoto[]>([
@@ -226,11 +228,12 @@ export const propertyProgress = (propertyId: number) => {
 
 export const propertyResponse = (property: MockProperty) => {
   const photos = photosByProperty.get(property.id) ?? [];
+  const basicInfo = { ...property, maintenanceFeeAmount: undefined };
   return {
-    ...property,
+    ...basicInfo,
     photos,
     representativePhoto: photos.find((photo) => photo.representative) ?? null,
-    progress: propertyProgress(property.id),
+    overallProgress: propertyProgress(property.id),
   };
 };
 
@@ -245,13 +248,24 @@ export const systemMemoItems = [
 
 export type MockMemo = {
   propertyId: number;
-  items: Array<{ systemMemoItemId: number; label: string; displayOrder: number; content: string }>;
+  items: Array<{
+    propertyMemoItemId: number;
+    systemMemoItemId: number;
+    label: string;
+    displayOrder: number;
+    content: string;
+  }>;
   freeMemo: string;
 };
 
 export const emptyMemo = (propertyId: number): MockMemo => ({
   propertyId,
-  items: systemMemoItems.map(({ id, ...item }) => ({ systemMemoItemId: id, ...item, content: '' })),
+  items: systemMemoItems.map(({ id, ...item }, index) => ({
+    propertyMemoItemId: propertyId * 100 + index + 1,
+    systemMemoItemId: id,
+    ...item,
+    content: '',
+  })),
   freeMemo: '',
 });
 
