@@ -42,24 +42,16 @@ const ResolvedPropertyMemoPage = ({ config, propertyId }: { config: PublicConfig
     setFreeMemo(memo.data.freeMemo);
   }, [memo.data]);
 
-  if (property.isPending || memo.isPending) {
+  if (memo.isPending) {
     return <div className="content-state">메모를 불러오는 중이에요.</div>;
   }
-  if (property.isError || memo.isError) {
-    const error = property.error ?? memo.error;
+  if (memo.isError) {
     return (
       <main className="property-page">
         <div className="content-state content-state--error" role="alert">
           <strong>메모를 불러오지 못했어요.</strong>
-          <span>{getPropertyErrorMessage(error)}</span>
-          <button
-            type="button"
-            className="inline-button"
-            onClick={() => {
-              void property.refetch();
-              void memo.refetch();
-            }}
-          >
+          <span>{getPropertyErrorMessage(memo.error)}</span>
+          <button type="button" className="inline-button" onClick={() => void memo.refetch()}>
             다시 시도
           </button>
         </div>
@@ -70,7 +62,7 @@ const ResolvedPropertyMemoPage = ({ config, propertyId }: { config: PublicConfig
   return (
     <main className={styles.page}>
       <TopNavigation
-        title={`${property.data.name} 메모`}
+        title={`${property.data?.name ?? '매물'} 메모`}
         backTo={`/properties/${propertyId}`}
         backLabel="매물 상세로 돌아가기"
       />

@@ -308,6 +308,25 @@ describe('FE-2 등록·수정·메모', () => {
     expect(screen.getByRole('link', { name: /메모 작성/ })).toHaveAttribute('href', '/properties/10/memo');
   });
 
+  it('메모 조회가 실패해도 매물 기본 정보와 다른 영역을 유지한다', async () => {
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/properties/10`, () => HttpResponse.json(successEnvelope(detailWithoutPhotos))),
+      http.get(`${config.apiBaseUrl}/api/properties/10/memo`, () =>
+        HttpResponse.json(errorEnvelope('INTERNAL_SERVER_ERROR'), { status: 500 }),
+      ),
+    );
+    renderAuthenticated('/properties/10');
+
+    expect(await screen.findByRole('heading', { name: '신림역 원룸', level: 1 })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (_, element) => element?.tagName === 'P' && element.textContent === '보증금 10,000,000원 / 월세 550,000원',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '메모를 불러오지 못했어요. 다시 시도' })).toBeInTheDocument();
+    expect(screen.queryByText('매물 상세를 불러오지 못했어요.')).not.toBeInTheDocument();
+  });
+
   it('별도 메모 화면에서 기본 양식과 자유 메모를 저장한 뒤 상세로 이동한다', async () => {
     let requestBody: unknown;
     server.use(
@@ -457,7 +476,7 @@ describe('FE-2 사진과 삭제 확인', () => {
 
     renderAuthenticated('/properties/10/photos');
     expect(await screen.findByRole('heading', { name: '사진 관리' })).toBeInTheDocument();
-    expect(screen.getByLabelText('사진 파일 선택')).toBeEnabled();
+    expect(await screen.findByLabelText('사진 파일 선택')).toBeEnabled();
     expect(await screen.findByRole('img', { name: '업로드 순 1번째 사진' })).toBeInTheDocument();
   });
 

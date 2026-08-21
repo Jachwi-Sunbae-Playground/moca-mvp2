@@ -11,7 +11,7 @@ import TopNavigation from '../components/ui/TopNavigation';
 import { isChecklistStage } from '../constants/checklist';
 import { useAssignActiveChecklist } from '../hooks/query/useChecklistMutations';
 import { useChecklistList } from '../hooks/query/useChecklists';
-import { usePropertyChecklistOverview, usePropertyDetail } from '../hooks/query/useProperties';
+import { usePropertyChecklistOverview } from '../hooks/query/useProperties';
 import type { ChecklistStage } from '../types/Checklist';
 import type { PublicConfig } from '../types/PublicConfig';
 import { parsePositiveId } from '../utils/propertyFormat';
@@ -56,7 +56,6 @@ const ResolvedPropertyActiveChecklist = ({
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const property = usePropertyDetail(config, propertyId);
   const overview = usePropertyChecklistOverview(config, propertyId);
   const list = useChecklistList(config, stage);
   const assign = useAssignActiveChecklist(config, propertyId, stage);
@@ -86,7 +85,7 @@ const ResolvedPropertyActiveChecklist = ({
     if (selectedId === null && current !== null) setSelectedId(current.checklistId);
   }, [current, selectedId]);
 
-  if (property.isPending || overview.isPending || list.isPending)
+  if (overview.isPending || list.isPending)
     return (
       <main className="property-page">
         <div className="page-container">
@@ -98,8 +97,8 @@ const ResolvedPropertyActiveChecklist = ({
       </main>
     );
 
-  if (property.isError || overview.isError || list.isError) {
-    const error = property.error ?? overview.error ?? list.error;
+  if (overview.isError || list.isError) {
+    const error = overview.error ?? list.error;
     const propertyNotFound = error instanceof ApiError && error.code === 'PROPERTY_NOT_FOUND';
     return (
       <main className="property-page">
@@ -112,7 +111,6 @@ const ResolvedPropertyActiveChecklist = ({
                 type="button"
                 className="inline-button"
                 onClick={() => {
-                  void property.refetch();
                   void overview.refetch();
                   void list.refetch();
                 }}
@@ -164,7 +162,7 @@ const ResolvedPropertyActiveChecklist = ({
     <main className={`${styles.page} property-page checklist-page active-checklist-page`}>
       <div className="page-container checklist-page__narrow">
         <TopNavigation title="내 체크리스트" backTo={`/properties/${propertyId}`} backLabel="매물 상세로 돌아가기" />
-        <h1 className="sr-only">{property.data.name} 체크리스트 연결</h1>
+        <h1 className="sr-only">매물 체크리스트 연결</h1>
         {!fromPropertyDetail && (
           <ChecklistStageTabs
             stage={stage}

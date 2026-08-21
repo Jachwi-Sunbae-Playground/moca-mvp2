@@ -161,6 +161,41 @@ describe('FE-2 API 경계', () => {
     });
   });
 
+  it('매물 상세의 사진 목록이 비어 있거나 생략되어도 빈 사진 영역으로 해석한다', async () => {
+    authenticate();
+    let requestCount = 0;
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/properties/:propertyId`, ({ params }) => {
+        requestCount += 1;
+        return HttpResponse.json(
+          successEnvelope({
+            id: Number(params.propertyId),
+            name: '신림역 원룸',
+            depositAmount: 10_000_000,
+            monthlyRentAmount: 550_000,
+            discoverySource: null,
+            ...(requestCount === 1 ? { photos: [] } : {}),
+            overallProgress: {
+              totalCount: 0,
+              completedCount: 0,
+              goodCount: 0,
+              cautionCount: 0,
+              unconfirmedCount: 0,
+              progressRate: 0,
+            },
+          }),
+        );
+      }),
+    );
+
+    await expect(fetchPropertyDetail(config, 10)).resolves.toMatchObject({
+      photoPreview: { totalCount: 0, photos: [] },
+    });
+    await expect(fetchPropertyDetail(config, 11)).resolves.toMatchObject({
+      photoPreview: { totalCount: 0, photos: [] },
+    });
+  });
+
   it('매물 수정은 Swagger에 정의된 전체 필드와 선택 필드의 null을 보낸다', async () => {
     authenticate();
     let requestBody: unknown;
