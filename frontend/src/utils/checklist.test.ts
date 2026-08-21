@@ -30,6 +30,11 @@ describe('체크리스트 편집 규칙', () => {
       stage: 'ONLINE_PHONE',
       path: '/properties/10/active-checklists/ONLINE_PHONE',
     });
+    expect(parseChecklistReturnTo('/properties/10/active-checklists/ON_SITE?from=property-detail')).toEqual({
+      propertyId: 10,
+      stage: 'ON_SITE',
+      path: '/properties/10/active-checklists/ON_SITE?from=property-detail',
+    });
     expect(parseChecklistReturnTo('https://evil.example/properties/10/active-checklists/ONLINE_PHONE')).toBeNull();
     expect(parseChecklistReturnTo('//evil.example')).toBeNull();
     expect(parseChecklistReturnTo('/properties/0/active-checklists/ONLINE_PHONE')).toBeNull();

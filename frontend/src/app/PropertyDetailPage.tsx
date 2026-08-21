@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
 import { getPropertyErrorMessage } from '../apis/propertyErrorMessages';
 import AuthenticatedPhoto from '../components/AuthenticatedPhoto';
+import ChecklistProgressBar from '../components/ChecklistProgressBar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PropertyPhotoViewer from '../components/PropertyPhotoViewer';
 import Icon from '../components/ui/Icon';
@@ -12,7 +13,7 @@ import { usePropertyChecklistOverview, usePropertyDetail, usePropertyMemo } from
 import { useRemoveProperty } from '../hooks/query/usePropertyMutations';
 import { CHECKLIST_STAGES } from '../types/Checklist';
 import type { PublicConfig } from '../types/PublicConfig';
-import { formatWon, getChecklistStageLabel, getSafeHttpUrl, parsePositiveId } from '../utils/propertyFormat';
+import { formatManwon, getChecklistStageLabel, getSafeHttpUrl, parsePositiveId } from '../utils/propertyFormat';
 import styles from './PropertyDetailPage.module.css';
 
 const PropertyDetailPage = ({ config }: { config: PublicConfig }) => {
@@ -103,8 +104,8 @@ const ResolvedPropertyDetailPage = ({ config, propertyId }: { config: PublicConf
         <section className={styles.basicSection}>
           <h1>{detail.name}</h1>
           <p className={styles.priceSummary}>
-            보증금 {formatWon(detail.depositAmount)} <span aria-hidden="true">/</span> 월세{' '}
-            {formatWon(detail.monthlyRentAmount)}
+            보증금 {formatManwon(detail.depositAmount)} <span aria-hidden="true">/</span> 월세{' '}
+            {formatManwon(detail.monthlyRentAmount)}
           </p>
           {detail.discoverySource.value !== '' && (
             <div className={styles.discoverySource}>
@@ -208,19 +209,7 @@ const ResolvedPropertyDetailPage = ({ config, propertyId }: { config: PublicConf
               </strong>
             )}
           </div>
-          {progress !== undefined && (
-            <div className={styles.progressTrack} aria-label={`체크 진행 ${progress.progressRate}%`}>
-              {progress.goodCount > 0 && (
-                <span className={styles.progressGood} style={{ flexGrow: progress.goodCount }} />
-              )}
-              {progress.cautionCount > 0 && (
-                <span className={styles.progressCaution} style={{ flexGrow: progress.cautionCount }} />
-              )}
-              {progress.unconfirmedCount > 0 && (
-                <span className={styles.progressUnconfirmed} style={{ flexGrow: progress.unconfirmedCount }} />
-              )}
-            </div>
-          )}
+          {progress !== undefined && progress.totalCount > 0 && <ChecklistProgressBar progress={progress} />}
           {checklists.isError ? (
             <button className={styles.sectionRetry} type="button" onClick={() => void checklists.refetch()}>
               체크리스트 연결을 불러오지 못했어요. 다시 시도

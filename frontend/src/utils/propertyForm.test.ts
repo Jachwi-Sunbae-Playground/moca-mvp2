@@ -56,12 +56,13 @@ describe('매물 입력 검증', () => {
   });
 
   it('URL과 일반 텍스트 발견 경로를 같은 요청 문자열로 보존한다', () => {
-    const base = { name: ' 매물 ', depositAmount: '0', monthlyRentAmount: '55,000', maintenanceFeeAmount: '' };
+    const base = { name: ' 매물 ', depositAmount: '0', monthlyRentAmount: '55', maintenanceFeeAmount: '' };
     expect(toPropertyInputDto({ ...base, discoverySource: ' https://example.com/home ' })?.discoverySource).toBe(
       'https://example.com/home',
     );
     expect(toPropertyInputDto({ ...base, discoverySource: ' 동네 중개사 추천 ' })?.discoverySource).toBe(
       '동네 중개사 추천',
     );
+    expect(toPropertyInputDto({ ...base, discoverySource: '' })?.monthlyRentAmount).toBe(550_000);
   });
 });

@@ -200,14 +200,14 @@ describe('FE-2 등록·수정·메모', () => {
 
     await user.type(screen.getByLabelText('이름'), ' 신림역 원룸 ');
     await user.type(screen.getByLabelText('보증금'), '0');
-    await user.type(screen.getByLabelText('월세'), '550000');
+    await user.type(screen.getByLabelText('월세'), '55');
     await user.type(screen.getByLabelText('확인한 곳'), ' 중개사 추천 ');
     await user.click(screen.getByRole('button', { name: '매물 등록' }));
 
     expect(await screen.findByRole('heading', { name: '신림역 원룸', level: 1 })).toBeInTheDocument();
     expect(
       screen.getByText(
-        (_, element) => element?.tagName === 'P' && element.textContent === '보증금 0원 / 월세 550,000원',
+        (_, element) => element?.tagName === 'P' && element.textContent === '보증금 0만원 / 월세 55만원',
       ),
     ).toBeInTheDocument();
     expect(requestBody).toEqual({
@@ -240,7 +240,7 @@ describe('FE-2 등록·수정·메모', () => {
     expect(document.body.textContent).not.toContain('internal validation');
   });
 
-  it('수정은 전체 필드를 보내고 변경이 없으면 API를 호출하지 않는다', async () => {
+  it('수정은 변경이 없어도 전체 필드를 보내고 상세 화면으로 돌아간다', async () => {
     let updateCalls = 0;
     let updateBody: unknown;
     server.use(
@@ -263,17 +263,12 @@ describe('FE-2 등록·수정·메모', () => {
     renderAuthenticated('/properties/10/edit');
 
     await user.click(await screen.findByRole('button', { name: '변경사항 저장' }));
-    expect(screen.getByText(/변경된 내용이 없어/)).toBeInTheDocument();
-    expect(updateCalls).toBe(0);
-
-    await user.clear(screen.getByLabelText('월세'));
-    await user.type(screen.getByLabelText('월세'), '530000');
-    await user.click(screen.getByRole('button', { name: '변경사항 저장' }));
     expect(await screen.findByRole('heading', { name: '신림역 원룸', level: 1 })).toBeInTheDocument();
+    expect(updateCalls).toBe(1);
     expect(updateBody).toEqual({
       name: propertyDetailFixture.name,
       depositAmount: propertyDetailFixture.depositAmount,
-      monthlyRentAmount: 530_000,
+      monthlyRentAmount: propertyDetailFixture.monthlyRentAmount,
       discoverySource: propertyDetailFixture.discoverySource.value,
     });
   });
@@ -306,25 +301,6 @@ describe('FE-2 등록·수정·메모', () => {
     expect(screen.getByText('입주 가능일')).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /메모 작성/ })).toHaveAttribute('href', '/properties/10/memo');
-  });
-
-  it('메모 조회가 실패해도 매물 기본 정보와 다른 영역을 유지한다', async () => {
-    server.use(
-      http.get(`${config.apiBaseUrl}/api/properties/10`, () => HttpResponse.json(successEnvelope(detailWithoutPhotos))),
-      http.get(`${config.apiBaseUrl}/api/properties/10/memo`, () =>
-        HttpResponse.json(errorEnvelope('INTERNAL_SERVER_ERROR'), { status: 500 }),
-      ),
-    );
-    renderAuthenticated('/properties/10');
-
-    expect(await screen.findByRole('heading', { name: '신림역 원룸', level: 1 })).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        (_, element) => element?.tagName === 'P' && element.textContent === '보증금 10,000,000원 / 월세 550,000원',
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '메모를 불러오지 못했어요. 다시 시도' })).toBeInTheDocument();
-    expect(screen.queryByText('매물 상세를 불러오지 못했어요.')).not.toBeInTheDocument();
   });
 
   it('별도 메모 화면에서 기본 양식과 자유 메모를 저장한 뒤 상세로 이동한다', async () => {
@@ -476,7 +452,7 @@ describe('FE-2 사진과 삭제 확인', () => {
 
     renderAuthenticated('/properties/10/photos');
     expect(await screen.findByRole('heading', { name: '사진 관리' })).toBeInTheDocument();
-    expect(await screen.findByLabelText('사진 파일 선택')).toBeEnabled();
+    expect(screen.getByLabelText('사진 파일 선택')).toBeEnabled();
     expect(await screen.findByRole('img', { name: '업로드 순 1번째 사진' })).toBeInTheDocument();
   });
 

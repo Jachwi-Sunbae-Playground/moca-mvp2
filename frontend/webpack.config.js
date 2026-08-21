@@ -91,6 +91,7 @@ module.exports = (_env, argv) => {
                 modules: {
                   auto: /\.module\.css$/i,
                   namedExport: false,
+                  exportLocalsConvention: 'camel-case-only',
                   localIdentName: isProduction ? '[hash:base64:6]' : '[name]__[local]__[hash:base64:5]',
                 },
               },

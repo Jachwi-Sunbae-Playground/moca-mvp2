@@ -121,12 +121,6 @@ export const parsePropertyDetail = (value: unknown): PropertyDetail => {
         };
       })
     : null;
-  const photoPreview =
-    photos !== null
-      ? { totalCount: photos.length, photos }
-      : record.photoPreview === null || record.photoPreview === undefined
-        ? { totalCount: 0, photos: [] }
-        : parsePhotoPreview(record.photoPreview);
 
   return {
     propertyId:
@@ -136,7 +130,7 @@ export const parsePropertyDetail = (value: unknown): PropertyDetail => {
     monthlyRentAmount: readInteger(record, 'monthlyRentAmount'),
     maintenanceFeeAmount: 'maintenanceFeeAmount' in record ? readNullableInteger(record, 'maintenanceFeeAmount') : null,
     discoverySource: parseDiscoverySource(record.discoverySource),
-    photoPreview,
+    photoPreview: photos === null ? parsePhotoPreview(record.photoPreview) : { totalCount: photos.length, photos },
     createdAt: typeof record.createdAt === 'string' ? readUtcDateTime(record, 'createdAt') : '1970-01-01T00:00:00Z',
     updatedAt: typeof record.updatedAt === 'string' ? readUtcDateTime(record, 'updatedAt') : '1970-01-01T00:00:00Z',
     lastActivityAt:
