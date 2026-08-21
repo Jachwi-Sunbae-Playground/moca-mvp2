@@ -30,7 +30,9 @@ const PropertyActiveChecklistPage = ({ config }: { config: PublicConfig }) => {
   const params = useParams();
   const propertyId = parsePositiveId(params.propertyId);
   if (propertyId === null || !isChecklistStage(params.stage)) return <InvalidActiveChecklist />;
-  return <ResolvedPropertyActiveChecklist config={config} propertyId={propertyId} stage={params.stage} />;
+  return (
+    <ResolvedPropertyActiveChecklist key={params.stage} config={config} propertyId={propertyId} stage={params.stage} />
+  );
 };
 
 const InvalidActiveChecklist = () => (
@@ -163,13 +165,18 @@ const ResolvedPropertyActiveChecklist = ({
       <div className="page-container checklist-page__narrow">
         <TopNavigation title="내 체크리스트" backTo={`/properties/${propertyId}`} backLabel="매물 상세로 돌아가기" />
         <h1 className="sr-only">매물 체크리스트 연결</h1>
-        {!fromPropertyDetail && (
-          <ChecklistStageTabs
-            stage={stage}
-            fullBleed
-            getTo={(nextStage) => `/properties/${propertyId}/active-checklists/${nextStage}`}
-          />
-        )}
+        <ChecklistStageTabs
+          stage={stage}
+          fullBleed
+          getTo={(nextStage) => {
+            const next = overview.data.stages.find((item) => item.stage === nextStage);
+            if (next?.applied === true && next.propertyChecklistId !== null) {
+              return `/properties/${propertyId}/checklists/${next.propertyChecklistId}`;
+            }
+            const query = fromPropertyDetail ? '?from=property-detail' : '';
+            return `/properties/${propertyId}/active-checklists/${nextStage}${query}`;
+          }}
+        />
 
         <p className={styles.description}>이 단계에서 사용할 체크리스트를 선택해요.</p>
 

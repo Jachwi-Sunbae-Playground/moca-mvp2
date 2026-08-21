@@ -309,6 +309,14 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
         HttpResponse.json(
           successEnvelope({
             propertyId: 10,
+            overallProgress: {
+              totalCount: 2,
+              completedCount: 1,
+              goodCount: 1,
+              cautionCount: 0,
+              unconfirmedCount: 1,
+              progressRate: 50,
+            },
             stages: [
               {
                 stage: 'ONLINE_PHONE',
@@ -336,7 +344,7 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
     renderAuthenticated('/properties/10/active-checklists/ONLINE_PHONE?from=property-detail');
 
     expect(await screen.findByRole('checkbox', { name: /전화 문의 기본 목록/ })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: '온라인·전화' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '온라인·전화' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('checkbox', { name: /전화 문의 기본 목록/ }));
     expect(requestBody).toBeUndefined();
@@ -344,6 +352,69 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
 
     await waitFor(() => expect(requestBody).toEqual({ checklistId: 7 }));
     expect(await screen.findByRole('heading', { name: '전화 문의 기본 목록', level: 1 })).toBeInTheDocument();
+  });
+
+  it('연결을 확정하지 않고 단계를 바꾸면 선택 상태를 폐기한다', async () => {
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
+        HttpResponse.json(successEnvelope(propertyDetailResponseFixture())),
+      ),
+      http.get(`${config.apiBaseUrl}/api/properties/10/checklists`, () =>
+        HttpResponse.json(
+          successEnvelope({
+            propertyId: 10,
+            overallProgress: {
+              totalCount: 0,
+              completedCount: 0,
+              goodCount: 0,
+              cautionCount: 0,
+              unconfirmedCount: 0,
+              progressRate: 0,
+            },
+            stages: [
+              {
+                stage: 'ONLINE_PHONE',
+                applied: false,
+                propertyChecklistId: null,
+                checklistName: null,
+                sourceChecklistId: null,
+                progress: {
+                  totalCount: 0,
+                  completedCount: 0,
+                  goodCount: 0,
+                  cautionCount: 0,
+                  unconfirmedCount: 0,
+                  progressRate: 0,
+                },
+              },
+              emptyStageProgress('ON_SITE'),
+              emptyStageProgress('PRE_CONTRACT'),
+            ],
+          }),
+        ),
+      ),
+      http.get(`${config.apiBaseUrl}/api/checklists`, ({ request }) => {
+        const stage = new URL(request.url).searchParams.get('stage');
+        const item = {
+          ...checklistSummaryFixture,
+          id: stage === 'ON_SITE' ? 9 : 7,
+          checklistId: stage === 'ON_SITE' ? 9 : 7,
+          name: stage === 'ON_SITE' ? '집에서 확인할 목록' : '전화 문의 기본 목록',
+          stage,
+        };
+        return HttpResponse.json(successEnvelope(checklistPageFixture([item])));
+      }),
+    );
+    const user = userEvent.setup();
+    renderAuthenticated('/properties/10/active-checklists/ONLINE_PHONE');
+
+    await user.click(await screen.findByRole('checkbox', { name: /전화 문의 기본 목록/ }));
+    expect(screen.getByRole('button', { name: '이 체크리스트 연결' })).toBeEnabled();
+
+    await user.click(screen.getByRole('link', { name: '집에서 확인' }));
+
+    expect(await screen.findByRole('checkbox', { name: /집에서 확인할 목록/ })).not.toBeChecked();
+    expect(screen.queryByRole('button', { name: '이 체크리스트 연결' })).not.toBeInTheDocument();
   });
 
   it('상태는 선택 즉시, 메모는 포커스가 빠질 때 자동 저장한다', async () => {
@@ -374,6 +445,40 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
           }),
         ),
       ),
+      http.get(`${config.apiBaseUrl}/api/properties/10/checklists`, () =>
+        HttpResponse.json(
+          successEnvelope({
+            propertyId: 10,
+            overallProgress: {
+              totalCount: 1,
+              completedCount: 0,
+              goodCount: 0,
+              cautionCount: 0,
+              unconfirmedCount: 1,
+              progressRate: 0,
+            },
+            stages: [
+              {
+                stage: 'ONLINE_PHONE',
+                applied: true,
+                propertyChecklistId: 47,
+                checklistName: '전화 문의 기본 목록',
+                sourceChecklistId: 7,
+                progress: {
+                  totalCount: 1,
+                  completedCount: 0,
+                  goodCount: 0,
+                  cautionCount: 0,
+                  unconfirmedCount: 1,
+                  progressRate: 0,
+                },
+              },
+              emptyStageProgress('ON_SITE'),
+              emptyStageProgress('PRE_CONTRACT'),
+            ],
+          }),
+        ),
+      ),
       http.patch(`${config.apiBaseUrl}/api/properties/10/checklists/47/items/701/status`, async ({ request }) => {
         statusRequest = await request.json();
         return HttpResponse.json(successEnvelope({ item: { id: 701, status: 'CAUTION' } }));
@@ -387,8 +492,14 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
     renderAuthenticated('/properties/10/checklists/47');
 
     expect(await screen.findByRole('heading', { name: '전화 문의 기본 목록', level: 1 })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: '온라인·전화' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: '집에서 확인' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: '온라인·전화' })).toHaveAttribute(
+      'href',
+      '/properties/10/checklists/47',
+    );
+    expect(screen.getByRole('link', { name: '집에서 확인' })).toHaveAttribute(
+      'href',
+      '/properties/10/active-checklists/ON_SITE?from=property-detail',
+    );
 
     await user.click(screen.getByRole('radio', { name: '주의' }));
     await waitFor(() => expect(statusRequest).toEqual({ status: 'CAUTION' }));
