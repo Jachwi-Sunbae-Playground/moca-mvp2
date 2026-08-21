@@ -59,6 +59,8 @@ npm run dev:mock
 
 `dev:mock`은 개발 빌드에서만 `ENABLE_MSW`를 활성화하고 브라우저 요청을 로컬 fixture로 처리합니다. 프로덕션 빌드는 이 값과 관계없이 MSW를 비활성화하므로 dev·prod 배포의 실제 API 오류를 가리지 않습니다.
 
+개발 빌드는 빠른 갱신을 위해 CSS를 `style-loader`로 주입하고 파일시스템 캐시와 개발용 소스 맵을 사용합니다. 프로덕션 빌드는 소스 맵을 노출하지 않고 CSS를 `[contenthash]`가 포함된 별도 파일로 추출해 브라우저와 CDN이 변경되지 않은 자산을 재사용할 수 있게 합니다. TypeScript와 JSX 변환은 `babel-loader`가 담당하며 타입 검사는 `npm run typecheck`에서 별도로 수행합니다.
+
 ## 공개 환경변수
 
 | 환경변수              | 로컬 예시                                      | 용도                                  |
