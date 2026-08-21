@@ -29,14 +29,50 @@ const parseDiscoverySource = (value: unknown): DiscoverySource => {
   if (typeof value === 'string') {
     return { type: /^https?:\/\//i.test(value) ? 'URL' : 'TEXT', value };
   }
+  if (value === undefined || typeof value !== 'object' || Array.isArray(value)) {
+    return { type: 'TEXT', value: '' };
+  }
   const record = readRecord(value);
-  const type = readString(record, 'type');
+  const type = record.type;
 
-  if (type !== 'URL' && type !== 'TEXT') {
-    throw new Error('발견 경로 유형이 올바르지 않습니다.');
+  if (type === 'URL' || type === 'TEXT') {
+    const sourceValue = typeof record.value === 'string' ? record.value : '';
+    return { type, value: sourceValue };
   }
 
-  return { type, value: readString(record, 'value') };
+  return { type: 'TEXT', value: '' };
+};
+
+const readDetailInteger = (record: Record<string, unknown>, key: string): number => {
+  const value = record[key];
+  return typeof value === 'number' && Number.isSafeInteger(value) ? value : 0;
+};
+
+const readDetailString = (record: Record<string, unknown>, key: string, fallback: string): string => {
+  const value = record[key];
+  return typeof value === 'string' ? value : fallback;
+};
+
+const parseDetailPhoto = (value: unknown): PropertyPhotoPreview | null => {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const photoId = readDetailInteger(record, 'id') || readDetailInteger(record, 'photoId');
+  const contentUrl = readDetailString(record, 'url', readDetailString(record, 'contentUrl', ''));
+  if (photoId < 1 || contentUrl === '') return null;
+
+  const rawCreatedAt = record.createdAt ?? record.created_at;
+  const createdAt =
+    typeof rawCreatedAt === 'string'
+      ? (() => {
+          try {
+            return readUtcDateTime({ createdAt: rawCreatedAt }, 'createdAt');
+          } catch {
+            return '1970-01-01T00:00:00Z';
+          }
+        })()
+      : '1970-01-01T00:00:00Z';
+
+  return { photoId, contentUrl, createdAt };
 };
 
 const parsePropertySummary = (value: unknown): PropertySummary => {
@@ -72,22 +108,6 @@ const parsePropertySummary = (value: unknown): PropertySummary => {
   };
 };
 
-const parsePhotoPreview = (value: unknown): PropertyDetail['photoPreview'] => {
-  const record = readRecord(value);
-
-  return {
-    totalCount: readInteger(record, 'totalCount'),
-    photos: readArray(record, 'photos').map((photo): PropertyPhotoPreview => {
-      const photoRecord = readRecord(photo);
-      return {
-        photoId: readInteger(photoRecord, 'photoId', 1),
-        contentUrl: readString(photoRecord, 'contentUrl'),
-        createdAt: readUtcDateTime(photoRecord, 'createdAt'),
-      };
-    }),
-  };
-};
-
 export const parsePropertyPage = (value: unknown): PropertyPage => {
   const record = readRecord(value);
   const content = readArray(record, 'items').map(parsePropertySummary);
@@ -107,39 +127,26 @@ export const parsePropertyPage = (value: unknown): PropertyPage => {
 export const parsePropertyDetail = (value: unknown): PropertyDetail => {
   const record = readRecord(value);
   const photos = Array.isArray(record.photos)
-    ? record.photos.map((photo): PropertyPhotoPreview => {
-        const photoRecord = readRecord(photo);
-        return {
-          photoId: readInteger(photoRecord, 'id', 1),
-          contentUrl: readString(photoRecord, 'url'),
-          createdAt:
-            typeof photoRecord.created_at === 'string'
-              ? readUtcDateTime(photoRecord, 'created_at')
-              : typeof photoRecord.createdAt === 'string'
-                ? readUtcDateTime(photoRecord, 'createdAt')
-                : '1970-01-01T00:00:00Z',
-        };
+    ? record.photos.flatMap((photo) => {
+        const parsedPhoto = parseDetailPhoto(photo);
+        return parsedPhoto === null ? [] : [parsedPhoto];
       })
-    : null;
+    : [];
 
   return {
-    propertyId:
-      typeof record.propertyId === 'number' ? readInteger(record, 'propertyId', 1) : readInteger(record, 'id', 1),
-    name: readString(record, 'name'),
-    depositAmount: readInteger(record, 'depositAmount'),
-    monthlyRentAmount: readInteger(record, 'monthlyRentAmount'),
-    maintenanceFeeAmount: 'maintenanceFeeAmount' in record ? readNullableInteger(record, 'maintenanceFeeAmount') : null,
+    propertyId: readDetailInteger(record, 'propertyId') || readDetailInteger(record, 'id'),
+    name: readDetailString(record, 'name', '이름 없는 매물'),
+    depositAmount: readDetailInteger(record, 'depositAmount'),
+    monthlyRentAmount: readDetailInteger(record, 'monthlyRentAmount'),
+    maintenanceFeeAmount:
+      typeof record.maintenanceFeeAmount === 'number' && Number.isSafeInteger(record.maintenanceFeeAmount)
+        ? record.maintenanceFeeAmount
+        : null,
     discoverySource: parseDiscoverySource(record.discoverySource),
-    photoPreview:
-      photos !== null
-        ? { totalCount: photos.length, photos }
-        : record.photoPreview === null || record.photoPreview === undefined
-          ? { totalCount: 0, photos: [] }
-          : parsePhotoPreview(record.photoPreview),
-    createdAt: typeof record.createdAt === 'string' ? readUtcDateTime(record, 'createdAt') : '1970-01-01T00:00:00Z',
-    updatedAt: typeof record.updatedAt === 'string' ? readUtcDateTime(record, 'updatedAt') : '1970-01-01T00:00:00Z',
-    lastActivityAt:
-      typeof record.lastActivityAt === 'string' ? readUtcDateTime(record, 'lastActivityAt') : '1970-01-01T00:00:00Z',
+    photoPreview: { totalCount: photos.length, photos },
+    createdAt: '1970-01-01T00:00:00Z',
+    updatedAt: '1970-01-01T00:00:00Z',
+    lastActivityAt: '1970-01-01T00:00:00Z',
   };
 };
 

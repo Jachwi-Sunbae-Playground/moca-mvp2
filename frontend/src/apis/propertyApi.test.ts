@@ -191,6 +191,33 @@ describe('FE-2 API 경계', () => {
     });
   });
 
+  it('매물 상세의 선택 데이터가 비어 있거나 일부 사진이 잘못되어도 기본 정보를 읽는다', async () => {
+    authenticate();
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
+        HttpResponse.json(
+          successEnvelope({
+            id: 10,
+            name: '기존 매물',
+            depositAmount: 10_000_000,
+            monthlyRentAmount: 550_000,
+            discoverySource: undefined,
+            photos: [
+              { id: 81, url: '/api/properties/10/photos/81/content' },
+              { id: null, url: null },
+            ],
+          }),
+        ),
+      ),
+    );
+
+    await expect(fetchPropertyDetail(config, 10)).resolves.toMatchObject({
+      propertyId: 10,
+      name: '기존 매물',
+      photoPreview: { totalCount: 1, photos: [{ photoId: 81 }] },
+    });
+  });
+
   it('매물 수정은 Swagger에 정의된 전체 필드와 선택 필드의 null을 보낸다', async () => {
     authenticate();
     let requestBody: unknown;
