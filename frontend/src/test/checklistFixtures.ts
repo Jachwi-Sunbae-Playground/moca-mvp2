@@ -16,13 +16,7 @@ export const secondOnlineItemFixture = {
   guide: '계약 시작일과 실제 입주 가능일을 함께 확인해요.',
 };
 
-export const checkItemPageFixture = (content: unknown[]) => ({
-  stage:
-    typeof content[0] === 'object' && content[0] !== null && 'stage' in content[0] ? content[0].stage : 'ONLINE_PHONE',
-  keyword: '',
-  totalCount: content.length,
-  items: content,
-});
+export const checkItemPageFixture = (content: unknown[]) => content;
 
 export const presetFixture = {
   presetType: 'ONE_ROOM',

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
 import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import ChecklistStartOptions from '../components/ChecklistStartOptions';
@@ -55,21 +55,21 @@ const ResolvedPropertyActiveChecklist = ({
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const property = usePropertyDetail(config, propertyId);
   const overview = usePropertyChecklistOverview(config, propertyId);
   const list = useChecklistList(config, stage);
   const assign = useAssignActiveChecklist(config, propertyId, stage);
   const newlyCreatedId = readNewChecklistId(location.state);
-  const fromPropertyDetail = isFromPropertyDetail(location.state);
+  const fromPropertyDetail = isFromPropertyDetail(location.state) || searchParams.get('from') === 'property-detail';
   const overviewStage = overview.data?.stages.find((item) => item.stage === stage);
-  const legacyCurrent = property.data?.activeChecklists.find((item) => item.stage === stage) ?? null;
   const current =
     overviewStage?.applied === true && overviewStage.sourceChecklistId !== null && overviewStage.checklistName !== null
       ? {
           checklistId: overviewStage.sourceChecklistId,
           name: overviewStage.checklistName,
         }
-      : legacyCurrent;
+      : null;
   const [selectedId, setSelectedId] = useState<number | null>(newlyCreatedId);
   const items = useMemo(() => list.data?.pages.flatMap((page) => page.content) ?? [], [list.data]);
 
@@ -127,7 +127,9 @@ const ResolvedPropertyActiveChecklist = ({
     );
   }
 
-  const returnPath = `/properties/${propertyId}/active-checklists/${stage}`;
+  const returnPath = `/properties/${propertyId}/active-checklists/${stage}${
+    fromPropertyDetail ? '?from=property-detail' : ''
+  }`;
   const createPath = (startMode?: ChecklistStartMode) => {
     const query = new URLSearchParams({ stage, returnTo: returnPath });
     if (startMode !== undefined) query.set('start', startMode);

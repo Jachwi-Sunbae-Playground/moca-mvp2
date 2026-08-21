@@ -1,29 +1,22 @@
 import type {
-  DeletionImpact,
   DiscoverySource,
-  PropertyActiveChecklist,
   PropertyBasicInfo,
   PropertyChecklistOverview,
   PropertyChecklistProgress,
   PropertyChecklistDetail,
   PropertyChecklistItemStatus,
   PropertyDetail,
-  PropertyMemo,
   PropertyMemoDocument,
   PropertyPage,
   PropertyPhoto,
   PropertyPhotoList,
   PropertyPhotoPreview,
   PropertySummary,
-  RecentVisit,
 } from '../types/Property';
-import { isVisitStatus } from '../constants/visit';
-import type { VisitSummary } from '../types/Visit';
 import {
   readArray,
   readBoolean,
   readInteger,
-  readNullableUtcDateTime,
   readNullableInteger,
   readNullableString,
   readRecord,
@@ -44,38 +37,6 @@ const parseDiscoverySource = (value: unknown): DiscoverySource => {
   }
 
   return { type, value: readString(record, 'value') };
-};
-
-const parseVisitSummary = (value: unknown): VisitSummary => {
-  const record = readRecord(value);
-  return {
-    totalCount: readInteger(record, 'totalCount'),
-    checkedCount: readInteger(record, 'checkedCount'),
-    goodCount: readInteger(record, 'goodCount'),
-    cautionCount: readInteger(record, 'cautionCount'),
-    unconfirmedCount: readInteger(record, 'unconfirmedCount'),
-  };
-};
-
-const parseRecentVisit = (value: unknown): RecentVisit | null => {
-  if (value === null) {
-    return null;
-  }
-
-  const record = readRecord(value);
-  const status = readString(record, 'status');
-
-  if (!isVisitStatus(status)) {
-    throw new Error('방문 상태 응답이 올바르지 않습니다.');
-  }
-
-  return {
-    visitId: readInteger(record, 'visitId', 1),
-    status,
-    startedAt: readUtcDateTime(record, 'startedAt'),
-    completedAt: readNullableUtcDateTime(record, 'completedAt'),
-    summary: parseVisitSummary(record.summary),
-  };
 };
 
 const parsePropertySummary = (value: unknown): PropertySummary => {
@@ -105,26 +66,9 @@ const parsePropertySummary = (value: unknown): PropertySummary => {
     monthlyRentAmount: readInteger(record, 'monthlyRentAmount'),
     discoverySource: parseDiscoverySource(record.discoverySource),
     representativePhoto: parsedRepresentativePhoto,
-    progress: parsePropertyChecklistProgress(record.progress),
-    recentVisit: null,
+    progress: parsePropertyChecklistProgress(record.overallProgress),
     photoCount: parsedRepresentativePhoto === null ? 0 : 1,
     lastActivityAt: '1970-01-01T00:00:00Z',
-  };
-};
-
-const parsePropertyActiveChecklist = (value: unknown): PropertyActiveChecklist => {
-  const record = readRecord(value);
-  const stage = readString(record, 'stage');
-
-  if (stage !== 'ONLINE_PHONE' && stage !== 'ON_SITE' && stage !== 'PRE_CONTRACT') {
-    throw new Error('체크리스트 단계가 올바르지 않습니다.');
-  }
-
-  return {
-    stage,
-    checklistId: readInteger(record, 'checklistId', 1),
-    name: readString(record, 'name'),
-    itemCount: readInteger(record, 'itemCount'),
   };
 };
 
@@ -141,38 +85,6 @@ const parsePhotoPreview = (value: unknown): PropertyDetail['photoPreview'] => {
         createdAt: readUtcDateTime(photoRecord, 'createdAt'),
       };
     }),
-  };
-};
-
-const parseDeletionImpact = (value: unknown): DeletionImpact => {
-  const record = readRecord(value);
-  return {
-    visitCount: readInteger(record, 'visitCount'),
-    photoCount: readInteger(record, 'photoCount'),
-    activeChecklistCount: readInteger(record, 'activeChecklistCount'),
-  };
-};
-
-const parsePropertyMemo = (value: unknown): PropertyMemo => {
-  const record = readRecord(value);
-  const additionalMemo = readString(record, 'additionalMemo', { allowEmpty: true, maximumCodePoints: 5_000 });
-  const content = readString(record, 'content', { allowEmpty: true, maximumCodePoints: 5_000 });
-  if (content !== additionalMemo) throw new Error('content와 additionalMemo가 일치하지 않습니다.');
-
-  return {
-    viewingSchedule: readString(record, 'viewingSchedule', { allowEmpty: true, maximumCodePoints: 200 }),
-    moveInAvailability: readString(record, 'moveInAvailability', { allowEmpty: true, maximumCodePoints: 200 }),
-    provisionalDeposit: readString(record, 'provisionalDeposit', { allowEmpty: true, maximumCodePoints: 200 }),
-    roomOptions: readString(record, 'roomOptions', { allowEmpty: true, maximumCodePoints: 200 }),
-    maintenanceAndUtilities: readString(record, 'maintenanceAndUtilities', {
-      allowEmpty: true,
-      maximumCodePoints: 200,
-    }),
-    commuteTime: readString(record, 'commuteTime', { allowEmpty: true, maximumCodePoints: 200 }),
-    governmentSupport: readString(record, 'governmentSupport', { allowEmpty: true, maximumCodePoints: 200 }),
-    additionalMemo,
-    content,
-    savedAt: readNullableUtcDateTime(record, 'savedAt'),
   };
 };
 
@@ -218,31 +130,7 @@ export const parsePropertyDetail = (value: unknown): PropertyDetail => {
     monthlyRentAmount: readInteger(record, 'monthlyRentAmount'),
     maintenanceFeeAmount: 'maintenanceFeeAmount' in record ? readNullableInteger(record, 'maintenanceFeeAmount') : null,
     discoverySource: parseDiscoverySource(record.discoverySource),
-    memo:
-      record.memo === undefined
-        ? {
-            viewingSchedule: '',
-            moveInAvailability: '',
-            provisionalDeposit: '',
-            roomOptions: '',
-            maintenanceAndUtilities: '',
-            commuteTime: '',
-            governmentSupport: '',
-            additionalMemo: '',
-            content: '',
-            savedAt: null,
-          }
-        : parsePropertyMemo(record.memo),
-    activeChecklists:
-      record.activeChecklists === undefined
-        ? []
-        : readArray(record, 'activeChecklists').map(parsePropertyActiveChecklist),
-    recentVisit: record.recentVisit === undefined ? null : parseRecentVisit(record.recentVisit),
     photoPreview: photos === null ? parsePhotoPreview(record.photoPreview) : { totalCount: photos.length, photos },
-    deletionImpact:
-      record.deletionImpact === undefined
-        ? { visitCount: 0, photoCount: photos?.length ?? 0, activeChecklistCount: 0 }
-        : parseDeletionImpact(record.deletionImpact),
     createdAt: typeof record.createdAt === 'string' ? readUtcDateTime(record, 'createdAt') : '1970-01-01T00:00:00Z',
     updatedAt: typeof record.updatedAt === 'string' ? readUtcDateTime(record, 'updatedAt') : '1970-01-01T00:00:00Z',
     lastActivityAt:
@@ -269,8 +157,6 @@ export const parsePropertyBasicInfo = (value: unknown): PropertyBasicInfo => {
   };
 };
 
-export const parsePropertyMemoResponse = parsePropertyMemo;
-
 export const parsePropertyMemoDocument = (value: unknown): PropertyMemoDocument => {
   const record = readRecord(value);
   return {
@@ -279,6 +165,7 @@ export const parsePropertyMemoDocument = (value: unknown): PropertyMemoDocument 
       .map((item) => {
         const itemRecord = readRecord(item);
         return {
+          propertyMemoItemId: readInteger(itemRecord, 'propertyMemoItemId', 1),
           systemMemoItemId: readInteger(itemRecord, 'systemMemoItemId', 1),
           label: readString(itemRecord, 'label'),
           displayOrder: readInteger(itemRecord, 'displayOrder', 1),
@@ -373,12 +260,7 @@ const parsePropertyPhoto = (value: unknown): PropertyPhoto => {
     contentUrl: typeof record.contentUrl === 'string' ? readString(record, 'contentUrl') : readString(record, 'url'),
     contentType,
     sizeBytes: readInteger(record, 'sizeBytes', 1),
-    createdAt:
-      typeof record.createdAt === 'string'
-        ? readUtcDateTime(record, 'createdAt')
-        : typeof record.created_at === 'string'
-          ? readUtcDateTime(record, 'created_at')
-          : readUtcDateTime(record, 'uploadedAt'),
+    createdAt: readUtcDateTime(record, 'createdAt'),
     representative: typeof record.representative === 'boolean' ? readBoolean(record, 'representative') : undefined,
   };
 };
@@ -393,7 +275,7 @@ export const parsePropertyPhotoList = (value: unknown): PropertyPhotoList => {
 };
 
 export const parseNoContent = (value: unknown): undefined => {
-  if (value !== undefined) {
+  if (value !== undefined && value !== null) {
     throw new Error('본문 없는 응답이 필요합니다.');
   }
 

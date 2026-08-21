@@ -91,7 +91,7 @@ article:last-child > .card {
   font-size: 0.63rem;
 }
 
-.emptyVisit {
+.emptyProgress {
   display: grid;
   gap: 0.35rem;
   margin-top: 0.55rem;

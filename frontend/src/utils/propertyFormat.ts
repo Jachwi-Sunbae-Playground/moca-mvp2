@@ -1,7 +1,5 @@
 import { checklistStageMeta } from '../constants/checklist';
 import type { ChecklistStage } from '../types/Checklist';
-import { visitStatusLabel } from '../constants/visit';
-import type { VisitStatus } from '../types/Visit';
 
 export const formatWon = (amount: number): string => `${new Intl.NumberFormat('ko-KR').format(amount)}원`;
 
@@ -22,8 +20,6 @@ export const getSafeHttpUrl = (value: string): string | null => {
     return null;
   }
 };
-
-export const getVisitStatusLabel = (status: VisitStatus): string => visitStatusLabel[status];
 
 export const getChecklistStageLabel = (stage: ChecklistStage): string => checklistStageMeta[stage].label;
 

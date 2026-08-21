@@ -1,6 +1,11 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
-import { clearAuthentication, getAccessToken, setAuthentication } from '../app/authStore';
+import {
+  authenticationSessionStorageKey,
+  clearAuthentication,
+  getAccessToken,
+  setAuthentication,
+} from '../app/authStore';
 import { propertyQueryKeys } from '../app/propertyQueryKeys';
 import { queryClient } from '../app/queryClient';
 import type { PublicConfig } from '../types/PublicConfig';
@@ -58,6 +63,7 @@ describe('API 클라이언트', () => {
     );
     expect(error).toMatchObject({ status: 401, code: 'ACCESS_TOKEN_EXPIRED' });
     expect(getAccessToken()).toBeNull();
+    expect(window.sessionStorage.getItem(authenticationSessionStorageKey)).toBeNull();
     expect(queryClient.getQueryData(propertyQueryKeys.detail(10))).toBeUndefined();
     expect(String(error)).not.toContain('내부 인증 상세');
   });
@@ -162,7 +168,7 @@ describe('API 클라이언트', () => {
       releaseResponse = resolve;
     });
     server.use(
-      http.patch(`${config.apiBaseUrl}/api/visits/31/items/501`, async () => {
+      http.patch(`${config.apiBaseUrl}/api/properties/10/checklists/20/items/501/status`, async () => {
         markResponseStarted?.();
         await responseGate;
         return HttpResponse.error();
@@ -171,7 +177,7 @@ describe('API 클라이언트', () => {
 
     const request = apiRequest({
       config,
-      path: '/api/visits/31/items/501',
+      path: '/api/properties/10/checklists/20/items/501/status',
       method: 'PATCH',
       body: { status: 'GOOD', expectedVersion: 0 },
       parseData: (value) => value,

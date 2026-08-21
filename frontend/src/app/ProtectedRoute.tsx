@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { ApiError, getSafeApiErrorMessage } from '../apis/apiClient';
 import StatusPanel from '../components/StatusPanel';
+import { Button } from '../components/ui/Button';
 import { useCurrentMember } from '../hooks/query/useCurrentMember';
 import { useAuthentication } from '../hooks/useAuthentication';
 import type { PublicConfig } from '../types/PublicConfig';
@@ -33,11 +34,7 @@ const ProtectedRoute = ({ config }: ProtectedRouteProps) => {
         title="회원 정보를 불러오지 못했어요"
         description={getSafeApiErrorMessage(currentMember.error)}
         tone="error"
-        action={
-          <button className="primary-button" type="button" onClick={() => void currentMember.refetch()}>
-            다시 시도하기
-          </button>
-        }
+        action={<Button onClick={() => void currentMember.refetch()}>다시 시도하기</Button>}
       />
     );
   }

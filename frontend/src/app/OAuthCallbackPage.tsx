@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiError, getSafeApiErrorMessage } from '../apis/apiClient';
 import { submitGoogleLogin } from '../apis/authApi';
 import { setAuthentication } from './authStore';
 import { getCurrentMemberQueryOptions } from '../hooks/query/useCurrentMember';
 import StatusPanel from '../components/StatusPanel';
+import { Button, ButtonLink } from '../components/ui/Button';
 import type { PublicConfig } from '../types/PublicConfig';
 import { consumeOAuthTransaction } from '../utils/oauthTransaction';
 import { queryClient } from './queryClient';
@@ -153,11 +154,7 @@ const OAuthCallbackPage = ({ config, storage = window.sessionStorage }: OAuthCal
       <StatusPanel
         title="Google 로그인이 취소됐어요"
         description="원할 때 다시 로그인할 수 있어요."
-        action={
-          <Link className="primary-link" to="/login">
-            로그인 화면으로 돌아가기
-          </Link>
-        }
+        action={<ButtonLink to="/login">로그인 화면으로 돌아가기</ButtonLink>}
       />
     );
   }
@@ -168,11 +165,7 @@ const OAuthCallbackPage = ({ config, storage = window.sessionStorage }: OAuthCal
         title="로그인 요청을 확인할 수 없어요"
         description="안전을 위해 로그인을 중단했습니다. 로그인 화면에서 다시 시작해 주세요."
         tone="error"
-        action={
-          <Link className="primary-link" to="/login">
-            로그인 다시 시작하기
-          </Link>
-        }
+        action={<ButtonLink to="/login">로그인 다시 시작하기</ButtonLink>}
       />
     );
   }
@@ -183,11 +176,7 @@ const OAuthCallbackPage = ({ config, storage = window.sessionStorage }: OAuthCal
         title="로그인 정보가 도착하지 않았어요"
         description="Google 로그인 화면에서 다시 인증해 주세요."
         tone="error"
-        action={
-          <Link className="primary-link" to="/login">
-            로그인 다시 시작하기
-          </Link>
-        }
+        action={<ButtonLink to="/login">로그인 다시 시작하기</ButtonLink>}
       />
     );
   }
@@ -198,11 +187,7 @@ const OAuthCallbackPage = ({ config, storage = window.sessionStorage }: OAuthCal
         title="회원 정보를 불러오지 못했어요"
         description={step.message}
         tone="error"
-        action={
-          <button className="primary-button" type="button" onClick={() => void confirmCurrentMember()}>
-            다시 확인하기
-          </button>
-        }
+        action={<Button onClick={() => void confirmCurrentMember()}>다시 확인하기</Button>}
       />
     );
   }
@@ -212,11 +197,7 @@ const OAuthCallbackPage = ({ config, storage = window.sessionStorage }: OAuthCal
       title="로그인을 완료하지 못했어요"
       description={step.message}
       tone="error"
-      action={
-        <Link className="primary-link" to="/login">
-          로그인 다시 시작하기
-        </Link>
-      }
+      action={<ButtonLink to="/login">로그인 다시 시작하기</ButtonLink>}
     />
   );
 };

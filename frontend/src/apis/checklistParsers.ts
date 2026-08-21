@@ -35,14 +35,11 @@ const parseCheckItem = (value: unknown): CheckItem => {
   };
 };
 
-export const parseCheckItemPage = (value: unknown): CheckItemPage => {
-  const result = readRecord(value);
-  const stage = parseStage(result.stage);
-  const items = readArray(result, 'items').map(parseCheckItem);
-  const totalElements = readInteger(result, 'totalCount');
-  if (items.some((item) => item.stage !== stage) || items.length !== totalElements) {
-    throw new Error('체크 항목 집계 응답이 올바르지 않습니다.');
-  }
+export const parseCheckItemPage = (value: unknown, stage: ChecklistStage): CheckItemPage => {
+  if (!Array.isArray(value)) throw new Error('체크 항목 응답이 올바르지 않습니다.');
+  const items = value.map(parseCheckItem);
+  const totalElements = items.length;
+  if (items.some((item) => item.stage !== stage)) throw new Error('체크 항목 단계가 올바르지 않습니다.');
   return {
     content: items,
     page: 0,

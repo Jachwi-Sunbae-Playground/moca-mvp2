@@ -3,6 +3,7 @@ import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import ChecklistListCard from '../components/ChecklistListCard';
 import ChecklistStageTabs from '../components/ChecklistStageTabs';
 import AddItemLink from '../components/ui/AddItemLink';
+import { Button } from '../components/ui/Button';
 import TopNavigation from '../components/ui/TopNavigation';
 import { isChecklistStage } from '../constants/checklist';
 import { useChecklistList } from '../hooks/query/useChecklists';
@@ -70,18 +71,15 @@ const ResolvedChecklistListPage = ({ config, stage }: { config: PublicConfig; st
             {list.isFetchNextPageError && (
               <p role="alert">추가 목록을 불러오지 못했어요. 기존 목록은 그대로 유지됩니다.</p>
             )}
-            <button
-              className="secondary-button"
-              type="button"
-              disabled={list.isFetchingNextPage}
+            <Button
+              variant="secondary"
+              fullWidth
+              isLoading={list.isFetchingNextPage}
+              loadingLabel="불러오는 중…"
               onClick={() => void list.fetchNextPage()}
             >
-              {list.isFetchingNextPage
-                ? '불러오는 중…'
-                : list.isFetchNextPageError
-                  ? '다시 불러오기'
-                  : '체크리스트 더 보기'}
-            </button>
+              {list.isFetchNextPageError ? '다시 불러오기' : '체크리스트 더 보기'}
+            </Button>
           </div>
         )}
       </div>

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import type { PropertySummary } from '../types/Property';
 import { formatWon } from '../utils/propertyFormat';
 import Icon from './ui/Icon';
-import VisitResultBar from './VisitResultBar';
+import ChecklistProgressBar from './ChecklistProgressBar';
 import styles from './PropertyCard.module.css';
 
 type PropertyCardProps = {
@@ -11,10 +11,6 @@ type PropertyCardProps = {
 };
 
 const PropertyCard = ({ property, thumbnailUrl }: PropertyCardProps) => {
-  const summary = {
-    ...property.progress,
-    checkedCount: property.progress.completedCount,
-  };
   const resolvedThumbnailUrl = thumbnailUrl ?? property.representativePhoto?.contentUrl;
   const progressLabel =
     property.progress.totalCount === 0 || property.progress.completedCount < property.progress.totalCount
@@ -42,12 +38,12 @@ const PropertyCard = ({ property, thumbnailUrl }: PropertyCardProps) => {
           </div>
         </div>
         {property.progress.totalCount === 0 ? (
-          <div className={styles.emptyVisit}>
+          <div className={styles.emptyProgress}>
             <span className={styles.emptyBar} aria-hidden="true" />
             <span>아직 방문 확인 기록이 없어요.</span>
           </div>
         ) : (
-          <VisitResultBar summary={summary} />
+          <ChecklistProgressBar progress={property.progress} />
         )}
       </Link>
     </article>

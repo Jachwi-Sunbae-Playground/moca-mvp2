@@ -14,18 +14,13 @@ describe('최종 API 명세 MSW handlers', () => {
   });
 
   it('인증 없이 단계별 시스템 체크 항목을 검색한다', async () => {
-    const response = await fetch(apiUrl('/api/check-items?stage=ON_SITE&keyword=수압'));
+    const response = await fetch(apiUrl('/api/check-items?stage=ON_SITE&query=수압'));
     const body = await readJson(response);
 
     expect(response.status).toBe(200);
     expect(body).toMatchObject({
       code: 'SUCCESS',
-      data: {
-        stage: 'ON_SITE',
-        keyword: '수압',
-        totalCount: 1,
-        items: [{ id: 201, stage: 'ON_SITE', itemType: 'CORE', question: '수압이 충분한가요?' }],
-      },
+      data: [{ id: 201, stage: 'ON_SITE', itemType: 'CORE', question: '수압이 충분한가요?' }],
     });
   });
 
@@ -128,7 +123,6 @@ describe('최종 API 명세 MSW handlers', () => {
     ['POST', '/api/properties/10/photos', 501, 'NOT_IMPLEMENTED'],
     ['GET', '/api/checklist-presets', 410, 'API_CONTRACT_REMOVED'],
     ['GET', '/api/properties/10/active-checklists/ONLINE_PHONE', 410, 'API_CONTRACT_REMOVED'],
-    ['GET', '/api/visits/31', 410, 'API_CONTRACT_REMOVED'],
   ])('%s %s는 성공 응답으로 위장하지 않는다', async (method, path, status, code) => {
     const response = await fetch(apiUrl(path), { method });
     const body = await readJson(response);

@@ -14,7 +14,9 @@ import {
   memberFixture,
   photoFixture,
   propertyDetailFixture,
+  propertyDetailResponseFixture,
   propertyPageFixture,
+  propertyPhotoResponseFixture,
   propertySummaryFixture,
   secondPropertySummaryFixture,
   successEnvelope,
@@ -27,14 +29,12 @@ const config: PublicConfig = {
   googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
 };
 
-const detailWithoutPhotos = {
+const detailWithoutPhotosFixture = {
   ...propertyDetailFixture,
-  recentVisit: null,
-  activeChecklists: [],
   photoCount: 0,
   photoPreview: { totalCount: 0, photos: [] },
-  deletionImpact: { ...propertyDetailFixture.deletionImpact, photoCount: 0 },
 };
+const detailWithoutPhotos = propertyDetailResponseFixture(detailWithoutPhotosFixture);
 
 const renderAuthenticated = (path: string) => {
   setAuthentication({ accessToken: 'memory-token', tokenType: 'Bearer', expiresIn: 60 });
@@ -79,7 +79,7 @@ describe('FE-2 매물 목록', () => {
     expect(screen.getByRole('link', { name: '망원동 투룸' })).toBeInTheDocument();
     expect(within(screen.getByRole('region', { name: '매물 목록' })).getAllByText('미완료')).toHaveLength(1);
     const firstPropertySummary = within(screen.getByRole('link', { name: '신림역 원룸' })).getByRole('list', {
-      name: '최근 방문 결과 집계',
+      name: '체크리스트 진행 결과 집계',
     });
     expect(firstPropertySummary).toHaveTextContent('괜찮음 10');
     expect(firstPropertySummary).toHaveTextContent('주의 5');
@@ -164,12 +164,20 @@ describe('FE-2 등록·수정·메모', () => {
         requestBody = await request.json();
         return HttpResponse.json(
           successEnvelope({
-            propertyId: 10,
+            id: 10,
             name: '신림역 원룸',
             depositAmount: 0,
             monthlyRentAmount: 550_000,
-            discoverySource: { type: 'TEXT', value: '중개사 추천' },
-            createdAt: '2026-08-10T07:30:00Z',
+            discoverySource: '중개사 추천',
+            photos: [],
+            overallProgress: {
+              totalCount: 0,
+              completedCount: 0,
+              goodCount: 0,
+              cautionCount: 0,
+              unconfirmedCount: 0,
+              progressRate: 0,
+            },
           }),
           { status: 201 },
         );
@@ -179,7 +187,7 @@ describe('FE-2 등록·수정·메모', () => {
           successEnvelope({
             ...detailWithoutPhotos,
             depositAmount: 0,
-            discoverySource: { type: 'TEXT', value: '중개사 추천' },
+            discoverySource: '중개사 추천',
           }),
         ),
       ),
@@ -206,7 +214,6 @@ describe('FE-2 등록·수정·메모', () => {
       name: '신림역 원룸',
       depositAmount: 0,
       monthlyRentAmount: 550_000,
-      maintenanceFeeAmount: null,
       discoverySource: '중개사 추천',
     });
   });
@@ -243,13 +250,11 @@ describe('FE-2 등록·수정·메모', () => {
         updateBody = await request.json();
         return HttpResponse.json(
           successEnvelope({
-            propertyId: 10,
+            id: 10,
             name: propertyDetailFixture.name,
             depositAmount: propertyDetailFixture.depositAmount,
             monthlyRentAmount: 530_000,
-            maintenanceFeeAmount: propertyDetailFixture.maintenanceFeeAmount,
-            discoverySource: propertyDetailFixture.discoverySource,
-            updatedAt: '2026-08-11T01:00:00Z',
+            discoverySource: propertyDetailFixture.discoverySource.value,
           }),
         );
       }),
@@ -269,7 +274,6 @@ describe('FE-2 등록·수정·메모', () => {
       name: propertyDetailFixture.name,
       depositAmount: propertyDetailFixture.depositAmount,
       monthlyRentAmount: 530_000,
-      maintenanceFeeAmount: propertyDetailFixture.maintenanceFeeAmount,
       discoverySource: propertyDetailFixture.discoverySource.value,
     });
   });
@@ -282,8 +286,14 @@ describe('FE-2 등록·수정·메모', () => {
           successEnvelope({
             propertyId: 10,
             items: [
-              { systemMemoItemId: 1, label: '집 주소', displayOrder: 1, content: '관악구 신림로 12길' },
-              { systemMemoItemId: 2, label: '입주 가능일', displayOrder: 2, content: '' },
+              {
+                propertyMemoItemId: 101,
+                systemMemoItemId: 1,
+                label: '집 주소',
+                displayOrder: 1,
+                content: '관악구 신림로 12길',
+              },
+              { propertyMemoItemId: 102, systemMemoItemId: 2, label: '입주 가능일', displayOrder: 2, content: '' },
             ],
             freeMemo: '',
           }),
@@ -307,8 +317,8 @@ describe('FE-2 등록·수정·메모', () => {
           successEnvelope({
             propertyId: 10,
             items: [
-              { systemMemoItemId: 1, label: '집 주소', displayOrder: 1, content: '' },
-              { systemMemoItemId: 2, label: '입주 가능일', displayOrder: 2, content: '' },
+              { propertyMemoItemId: 101, systemMemoItemId: 1, label: '집 주소', displayOrder: 1, content: '' },
+              { propertyMemoItemId: 102, systemMemoItemId: 2, label: '입주 가능일', displayOrder: 2, content: '' },
             ],
             freeMemo: '',
           }),
@@ -317,7 +327,7 @@ describe('FE-2 등록·수정·메모', () => {
       http.put(`${config.apiBaseUrl}/api/properties/10/memo`, async ({ request }) => {
         requestBody = await request.json();
         const body = requestBody as {
-          items: Array<{ systemMemoItemId: number; content: string }>;
+          items: Array<{ propertyMemoItemId: number; content: string }>;
           freeMemo: string;
         };
         return HttpResponse.json(
@@ -325,6 +335,7 @@ describe('FE-2 등록·수정·메모', () => {
             propertyId: 10,
             items: body.items.map((item, index) => ({
               ...item,
+              systemMemoItemId: index + 1,
               label: index === 0 ? '집 주소' : '입주 가능일',
               displayOrder: index + 1,
             })),
@@ -343,8 +354,8 @@ describe('FE-2 등록·수정·메모', () => {
     expect(await screen.findByRole('heading', { name: '신림역 원룸', level: 1 })).toBeInTheDocument();
     expect(requestBody).toEqual({
       items: [
-        { systemMemoItemId: 1, content: '관악구 신림로 12길' },
-        { systemMemoItemId: 2, content: '' },
+        { propertyMemoItemId: 101, content: '관악구 신림로 12길' },
+        { propertyMemoItemId: 102, content: '' },
       ],
       freeMemo: '채광을 다시 확인하기',
     });
@@ -358,7 +369,7 @@ describe('FE-2 등록·수정·메모', () => {
         HttpResponse.json(
           successEnvelope({
             propertyId: 10,
-            items: [{ systemMemoItemId: 1, label: '집 주소', displayOrder: 1, content: '' }],
+            items: [{ propertyMemoItemId: 101, systemMemoItemId: 1, label: '집 주소', displayOrder: 1, content: '' }],
             freeMemo: '',
           }),
         ),
@@ -368,13 +379,18 @@ describe('FE-2 등록·수정·메모', () => {
         const body = await request.json();
         if (saveAttempts === 1) return HttpResponse.json(errorEnvelope('INTERNAL_SERVER_ERROR'), { status: 500 });
         const memoBody = body as {
-          items: Array<{ systemMemoItemId: number; content: string }>;
+          items: Array<{ propertyMemoItemId: number; content: string }>;
           freeMemo: string;
         };
         return HttpResponse.json(
           successEnvelope({
             propertyId: 10,
-            items: memoBody.items.map((item) => ({ ...item, label: '집 주소', displayOrder: 1 })),
+            items: memoBody.items.map((item) => ({
+              ...item,
+              systemMemoItemId: 1,
+              label: '집 주소',
+              displayOrder: 1,
+            })),
             freeMemo: memoBody.freeMemo,
           }),
         );
@@ -398,14 +414,19 @@ describe('FE-2 사진과 삭제 확인', () => {
   it('상세 사진은 큰 화면에서 넘겨 보고 별도 사진 화면에서 관리한다', async () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
-        HttpResponse.json(successEnvelope(propertyDetailFixture)),
+        HttpResponse.json(successEnvelope(propertyDetailResponseFixture())),
       ),
       http.get(`${config.apiBaseUrl}/api/properties/10/photos`, () =>
         HttpResponse.json(
           successEnvelope({
-            photos: [
-              photoFixture,
-              { ...photoFixture, photoId: 82, contentUrl: '/api/properties/10/photos/82/content' },
+            propertyId: 10,
+            items: [
+              propertyPhotoResponseFixture(),
+              propertyPhotoResponseFixture({
+                ...photoFixture,
+                photoId: 82,
+                contentUrl: '/api/properties/10/photos/82/content',
+              }),
             ],
             totalCount: 2,
           }),
@@ -445,7 +466,7 @@ describe('FE-2 사진과 삭제 확인', () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () => HttpResponse.json(successEnvelope(detailWithoutPhotos))),
       http.get(`${config.apiBaseUrl}/api/properties/10/photos`, () =>
-        HttpResponse.json(successEnvelope({ photos: [], totalCount: 0 })),
+        HttpResponse.json(successEnvelope({ propertyId: 10, items: [], totalCount: 0 })),
       ),
       http.post(`${config.apiBaseUrl}/api/properties/10/photos`, () => {
         uploadCalls += 1;
@@ -471,7 +492,7 @@ describe('FE-2 사진과 삭제 확인', () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () => HttpResponse.json(successEnvelope(detailWithoutPhotos))),
       http.get(`${config.apiBaseUrl}/api/properties/10/photos`, () =>
-        HttpResponse.json(successEnvelope({ photos: [], totalCount: 30 })),
+        HttpResponse.json(successEnvelope({ propertyId: 10, items: [], totalCount: 30 })),
       ),
     );
     renderAuthenticated('/properties/10/photos');
@@ -487,7 +508,7 @@ describe('FE-2 사진과 삭제 확인', () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () => HttpResponse.json(successEnvelope(detailWithoutPhotos))),
       http.get(`${config.apiBaseUrl}/api/properties/10/photos`, () =>
-        HttpResponse.json(successEnvelope({ photos: [], totalCount: 0 })),
+        HttpResponse.json(successEnvelope({ propertyId: 10, items: [], totalCount: 0 })),
       ),
       http.post(`${config.apiBaseUrl}/api/properties/10/photos`, async () => {
         uploadCalls += 1;
@@ -520,10 +541,16 @@ describe('FE-2 사진과 삭제 확인', () => {
     let deleteCalls = 0;
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
-        HttpResponse.json(successEnvelope(propertyDetailFixture)),
+        HttpResponse.json(successEnvelope(propertyDetailResponseFixture())),
       ),
       http.get(`${config.apiBaseUrl}/api/properties/10/photos`, () =>
-        HttpResponse.json(successEnvelope({ photos: deleted ? [] : [photoFixture], totalCount: deleted ? 0 : 1 })),
+        HttpResponse.json(
+          successEnvelope({
+            propertyId: 10,
+            items: deleted ? [] : [propertyPhotoResponseFixture()],
+            totalCount: deleted ? 0 : 1,
+          }),
+        ),
       ),
       http.get(
         `${config.apiBaseUrl}/api/properties/10/photos/81/content`,
@@ -532,7 +559,7 @@ describe('FE-2 사진과 삭제 확인', () => {
       http.delete(`${config.apiBaseUrl}/api/properties/10/photos/81`, () => {
         deleteCalls += 1;
         deleted = true;
-        return new HttpResponse(null, { status: 204 });
+        return new HttpResponse(null, { status: 200 });
       }),
     );
     const user = userEvent.setup();
@@ -574,12 +601,15 @@ describe('FE-2 사진과 삭제 확인', () => {
     ];
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
-        HttpResponse.json(successEnvelope(propertyDetailFixture)),
+        HttpResponse.json(successEnvelope(propertyDetailResponseFixture())),
       ),
       http.get(`${config.apiBaseUrl}/api/properties/10/photos`, () =>
         HttpResponse.json(
           successEnvelope({
-            photos: photos.map((photo) => ({ ...photo, representative: photo.photoId === representativePhotoId })),
+            propertyId: 10,
+            items: photos.map((photo) =>
+              propertyPhotoResponseFixture({ ...photo, representative: photo.photoId === representativePhotoId }),
+            ),
             totalCount: photos.length,
           }),
         ),
@@ -591,7 +621,7 @@ describe('FE-2 사진과 삭제 확인', () => {
       http.put(`${config.apiBaseUrl}/api/properties/10/photos/82/representative`, () => {
         representativeCalls += 1;
         representativePhotoId = 82;
-        return HttpResponse.json(successEnvelope({ ...photos[1], representative: true }));
+        return new HttpResponse(null, { status: 200 });
       }),
     );
     const user = userEvent.setup();
@@ -607,10 +637,10 @@ describe('FE-2 사진과 삭제 확인', () => {
   it('사진 삭제 실패는 사진을 유지하고 안전한 재시도 오류를 표시한다', async () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
-        HttpResponse.json(successEnvelope(propertyDetailFixture)),
+        HttpResponse.json(successEnvelope(propertyDetailResponseFixture())),
       ),
       http.get(`${config.apiBaseUrl}/api/properties/10/photos`, () =>
-        HttpResponse.json(successEnvelope({ photos: [photoFixture], totalCount: 1 })),
+        HttpResponse.json(successEnvelope({ propertyId: 10, items: [propertyPhotoResponseFixture()], totalCount: 1 })),
       ),
       http.get(
         `${config.apiBaseUrl}/api/properties/10/photos/81/content`,
@@ -636,7 +666,7 @@ describe('FE-2 사진과 삭제 확인', () => {
       http.get(`${config.apiBaseUrl}/api/properties/10`, () => HttpResponse.json(successEnvelope(detailWithoutPhotos))),
       http.delete(`${config.apiBaseUrl}/api/properties/10`, () => {
         deleteCalls += 1;
-        return new HttpResponse(null, { status: 204 });
+        return new HttpResponse(null, { status: 200 });
       }),
       http.get(`${config.apiBaseUrl}/api/properties`, () =>
         HttpResponse.json(successEnvelope(propertyPageFixture([]))),

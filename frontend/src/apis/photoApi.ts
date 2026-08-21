@@ -41,10 +41,10 @@ export const setRepresentativePropertyPhoto = (
   config: PublicConfig,
   propertyId: number,
   photoId: number,
-): Promise<PropertyPhoto> =>
+): Promise<undefined> =>
   apiRequest({
     config,
     path: `/api/properties/${propertyId}/photos/${photoId}/representative`,
     method: 'PUT',
-    parseData: parsePropertyPhotoResponse,
+    parseData: parseNoContent,
   });

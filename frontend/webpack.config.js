@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 const shouldAnalyze = process.env.ANALYZE === 'true';
@@ -16,6 +17,13 @@ module.exports = (_env, argv) => {
 
   return {
     entry: isBrowserTestHarness ? './src/test-browser/main.tsx' : './src/main.tsx',
+    cache: {
+      type: 'filesystem',
+      buildDependencies: {
+        config: [__filename],
+      },
+    },
+    devtool: isProduction ? false : 'eval-cheap-module-source-map',
     output: {
       path: path.resolve(__dirname, 'dist'),
       // 운영에서만 contenthash 를 붙인다. 내용이 바뀌면 파일명이 바뀌므로 CDN 캐시를 무효화하지 않아도
@@ -38,6 +46,14 @@ module.exports = (_env, argv) => {
         filename: 'index.html',
         inject: true,
       }),
+      ...(isProduction
+        ? [
+            new MiniCssExtractPlugin({
+              filename: '[name].[contenthash].css',
+              chunkFilename: '[name].[contenthash].css',
+            }),
+          ]
+        : []),
       new BundleAnalyzerPlugin({
         analyzerMode: shouldAnalyze ? 'static' : 'disabled',
         reportFilename: 'bundle-report.html',
@@ -68,7 +84,7 @@ module.exports = (_env, argv) => {
         {
           test: /\.css$/,
           use: [
-            'style-loader',
+            isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
             {
               loader: 'css-loader',
               options: {

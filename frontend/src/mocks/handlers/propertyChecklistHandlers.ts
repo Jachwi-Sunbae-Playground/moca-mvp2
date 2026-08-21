@@ -122,6 +122,4 @@ export const propertyChecklistHandlers = [
     },
   ),
   http.all('*/api/properties/:propertyId/active-checklists/*', obsoleteEndpoint),
-  http.all('*/api/properties/:propertyId/visits*', obsoleteEndpoint),
-  http.all('*/api/visits/*', obsoleteEndpoint),
 ];

@@ -5,17 +5,13 @@ import type {
   PropertyChecklistOverview,
   PropertyChecklistDetail,
   PropertyChecklistItemStatus,
-  PropertyMemo,
   PropertyMemoDocument,
   PropertyPage,
-  PropertyPreVisitMemo,
 } from '../types/Property';
 import { apiRequest } from './apiClient';
 import type {
   PropertyInputDto,
-  SavePropertyMemoRequestDto,
   SavePropertyMemoDocumentRequestDto,
-  SavePropertyPreVisitMemoRequestDto,
   UpdatePropertyRequestDto,
 } from './dtos/PropertyDto';
 import {
@@ -25,7 +21,6 @@ import {
   parsePropertyChecklistOverview,
   parsePropertyChecklistDetail,
   parsePropertyMemoDocument,
-  parsePropertyMemoResponse,
   parsePropertyPage,
 } from './propertyParsers';
 import { readInteger, readRecord, readString } from './responseParsers';
@@ -55,8 +50,16 @@ export const fetchProperties = (
   });
 };
 
+const toPropertyRequest = ({ maintenanceFeeAmount: _maintenanceFeeAmount, ...request }: PropertyInputDto) => request;
+
 export const createProperty = (config: PublicConfig, request: PropertyInputDto): Promise<PropertyBasicInfo> =>
-  apiRequest({ config, path: '/api/properties', method: 'POST', body: request, parseData: parsePropertyBasicInfo });
+  apiRequest({
+    config,
+    path: '/api/properties',
+    method: 'POST',
+    body: toPropertyRequest(request),
+    parseData: parsePropertyBasicInfo,
+  });
 
 export const fetchPropertyDetail = (
   config: PublicConfig,
@@ -74,7 +77,7 @@ export const updateProperty = (
     config,
     path: `/api/properties/${propertyId}`,
     method: 'PUT',
-    body: request,
+    body: toPropertyRequest(request),
     parseData: parsePropertyBasicInfo,
   });
 
@@ -185,31 +188,4 @@ export const removeProperty = (config: PublicConfig, propertyId: number): Promis
     path: `/api/properties/${propertyId}`,
     method: 'DELETE',
     parseData: parseNoContent,
-  });
-
-export const savePropertyPreVisitMemo = (
-  config: PublicConfig,
-  propertyId: number,
-  request: SavePropertyPreVisitMemoRequestDto,
-): Promise<PropertyPreVisitMemo> =>
-  apiRequest({
-    config,
-    path: `/api/properties/${propertyId}/memo`,
-    method: 'PUT',
-    body: request,
-    parseData: parsePropertyMemoResponse,
-  });
-
-/** @deprecated v1.0 화면 호환 전용이다. 신규 코드는 savePropertyPreVisitMemo를 사용한다. */
-export const savePropertyMemo = (
-  config: PublicConfig,
-  propertyId: number,
-  request: SavePropertyMemoRequestDto,
-): Promise<PropertyMemo> =>
-  apiRequest({
-    config,
-    path: `/api/properties/${propertyId}/memo`,
-    method: 'PUT',
-    body: request,
-    parseData: parsePropertyMemoResponse,
   });

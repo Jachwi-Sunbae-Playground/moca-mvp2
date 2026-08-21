@@ -11,11 +11,21 @@
 
 .editor-section,
 .item-picker {
-  margin-top: 0.65rem;
-  padding: 0.7rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  margin-top: 0.55rem;
+  padding: 0.6rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.checklist-editor > .editor-section:first-child {
+  margin-top: 0.15rem;
+}
+
+.editor-section + .editor-section,
+.editor-section + .item-picker,
+.item-picker + .editor-section {
+  border-top: 1px solid var(--color-border);
 }
 
 .editor-section h2,
@@ -85,15 +95,20 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.55rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  padding: 0.55rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+}
+
+.selected-check-items li:first-child {
+  border-top: 1px solid var(--color-border);
 }
 
 .selected-check-items__drag-handle {
   display: grid;
-  width: 1.75rem;
-  min-width: 1.75rem;
+  width: 1.6rem;
+  min-width: 1.6rem;
   min-height: 2.25rem;
   padding: 0;
   border: 0;
@@ -160,12 +175,13 @@
 }
 
 .selected-check-items__actions button {
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  background: var(--color-surface);
+  min-width: 1.75rem;
+  min-height: 2.25rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--color-primary-dark);
+  font-size: 1.1rem;
   cursor: pointer;
 }
 

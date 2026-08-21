@@ -23,8 +23,6 @@ const CreateChecklistPage = lazy(() => import('./CreateChecklistPage'));
 const ChecklistDetailPage = lazy(() => import('./ChecklistDetailPage'));
 const PropertyActiveChecklistPage = lazy(() => import('./PropertyActiveChecklistPage'));
 const PropertyChecklistPage = lazy(() => import('./PropertyChecklistPage'));
-const PropertyVisitsPage = lazy(() => import('./PropertyVisitsPage'));
-const VisitDetailPage = lazy(() => import('./VisitDetailPage'));
 const MyPage = lazy(() => import('./MyPage'));
 const UpcomingFeaturePage = lazy(() => import('./UpcomingFeaturePage'));
 
@@ -67,8 +65,6 @@ const AppRoutes = ({ config, storage, navigateExternally }: AppRoutesProps) => (
         <Route path="/properties/:propertyId/edit" element={lazyPage(<EditPropertyPage config={config} />)} />
         <Route path="/properties/:propertyId/photos" element={lazyPage(<PropertyPhotosPage config={config} />)} />
         <Route path="/properties/:propertyId/memo" element={lazyPage(<PropertyMemoPage config={config} />)} />
-        <Route path="/properties/:propertyId/visits" element={lazyPage(<PropertyVisitsPage config={config} />)} />
-        <Route path="/visits/:visitId" element={lazyPage(<VisitDetailPage config={config} />)} />
         <Route
           path="/properties/:propertyId/active-checklists/:stage"
           element={lazyPage(<PropertyActiveChecklistPage config={config} />)}
