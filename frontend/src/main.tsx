@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { restoreAuthentication } from './app/authStore';
 
 const rootElement = document.getElementById('root');
 
@@ -9,6 +10,8 @@ if (rootElement === null) {
 }
 
 const startApplication = async () => {
+  restoreAuthentication();
+
   if (__ENABLE_MSW__) {
     const { startBrowserMocking } = await import('./mocks/browser');
     await startBrowserMocking();
