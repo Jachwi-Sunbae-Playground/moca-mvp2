@@ -40,13 +40,15 @@ article:last-child > .card {
 }
 
 .mainInfo {
-  display: block;
+  display: grid;
+  grid-template-columns: 4.25rem minmax(0, 1fr);
   align-items: center;
   gap: 0.8rem;
 }
 
 .thumbnail {
-  display: none;
+  position: relative;
+  display: grid;
   width: 4.25rem;
   aspect-ratio: 1;
   overflow: hidden;
