@@ -1,14 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
-import ChecklistStageTabs from '../components/ChecklistStageTabs';
 import PropertyChecklistItemControl from '../components/PropertyChecklistItemControl';
 import TopNavigation from '../components/ui/TopNavigation';
-import {
-  usePropertyChecklistDetail,
-  usePropertyChecklistOverview,
-  usePropertyDetail,
-} from '../hooks/query/useProperties';
-import type { ChecklistStage } from '../types/Checklist';
+import { usePropertyChecklistDetail, usePropertyDetail } from '../hooks/query/useProperties';
 import type { PublicConfig } from '../types/PublicConfig';
 import { getChecklistStageLabel, parsePositiveId } from '../utils/propertyFormat';
 import styles from './PropertyChecklistPage.module.css';
@@ -44,7 +38,6 @@ const ResolvedPropertyChecklistPage = ({
   propertyChecklistId: number;
 }) => {
   const checklist = usePropertyChecklistDetail(config, propertyId, propertyChecklistId);
-  const overview = usePropertyChecklistOverview(config, propertyId);
   const property = usePropertyDetail(config, propertyId);
 
   if (checklist.isPending) {
@@ -70,16 +63,6 @@ const ResolvedPropertyChecklistPage = ({
 
   const detail = checklist.data;
   const completedCount = detail.items.filter((item) => item.status !== 'UNCONFIRMED').length;
-  const getStagePath = (stage: ChecklistStage) => {
-    const stageOverview = overview.data?.stages.find((item) => item.stage === stage);
-
-    if (stageOverview?.applied === true && stageOverview.propertyChecklistId !== null) {
-      return `/properties/${propertyId}/checklists/${stageOverview.propertyChecklistId}`;
-    }
-
-    if (stage === detail.stage) return `/properties/${propertyId}/checklists/${propertyChecklistId}`;
-    return `/properties/${propertyId}/active-checklists/${stage}`;
-  };
 
   return (
     <main className={styles.page}>
@@ -89,9 +72,6 @@ const ResolvedPropertyChecklistPage = ({
           backTo={`/properties/${propertyId}`}
           backLabel="매물 상세로 돌아가기"
         />
-        <div className={styles.stageTabs}>
-          <ChecklistStageTabs stage={detail.stage} fullBleed getTo={getStagePath} />
-        </div>
         <header className={styles.heading}>
           <div>
             <span>{getChecklistStageLabel(detail.stage)}</span>

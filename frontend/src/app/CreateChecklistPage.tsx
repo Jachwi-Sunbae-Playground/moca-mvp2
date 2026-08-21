@@ -162,7 +162,7 @@ const ResolvedCreateChecklistPage = ({
               if (safeReturn !== null && safeReturn.stage === stage) {
                 navigate(safeReturn.path, { replace: true, state: { newChecklistId: created.checklistId } });
               } else {
-                navigate(`/checklists/${created.checklistId}`, { replace: true, state: { focusHeading: true } });
+                navigate(`/checklists/${stage}`, { replace: true, state: { newChecklistId: created.checklistId } });
               }
               return created;
             }}

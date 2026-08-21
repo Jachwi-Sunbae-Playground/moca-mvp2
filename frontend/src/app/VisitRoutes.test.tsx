@@ -23,7 +23,7 @@ const config: PublicConfig = {
 
 const renderAuthenticated = (path: string, history?: { initialEntries: string[]; initialIndex: number }) => {
   setAuthentication({ accessToken: 'memory-token', tokenType: 'Bearer', expiresIn: 60 });
-  server.use(http.get(`${config.apiBaseUrl}/api/members`, () => HttpResponse.json(successEnvelope(memberFixture))));
+  server.use(http.get(`${config.apiBaseUrl}/api/members/me`, () => HttpResponse.json(successEnvelope(memberFixture))));
   const guardedHistory = createGuardedHistory(
     UNSAFE_createMemoryHistory({
       initialEntries: history?.initialEntries ?? [path],

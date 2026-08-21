@@ -1,20 +1,27 @@
 import { http } from 'msw';
-import { failure, obsoleteEndpoint, success } from '../mockStore';
+import { failure, success } from '../mockStore';
 
 export const authHandlers = [
   http.post('*/api/auth/google', async ({ request }) => {
-    const body = (await request.json()) as { authorizationCode?: unknown };
-    if (typeof body.authorizationCode !== 'string' || body.authorizationCode.trim() === '') {
+    const body = (await request.json()) as Record<string, unknown>;
+    if (
+      typeof body.authorizationCode !== 'string' ||
+      body.authorizationCode.trim() === '' ||
+      typeof body.codeVerifier !== 'string' ||
+      body.codeVerifier.trim() === '' ||
+      typeof body.nonce !== 'string' ||
+      body.nonce.trim() === '' ||
+      typeof body.redirectUri !== 'string' ||
+      body.redirectUri.trim() === ''
+    ) {
       return failure('INVALID_REQUEST', 400);
     }
     return success({
       accessToken: 'local-msw-access-token',
       tokenType: 'Bearer',
-      expiresInSeconds: 28_800,
-      isNewMember: false,
-      member: { id: 1, name: '이자취', email: 'jachwi@example.com' },
+      expiresIn: 28_800,
+      member: { memberId: 1, name: '이자취', email: 'jachwi@example.com' },
     });
   }),
-  http.get('*/api/members', () => success({ id: 1, name: '이자취', email: 'jachwi@example.com' })),
-  http.get('*/api/members/me', obsoleteEndpoint),
+  http.get('*/api/members/me', () => success({ id: 1, name: '이자취', email: 'jachwi@example.com' })),
 ];

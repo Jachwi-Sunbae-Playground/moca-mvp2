@@ -147,6 +147,10 @@ describe('체크리스트 탐색과 편집', () => {
         optionalSystemCheckItemIds: [102],
       }),
     );
+    expect(await screen.findByRole('link', { name: '새 체크리스트 만들기' })).toHaveAttribute(
+      'href',
+      '/checklists/new?stage=ONLINE_PHONE',
+    );
   });
 
   it('수정 요청에는 현재 시스템 항목의 전체 순서를 보낸다', async () => {
@@ -172,6 +176,10 @@ describe('체크리스트 탐색과 편집', () => {
     await user.click(screen.getByRole('button', { name: '변경 내용 저장' }));
 
     await waitFor(() => expect(requestBody).toEqual({ name: '수정한 목록', systemCheckItemIds: [101, 102] }));
+    expect(await screen.findByRole('link', { name: '새 체크리스트 만들기' })).toHaveAttribute(
+      'href',
+      '/checklists/new?stage=ONLINE_PHONE',
+    );
   });
 });
 
@@ -375,14 +383,9 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
     const user = userEvent.setup();
     renderAuthenticated('/properties/10/checklists/47');
 
-    expect(await screen.findByRole('link', { name: '온라인·전화' })).toHaveAttribute(
-      'href',
-      '/properties/10/checklists/47',
-    );
-    expect(screen.getByRole('link', { name: '집에서 확인' })).toHaveAttribute(
-      'href',
-      '/properties/10/active-checklists/ON_SITE',
-    );
+    expect(await screen.findByRole('heading', { name: '전화 문의 기본 목록', level: 1 })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: '온라인·전화' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: '집에서 확인' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('radio', { name: '주의' }));
     await waitFor(() => expect(statusRequest).toEqual({ status: 'CAUTION' }));

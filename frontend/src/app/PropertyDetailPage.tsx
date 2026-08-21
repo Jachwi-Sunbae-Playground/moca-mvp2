@@ -235,7 +235,7 @@ const ResolvedPropertyDetailPage = ({ config, propertyId }: { config: PublicConf
                     : `/properties/${propertyId}/active-checklists/${stage}`;
                 return (
                   <li key={stage}>
-                    <Link to={checklistPath}>
+                    <Link to={checklistPath} state={{ from: 'property-detail' }}>
                       <span className={styles.stageNumber}>{index + 1}</span>
                       <span className={styles.stageCopy}>
                         <strong>{getChecklistStageLabel(stage)}</strong>
