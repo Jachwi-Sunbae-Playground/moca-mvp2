@@ -8,7 +8,7 @@ import type {
   PropertyMemoDocument,
   PropertyPage,
 } from '../types/Property';
-import { apiRequest } from './apiClient';
+import { ApiError, apiRequest } from './apiClient';
 import type {
   PropertyInputDto,
   SavePropertyMemoDocumentRequestDto,
@@ -92,6 +92,29 @@ export const fetchPropertyMemo = (
     signal,
     parseData: parsePropertyMemoDocument,
   });
+
+export const initializePropertyMemo = (config: PublicConfig, propertyId: number): Promise<PropertyMemoDocument> =>
+  apiRequest({
+    config,
+    path: `/api/properties/${propertyId}/memo`,
+    method: 'POST',
+    parseData: parsePropertyMemoDocument,
+  });
+
+export const fetchOrInitializePropertyMemo = async (
+  config: PublicConfig,
+  propertyId: number,
+  signal?: AbortSignal,
+): Promise<PropertyMemoDocument> => {
+  try {
+    const memo = await fetchPropertyMemo(config, propertyId, signal);
+    if (memo.items.length > 0) return memo;
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 404) throw error;
+  }
+
+  return initializePropertyMemo(config, propertyId);
+};
 
 export const savePropertyMemoDocument = (
   config: PublicConfig,

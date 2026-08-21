@@ -38,8 +38,6 @@ describe('매물 입력 검증', () => {
       }),
     ).toEqual({
       name: expect.any(String),
-      depositAmount: expect.any(String),
-      monthlyRentAmount: expect.any(String),
     });
     expect(
       validatePropertyForm({
@@ -64,5 +62,17 @@ describe('매물 입력 검증', () => {
       '동네 중개사 추천',
     );
     expect(toPropertyInputDto({ ...base, discoverySource: '' })?.monthlyRentAmount).toBe(550_000);
+  });
+
+  it('선택 금액이 비어 있으면 요청에서 제외한다', () => {
+    expect(
+      toPropertyInputDto({
+        name: '매물',
+        depositAmount: '',
+        monthlyRentAmount: '',
+        maintenanceFeeAmount: '',
+        discoverySource: '',
+      }),
+    ).toEqual({ name: '매물', maintenanceFeeAmount: null, discoverySource: null });
   });
 });

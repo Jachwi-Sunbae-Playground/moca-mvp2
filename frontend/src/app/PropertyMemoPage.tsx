@@ -81,7 +81,7 @@ const ResolvedPropertyMemoPage = ({ config, propertyId }: { config: PublicConfig
           void saveMemo
             .mutateAsync({
               items: memo.data.items.map((item) => ({
-                propertyMemoItemId: item.propertyMemoItemId,
+                systemMemoItemId: item.systemMemoItemId,
                 content: itemValues[item.systemMemoItemId]?.trim() ?? '',
               })),
               freeMemo: freeMemo.trim(),

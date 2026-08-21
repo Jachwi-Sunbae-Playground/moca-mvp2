@@ -322,7 +322,7 @@ describe('FE-2 등록·수정·메모', () => {
       http.put(`${config.apiBaseUrl}/api/properties/10/memo`, async ({ request }) => {
         requestBody = await request.json();
         const body = requestBody as {
-          items: Array<{ propertyMemoItemId: number; content: string }>;
+          items: Array<{ systemMemoItemId: number; content: string }>;
           freeMemo: string;
         };
         return HttpResponse.json(
@@ -349,8 +349,8 @@ describe('FE-2 등록·수정·메모', () => {
     expect(await screen.findByRole('heading', { name: '신림역 원룸', level: 1 })).toBeInTheDocument();
     expect(requestBody).toEqual({
       items: [
-        { propertyMemoItemId: 101, content: '관악구 신림로 12길' },
-        { propertyMemoItemId: 102, content: '' },
+        { systemMemoItemId: 1, content: '관악구 신림로 12길' },
+        { systemMemoItemId: 2, content: '' },
       ],
       freeMemo: '채광을 다시 확인하기',
     });
@@ -374,7 +374,7 @@ describe('FE-2 등록·수정·메모', () => {
         const body = await request.json();
         if (saveAttempts === 1) return HttpResponse.json(errorEnvelope('INTERNAL_SERVER_ERROR'), { status: 500 });
         const memoBody = body as {
-          items: Array<{ propertyMemoItemId: number; content: string }>;
+          items: Array<{ systemMemoItemId: number; content: string }>;
           freeMemo: string;
         };
         return HttpResponse.json(

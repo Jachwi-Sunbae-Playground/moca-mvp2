@@ -4,7 +4,7 @@ import {
   fetchPropertyChecklistOverview,
   fetchPropertyChecklistDetail,
   fetchPropertyDetail,
-  fetchPropertyMemo,
+  fetchOrInitializePropertyMemo,
 } from '../../apis/propertyApi';
 import { fetchPropertyPhotos } from '../../apis/photoApi';
 import { propertyQueryKeys } from '../../app/propertyQueryKeys';
@@ -29,7 +29,7 @@ export const usePropertyDetail = (config: PublicConfig, propertyId: number) =>
 export const usePropertyMemo = (config: PublicConfig, propertyId: number) =>
   useQuery({
     queryKey: propertyQueryKeys.memo(propertyId),
-    queryFn: ({ signal }) => fetchPropertyMemo(config, propertyId, signal),
+    queryFn: ({ signal }) => fetchOrInitializePropertyMemo(config, propertyId, signal),
   });
 
 export const usePropertyChecklistOverview = (config: PublicConfig, propertyId: number) =>

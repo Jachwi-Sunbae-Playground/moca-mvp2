@@ -79,7 +79,8 @@ export type PropertyPhotoList = {
 };
 
 export type PropertyMemoItem = {
-  propertyMemoItemId: number;
+  /** GET /memo returns the system items before a property memo row exists. */
+  propertyMemoItemId?: number;
   systemMemoItemId: number;
   label: string;
   displayOrder: number;

@@ -65,11 +65,11 @@ export const validatePropertyForm = (values: PropertyFormValues): PropertyFormEr
     errors.name = '이름은 30자 이하로 입력해 주세요.';
   }
 
-  if (parseMoneyInput(values.depositAmount) === null) {
+  if (values.depositAmount !== '' && parseMoneyInput(values.depositAmount) === null) {
     errors.depositAmount = '보증금은 0 이상 최대 안전 정수 이하의 정수로 입력해 주세요.';
   }
 
-  if (parseMoneyInput(values.monthlyRentAmount) === null) {
+  if (values.monthlyRentAmount !== '' && parseMoneyInput(values.monthlyRentAmount) === null) {
     errors.monthlyRentAmount = '월세는 0 이상 최대 안전 정수 이하의 정수로 입력해 주세요.';
   }
 
@@ -88,8 +88,8 @@ export const toPropertyInputDto = (values: PropertyFormValues): PropertyInputDto
   const depositInput = parseMoneyInput(values.depositAmount);
   const monthlyRentInput = parseMoneyInput(values.monthlyRentAmount);
   const maintenanceFeeInput = values.maintenanceFeeAmount === '' ? null : parseMoneyInput(values.maintenanceFeeAmount);
-  const depositAmount = depositInput === null ? null : toWon(depositInput);
-  const monthlyRentAmount = monthlyRentInput === null ? null : toWon(monthlyRentInput);
+  const depositAmount = depositInput === null ? undefined : toWon(depositInput);
+  const monthlyRentAmount = monthlyRentInput === null ? undefined : toWon(monthlyRentInput);
   const maintenanceFeeAmount = maintenanceFeeInput === null ? null : toWon(maintenanceFeeInput);
 
   if (
@@ -102,8 +102,8 @@ export const toPropertyInputDto = (values: PropertyFormValues): PropertyInputDto
 
   return {
     name: values.name.trim(),
-    depositAmount,
-    monthlyRentAmount,
+    ...(depositAmount === undefined ? {} : { depositAmount }),
+    ...(monthlyRentAmount === undefined ? {} : { monthlyRentAmount }),
     maintenanceFeeAmount,
     discoverySource: values.discoverySource.trim() || null,
   };

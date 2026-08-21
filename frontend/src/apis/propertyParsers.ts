@@ -177,7 +177,9 @@ export const parsePropertyMemoDocument = (value: unknown): PropertyMemoDocument 
       .map((item) => {
         const itemRecord = readRecord(item);
         return {
-          propertyMemoItemId: readInteger(itemRecord, 'propertyMemoItemId', 1),
+          ...(itemRecord.propertyMemoItemId === undefined
+            ? {}
+            : { propertyMemoItemId: readInteger(itemRecord, 'propertyMemoItemId', 1) }),
           systemMemoItemId: readInteger(itemRecord, 'systemMemoItemId', 1),
           label: readString(itemRecord, 'label'),
           displayOrder: readInteger(itemRecord, 'displayOrder', 1),

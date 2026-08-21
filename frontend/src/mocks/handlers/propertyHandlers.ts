@@ -78,7 +78,8 @@ export const propertyHandlers = [
   http.get('*/api/properties/:propertyId/memo', ({ params }) => {
     const property = getProperty(params.propertyId);
     if (property === undefined) return failure('PROPERTY_NOT_FOUND', 404);
-    return success(getMockMemosByProperty().get(property.id) ?? emptyMemo(property.id));
+    const memo = getMockMemosByProperty().get(property.id);
+    return memo === undefined ? failure('MEMO_NOT_FOUND', 404) : success(memo);
   }),
   http.post('*/api/properties/:propertyId/memo', ({ params }) => {
     const property = getProperty(params.propertyId);
@@ -91,16 +92,16 @@ export const propertyHandlers = [
     const property = getProperty(params.propertyId);
     if (property === undefined) return failure('PROPERTY_NOT_FOUND', 404);
     const body = (await request.json()) as {
-      items?: Array<{ propertyMemoItemId: number; content: string }>;
+      items?: Array<{ systemMemoItemId: number; content: string }>;
       freeMemo?: string;
     };
     const current = getMockMemosByProperty().get(property.id) ?? emptyMemo(property.id);
-    const requestedContent = new Map(body.items?.map((item) => [item.propertyMemoItemId, item.content]) ?? []);
+    const requestedContent = new Map(body.items?.map((item) => [item.systemMemoItemId, item.content]) ?? []);
     const memo = {
       propertyId: property.id,
       items: current.items
-        .filter((item) => requestedContent.has(item.propertyMemoItemId))
-        .map((item) => ({ ...item, content: requestedContent.get(item.propertyMemoItemId) ?? '' })),
+        .filter((item) => requestedContent.has(item.systemMemoItemId))
+        .map((item) => ({ ...item, content: requestedContent.get(item.systemMemoItemId) ?? '' })),
       freeMemo: body.freeMemo ?? '',
     };
     setMockMemosByProperty(new Map(getMockMemosByProperty()).set(property.id, memo));

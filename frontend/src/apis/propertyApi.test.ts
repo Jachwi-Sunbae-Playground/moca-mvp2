@@ -17,6 +17,7 @@ import {
   fetchProperties,
   fetchPropertyDetail,
   fetchPropertyMemo,
+  fetchOrInitializePropertyMemo,
   removeProperty,
   savePropertyMemoDocument,
   updateProperty,
@@ -262,7 +263,7 @@ describe('FE-2 API 경계', () => {
     await expect(removePropertyPhoto(config, 10, 81)).resolves.toBeUndefined();
   });
 
-  it('매물 메모는 매물 메모 항목 ID와 자유 메모를 조회하고 저장한다', async () => {
+  it('매물 메모는 시스템 메모 항목 ID와 자유 메모를 조회하고 저장한다', async () => {
     authenticate();
     let requestBody: unknown;
     server.use(
@@ -270,7 +271,7 @@ describe('FE-2 API 경계', () => {
         HttpResponse.json(
           successEnvelope({
             propertyId: 10,
-            items: [{ propertyMemoItemId: 1001, systemMemoItemId: 1, label: '집 주소', displayOrder: 1, content: '' }],
+            items: [{ systemMemoItemId: 1, label: '집 주소', displayOrder: 1, content: '' }],
             freeMemo: '',
           }),
         ),
@@ -282,7 +283,6 @@ describe('FE-2 API 경계', () => {
             propertyId: 10,
             items: [
               {
-                propertyMemoItemId: 1001,
                 systemMemoItemId: 1,
                 label: '집 주소',
                 displayOrder: 1,
@@ -295,16 +295,42 @@ describe('FE-2 API 경계', () => {
       }),
     );
 
-    await expect(fetchPropertyMemo(config, 10)).resolves.toMatchObject({ items: [{ propertyMemoItemId: 1001 }] });
+    await expect(fetchPropertyMemo(config, 10)).resolves.toMatchObject({ items: [{ systemMemoItemId: 1 }] });
     const memo = await savePropertyMemoDocument(config, 10, {
-      items: [{ propertyMemoItemId: 1001, content: '관악구 신림로' }],
+      items: [{ systemMemoItemId: 1, content: '관악구 신림로' }],
       freeMemo: '채광 확인',
     });
     expect(requestBody).toEqual({
-      items: [{ propertyMemoItemId: 1001, content: '관악구 신림로' }],
+      items: [{ systemMemoItemId: 1, content: '관악구 신림로' }],
       freeMemo: '채광 확인',
     });
     expect(memo.freeMemo).toBe('채광 확인');
+  });
+
+  it('기본 메모 항목만 내려오는 응답도 파싱하고, 비어 있으면 초기화한다', async () => {
+    authenticate();
+    let initializeCalls = 0;
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/properties/10/memo`, () =>
+        HttpResponse.json(successEnvelope({ propertyId: 10, items: [], freeMemo: '' })),
+      ),
+      http.post(`${config.apiBaseUrl}/api/properties/10/memo`, () => {
+        initializeCalls += 1;
+        return HttpResponse.json(
+          successEnvelope({
+            propertyId: 10,
+            items: [{ systemMemoItemId: 1, label: '집 주소', displayOrder: 1, content: '' }],
+            freeMemo: '',
+          }),
+          { status: 201 },
+        );
+      }),
+    );
+
+    await expect(fetchOrInitializePropertyMemo(config, 10)).resolves.toMatchObject({
+      items: [{ systemMemoItemId: 1, content: '' }],
+    });
+    expect(initializeCalls).toBe(1);
   });
 
   it('사진 조회는 사용하되 미구현 업로드는 실패를 그대로 드러낸다', async () => {
