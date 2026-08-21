@@ -5,10 +5,8 @@ import com.jachwisunbae.common.exception.DomainErrorCode;
 import com.jachwisunbae.property.controller.dto.request.PropertyMemoItemRequest;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyMemoRequest;
 import com.jachwisunbae.property.entity.PropertyMemo;
-import com.jachwisunbae.property.entity.PropertyMemoItem;
 import com.jachwisunbae.property.repository.PropertyMemoRepository;
 import com.jachwisunbae.property.repository.PropertyRepository;
-import com.jachwisunbae.property.repository.SystemMemoItemRepository;
 import com.jachwisunbae.property.repository.query.PropertyMemoQuery;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -19,14 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class PropertyMemoService {
     private final PropertyRepository propertyRepository;
     private final PropertyMemoRepository propertyMemoRepository;
-    private final SystemMemoItemRepository systemMemoItemRepository;
+    private final PropertyMemoInitializer propertyMemoInitializer;
 
     public PropertyMemoService(final PropertyRepository propertyRepository,
                                final PropertyMemoRepository propertyMemoRepository,
-                               final SystemMemoItemRepository systemMemoItemRepository) {
+                               final PropertyMemoInitializer propertyMemoInitializer) {
         this.propertyRepository = propertyRepository;
         this.propertyMemoRepository = propertyMemoRepository;
-        this.systemMemoItemRepository = systemMemoItemRepository;
+        this.propertyMemoInitializer = propertyMemoInitializer;
     }
 
     public PropertyMemoQuery find(final Long memberId, final Long propertyId) {
@@ -36,10 +34,8 @@ public class PropertyMemoService {
 
     @Transactional
     public PropertyMemoQuery initialize(final Long memberId, final Long propertyId) {
-        findOwnedProperty(memberId, propertyId);
-        if (propertyMemoRepository.findByPropertyId(propertyId).isEmpty()) {
-            createMemoWithSnapshot(propertyId, "");
-        }
+        findOwnedPropertyForUpdate(memberId, propertyId);
+        propertyMemoInitializer.initialize(propertyId);
         return propertyMemoRepository.findQuery(propertyId);
     }
 
@@ -60,12 +56,6 @@ public class PropertyMemoService {
         propertyMemoRepository.update(memo);
     }
 
-    private void createMemoWithSnapshot(final long propertyId, final String freeMemo) {
-        PropertyMemo memo = propertyMemoRepository.save(PropertyMemo.create(propertyId, freeMemo));
-        systemMemoItemRepository.findActive().forEach(item -> propertyMemoRepository.saveItem(
-                PropertyMemoItem.create(memo.getId(), item.getId(), item.getLabel(), item.getDisplayOrder(), "")));
-    }
-
     private void updateItems(final List<PropertyMemoItemRequest> requests) {
         for (PropertyMemoItemRequest request : requests) {
             propertyMemoRepository.updateItem(request.propertyMemoItemId(), request.content());
@@ -76,5 +66,11 @@ public class PropertyMemoService {
         if (!propertyRepository.existsByIdAndMemberId(propertyId, memberId)) {
             throw new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND, "매물을 찾을 수 없습니다.");
         }
+    }
+
+    private void findOwnedPropertyForUpdate(final Long memberId, final Long propertyId) {
+        propertyRepository.findByIdAndMemberIdForUpdate(propertyId, memberId)
+                .orElseThrow(() -> new BusinessException(
+                        DomainErrorCode.PROPERTY_NOT_FOUND, "매물을 찾을 수 없습니다."));
     }
 }
