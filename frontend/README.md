@@ -1,9 +1,12 @@
 # 자취선배 프론트엔드
 
-- 문서 성격: 파생
+- 상태: MVP2 전환 중
+- 문서 성격: 파생(부분)
 - 대조 대상: `frontend/package.json`, `frontend/webpack.config.js`, `frontend/.env.example`, `frontend/src/`, `.github/workflows/frontend-ci.yml`
 
 Webpack으로 구성한 React + TypeScript SPA입니다. 현재 코드는 초기 백엔드 프로토타입 계약을 기준으로 작성되어 있으며, 새 백엔드 구현과 연결할 때 Swagger/OpenAPI를 기준으로 갱신합니다.
+
+> 설치·실행·검사와 빌드 설정은 현재 기준입니다. 아래 기능별 정책 설명은 MVP1 개발 과정의 참고 내용이 섞여 있어 현재 코드의 완료 범위를 보장하지 않습니다. MVP1 요구사항·정책·API 문서를 통합하는 후속 작업에서 코드와 다시 대조합니다.
 
 ## 백엔드 API 계약
 
@@ -13,7 +16,7 @@ Webpack으로 구성한 React + TypeScript SPA입니다. 현재 코드는 초기
 
 - React 19, TypeScript 6 strict, Webpack 5
 - React Router: SPA 라우팅과 보호 경로
-- TanStack Query: 현재 회원·매물·체크리스트·방문처럼 서버에서 조회하는 상태
+- TanStack Query: 서버에서 조회하는 상태
 - Vitest, React Testing Library, MSW: 사용자 흐름과 HTTP 경계 테스트
 - ESLint, Prettier
 
@@ -75,7 +78,7 @@ npm run dev:mock
 
 1. Google Cloud Console의 Web OAuth Client에 `http://localhost:3000/oauth/google/callback`을 승인된 redirect URI로 등록합니다.
 2. 프론트엔드 `GOOGLE_CLIENT_ID`와 백엔드 `GOOGLE_OAUTH_CLIENT_ID`에 같은 Web Client ID를 사용합니다.
-3. 프론트엔드 `GOOGLE_REDIRECT_URI`를 백엔드 `GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS`에 정확히 등록하고, 백엔드 `CORS_ALLOWED_ORIGINS`에 `http://localhost:3000`을 둡니다.
+3. 프론트엔드 `GOOGLE_REDIRECT_URI`를 Google Console의 허용 redirect URI에 정확히 등록하고, 백엔드 `CORS_ALLOWED_ORIGINS`에 `http://localhost:3000`을 둡니다.
 
 Client Secret은 백엔드에만 설정합니다. 백엔드 실행 방법과 비밀값 관리는 [백엔드 환경변수 가이드](../backend/docs/guides/environment-variables.md)를 따릅니다.
 
@@ -191,7 +194,7 @@ BROWSER_TEST_HARNESS=true npm run dev -- --host 127.0.0.1
 
 Google 운영 자격 증명이 있는 로컬 환경에서는 위 OAuth 설정을 맞춰 실제 redirect 왕복을 추가 확인합니다. 자격 증명이 없을 때는 인증을 우회하거나 비밀값을 출력하지 않고 MSW 경계를 사용합니다. 새 백엔드와 연결할 때는 Swagger/OpenAPI를 기준으로 프론트엔드 계약을 다시 검증합니다.
 
-[Frontend CI](../.github/workflows/frontend-ci.yml)는 PR과 `main` push의 프론트엔드 변경에 대해 `npm ci`, 타입·린트·포맷·테스트·빌드를 순서대로 검사합니다. CI의 OAuth 값은 빌드 검증용 가짜 공개 값이며 실제 Google 인증에 사용하지 않습니다.
+[Frontend CI](../.github/workflows/frontend-ci.yml)는 `main` 대상 PR의 프론트엔드 변경에 대해 `npm ci`와 프로덕션 빌드를 검사합니다. CI의 OAuth 값은 빌드 검증용 가짜 공개 값이며 실제 Google 인증에 사용하지 않습니다. 더 넓은 검사는 변경 위험에 따라 로컬에서 실행합니다.
 
 ## 구현 범위와 후속 범위
 
@@ -214,4 +217,4 @@ Google 운영 자격 증명이 있는 로컬 환경에서는 위 OAuth 설정을
 - `/compare`·`/export`·`/tips` 공통 준비 중 안내 화면
 - 홈·체크리스트 하단 메뉴와 보호 경로 단위 코드 분할
 
-두 매물 이상 비교·비교표 계산·실제 파일 내보내기·선배 팁 콘텐츠는 공통 준비 중 안내까지만 제공하고 실제 기능은 현재 범위에 포함하지 않습니다. 방문 삭제·완료 취소, 오프라인 초안 영속 저장, 대표 사진 선택·순서 변경, 이미지 가공, 공개·Presigned 사진 URL과 영속 인증도 후속 Issue에서 구현합니다. 자세한 코드 작성 규칙은 [프론트엔드 컨벤션](./docs/FRONTEND_CONVENTIONS.md)을, 배포 절차는 [프론트엔드 배포](./docs/deployment.md)를 참고합니다.
+두 매물 이상 비교·비교표 계산·실제 파일 내보내기·선배 팁 콘텐츠는 공통 준비 중 안내까지만 제공하고 실제 기능은 현재 범위에 포함하지 않습니다. 방문 삭제·완료 취소, 오프라인 초안 영속 저장, 대표 사진 선택·순서 변경, 이미지 가공, 공개·Presigned 사진 URL과 영속 인증도 후속 Issue에서 구현합니다. 자세한 코드 작성 규칙은 [프론트엔드 컨벤션](./docs/FRONTEND_CONVENTIONS.md)을, 현재 배포 기준은 [MVP2 프론트엔드 배포](./docs/mvp2-deployment.md)를 참고합니다. 기존 [MVP1 프론트엔드 배포 기록](./docs/deployment.md)은 당시 구성 확인용으로만 남깁니다.

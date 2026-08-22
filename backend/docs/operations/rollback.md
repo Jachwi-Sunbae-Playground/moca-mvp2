@@ -1,8 +1,10 @@
-# 롤백
+# MVP1 롤백 기록
 
-- 상태: 동작 중
-- 문서 성격: 파생
-- 대조 대상: 실제 CodeDeploy 배포 그룹 설정, `backend/deploy/`
+- 상태: MVP1에서 동작, MVP2에서 사용하지 않음
+- 문서 성격: 시점 고정
+- 갱신 정책: MVP1 당시 롤백 구성을 보존하며 갱신하지 않는다
+
+> Moca MVP2의 현재 기준은 [MVP2 롤백](mvp2-rollback.md)을 따른다.
 
 배포 구성은 [배포](deployment.md)에 있다.
 

@@ -1,11 +1,12 @@
-# 배포 아키텍처 설계
+# MVP1 배포 아키텍처 기록
 
-- 상태: 구성 완료
+- 상태: MVP1에서 구성 완료, MVP2에서 사용하지 않음
 - 최초 작성일: 2026-08-13
 - 참여자: 자취선배 백엔드 팀
-- 문서 성격: 파생
-- 대조 대상: 우테코 인프라 안내(Notion), 실제 AWS 리소스 구성, [배포](../../backend/docs/operations/deployment.md)
-- 갱신 정책: 이 문서의 값을 실구성과 맞춰 유지한다. 중심 결정은 [ADR-0008](../../backend/docs/adr/0008-deploy-with-aws-native-pipeline.md)로 승격했고 이 문서는 구성 참조로 남는다
+- 문서 성격: 시점 고정
+- 갱신 정책: MVP1 당시 우테코 AWS 구성을 보존하며 갱신하지 않는다
+
+> Moca MVP2의 현재 계획은 [MVP2 배포 아키텍처](mvp2-deployment-architecture.md)를 따른다. 아래 리소스와 도메인은 새 개인 AWS 계정에서 사용하지 않는다.
 
 이 문서는 [배포](../../backend/docs/operations/deployment.md)와 [롤백](../../backend/docs/operations/rollback.md)이 `미정`으로 비워 둔 배포 대상과 플랫폼을 채우기 위해 시작했다. 2026-08-13부터 08-15까지 실제로 구성했고 아래 주소에서 동작한다.
 

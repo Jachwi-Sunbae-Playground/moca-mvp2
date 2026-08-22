@@ -15,6 +15,17 @@
 
 Git·GitHub 협업 규칙은 백엔드에 한정되지 않으므로 [`docs/convention`](../../docs/convention/README.md)에서 관리한다.
 
+## 현재 기준 문서
+
+- [로컬 개발](guides/local-development.md)
+- [환경변수](guides/environment-variables.md)
+- [데이터베이스 초기화](guides/database-initialization.md)
+- [시스템 개요](architecture/system-overview.md)
+- [MVP2 백엔드 배포](operations/mvp2-deployment.md)
+- [MVP2 롤백](operations/mvp2-rollback.md)
+
+`operations/deployment.md`와 `operations/rollback.md`는 MVP1 당시 구성을 보존한 기록이며 현재 절차가 아니다.
+
 ## 문서 작성 원칙
 
 - 결정 이유와 대안은 ADR, 현재 지켜야 할 규칙은 컨벤션에 기록한다.

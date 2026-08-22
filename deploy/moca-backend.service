@@ -1,0 +1,21 @@
+[Unit]
+Description=Moca MVP2 backend
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=moca
+Group=moca
+WorkingDirectory=/opt/moca/current
+EnvironmentFile=/etc/moca/app.env
+Environment=SPRING_PROFILES_ACTIVE=prod
+ExecStart=/usr/bin/java -jar /opt/moca/current/backend/app.jar
+Restart=on-failure
+RestartSec=5
+SuccessExitStatus=143
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

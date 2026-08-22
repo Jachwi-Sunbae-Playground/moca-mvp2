@@ -1,9 +1,11 @@
-# 프론트엔드 배포
+# MVP1 프론트엔드 배포 기록
 
-- 상태: 동작 중
+- 상태: MVP1에서 동작, MVP2에서 사용하지 않음
 - 현재 배포 환경: prod `https://www.jachwi-sunbae.kr`, dev `https://dev.jachwi-sunbae.kr`
-- 문서 성격: 파생
-- 대조 대상: `frontend/webpack.config.js`, 실제 CloudFront·S3·파이프라인 구성
+- 문서 성격: 시점 고정
+- 갱신 정책: MVP1 당시 S3·CloudFront 구성을 보존하며 갱신하지 않는다
+
+> Moca MVP2의 현재 기준은 [MVP2 프론트엔드 배포](mvp2-deployment.md)를 따른다.
 
 전체 구성과 선택 근거는 [배포 아키텍처 설계](../../docs/operations/deployment-architecture.md)에 있다. 백엔드 배포는 [배포](../../backend/docs/operations/deployment.md)를 참고한다.
 
