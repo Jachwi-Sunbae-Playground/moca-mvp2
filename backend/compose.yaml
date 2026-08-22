@@ -1,16 +1,19 @@
+name: moca-mvp2-backend
+
 services:
   mysql:
     image: mysql:8.4.10
     environment:
-      MYSQL_DATABASE: ${DB_NAME:-jachwi_sunbae}
-      MYSQL_USER: ${DB_USERNAME:-jachwi_sunbae}
+      MYSQL_DATABASE: ${DB_NAME:-moca_mvp2}
+      MYSQL_USER: ${DB_USERNAME:-moca_mvp2}
       MYSQL_PASSWORD: ${DB_PASSWORD:-local_password}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-local_root_password}
       TZ: UTC
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - "127.0.0.1:${DB_PORT:-3306}:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./src/main/resources/db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD"]
       interval: 5s
@@ -25,8 +28,8 @@ services:
       MINIO_ROOT_USER: ${PHOTO_STORAGE_ACCESS_KEY:-local-photo-access-key}
       MINIO_ROOT_PASSWORD: ${PHOTO_STORAGE_SECRET_KEY:-local-photo-secret-key}
     ports:
-      - "${PHOTO_STORAGE_PORT:-9000}:9000"
-      - "${PHOTO_STORAGE_CONSOLE_PORT:-9001}:9001"
+      - "127.0.0.1:${PHOTO_STORAGE_PORT:-9000}:9000"
+      - "127.0.0.1:${PHOTO_STORAGE_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio-data:/data
     healthcheck:
@@ -44,7 +47,7 @@ services:
     environment:
       PHOTO_STORAGE_ACCESS_KEY: ${PHOTO_STORAGE_ACCESS_KEY:-local-photo-access-key}
       PHOTO_STORAGE_SECRET_KEY: ${PHOTO_STORAGE_SECRET_KEY:-local-photo-secret-key}
-      PHOTO_STORAGE_BUCKET: ${PHOTO_STORAGE_BUCKET:-jachwi-sunbae-photos}
+      PHOTO_STORAGE_BUCKET: ${PHOTO_STORAGE_BUCKET:-moca-mvp2-photos}
     entrypoint: /bin/sh
     command:
       - -c

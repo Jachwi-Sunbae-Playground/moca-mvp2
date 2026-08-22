@@ -2,45 +2,34 @@
 
 ## 브랜치 전략
 
-`main`과 `develop` 두 브랜치를 유지하고, 작업은 짧은 작업 브랜치에서 한다.
+`main` 하나와 짧은 작업 브랜치만 유지한다.
 
-| 브랜치 | 역할 | 배포 대상 |
-| --- | --- | --- |
-| `main` | 운영에 배포되는 가장 안정적인 코드를 관리한다 | prod |
-| `develop` | 기본 브랜치. 작업 브랜치가 모이는 통합 지점이다 | dev |
-| 작업 브랜치 | 기능 추가·수정 단위로 `develop`에서 분기해 PR로 되돌린다. 병합 후 삭제한다 | — |
+| 브랜치 | 역할 |
+| --- | --- |
+| `main` | 항상 로컬 개발을 시작할 수 있는 기준선 |
+| 작업 브랜치 | 한 이슈의 코드·설정·문서 변경을 함께 진행하고 PR로 병합하는 공간 |
 
-- 작업은 짧은 작업 브랜치에서 진행한다.
-- `main`과 `develop`에 직접 작업하거나 푸시하지 않는다.
-- **두 브랜치 모두 병합이 배포 트리거다.** `develop` 병합은 dev에, `main` 병합은 prod에 배포된다([배포 아키텍처 설계](../operations/deployment-architecture.md)).
-- `main`으로는 `develop`에서 **PR로 승격**한다. 작업 브랜치를 `main`에 직접 병합하지 않는다.
+- 작업 브랜치는 최신 `main`에서 분기하고 병합 후 삭제한다.
+- `main`에 직접 커밋하거나 푸시하지 않는다.
+- MVP2 개발 중 `main` 병합은 배포를 실행하지 않는다.
+- 실제 배포 자동화는 [MVP2 배포 아키텍처](../operations/mvp2-deployment-architecture.md)의 준비 조건을 갖춘 뒤 수동으로만 실행한다.
 
-```text
-작업 브랜치 ─PR→ develop ─PR→ main
-                  ↓            ↓
-                 dev          prod
-```
+## 브랜치 보호 기준
 
-운영으로 나가는 것을 diff로 확인하기 위해 승격도 PR로 한다. dev에서 실제 인프라로 확인한 뒤 올린다.
+`main`에는 다음 최소 보호 규칙을 적용한다.
 
-## 브랜치 보호 규칙
-
-`main`과 `develop`에 같은 보호 규칙을 적용한다. 머지 조건의 의미는 [이슈와 PR](issue-and-pr.md#머지)을 따른다.
-
-- PR을 거쳐야 하며 승인 1명 이상과 필수 리뷰 해결을 요구한다.
-- 브랜치를 최신 상태로 맞춘 뒤 필수 상태 검사를 다시 통과해야 한다.
-- `Build`, `Check frontend`, `Check docs consistency`를 필수 상태 검사로 지정한다.
-- 관리자와 별도 역할도 규칙을 우회하지 않는다.
+- PR을 거쳐 병합한다.
+- 승인 인원은 요구하지 않는다. 대신 작성자가 변경 파일과 CI 결과를 직접 확인한다.
+- 변경된 영역의 CI와 `Check docs consistency`가 성공해야 한다.
 - 강제 푸시와 브랜치 삭제를 허용하지 않는다.
 
-세 필수 워크플로의 트리거에는 경로 필터를 두지 않는다. 워크플로 자체가 생략되면 검사가 `Pending`에 남아 관련 없는 변경도 병합할 수 없기 때문이다. 백엔드와 프론트엔드 워크플로는 내부 변경 감지 단계에서 수정 디렉터리를 확인하고 관련 검사만 수행한다.
-
-실제 ruleset과 dev 배포를 대조한 결과는 [2026-08-20 CI/CD 배포 검증 기록](../operations/2026-08-20-cicd-deployment-validation.md)에 있다.
+백엔드와 프론트엔드 CI는 관련 경로가 바뀐 PR에서만 실행한다. `main` push에는 다시 실행하지 않아 같은 커밋을 중복 검사하지 않는다.
 
 ## 브랜치 이름
 
 ```text
 <type>/<issue-number>-<description>
+codex/<description>
 ```
 
 예시:
@@ -49,6 +38,7 @@
 feat/12-create-reservation
 fix/24-prevent-duplicate-booking
 refactor/31-separate-validation
+codex/mvp2-transition-foundation
 ```
 
 | type | 용도 |
@@ -62,7 +52,7 @@ refactor/31-separate-validation
 
 ## 커밋 메시지
 
-커밋 메시지는 Conventional Commits를 사용하며, 타입은 브랜치 이름과 같은 값을 쓴다.
+커밋 메시지는 Conventional Commits를 사용하며, 타입은 위 표의 작업 성격에 맞게 선택한다.
 
 ```text
 <type>: 변경 내용을 작성한다

@@ -31,7 +31,7 @@ public class JdbcPropertyMemoRepository implements PropertyMemoRepository {
         String sql = """
                 SELECT pm.property_id, pm.free_memo,
                        pmi.id AS property_memo_item_id,
-                       pmi.system_meno_id AS system_memo_item_id,
+                       pmi.system_memo_item_id,
                        pmi.label, pmi.display_order, pmi.content
                 FROM property_memos pm
                 JOIN property_memo_items pmi ON pmi.property_memo_id = pm.id
@@ -87,7 +87,7 @@ public class JdbcPropertyMemoRepository implements PropertyMemoRepository {
     @Override
     public void saveItem(final PropertyMemoItem item) {
         jdbcTemplate.update("INSERT INTO property_memo_items "
-                        + "(property_memo_id, system_meno_id, label, display_order, content) VALUES (?, ?, ?, ?, ?)",
+                        + "(property_memo_id, system_memo_item_id, label, display_order, content) VALUES (?, ?, ?, ?, ?)",
                 item.getPropertyMemoId(), item.getSystemMemoItemId(), item.getLabel(), item.getDisplayOrder(),
                 item.getContent());
     }

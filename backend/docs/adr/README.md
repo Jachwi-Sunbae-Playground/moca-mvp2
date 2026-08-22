@@ -23,8 +23,10 @@ ADR은 프로젝트에 영향을 주는 기술적 결정을 당시의 맥락과 
 | [0004](0004-manage-local-development-environment.md) | 재현 가능한 개발 환경을 관리한다 | 승인 | 2026-08-04 |
 | [0005](0005-select-java-code-style.md) | Java 코드 스타일을 선택한다 | 승인 | 2026-08-04 |
 | [0006](0006-use-private-s3-compatible-photo-storage.md) | 비공개 S3 호환 저장소에 매물 사진을 저장한다 | 승인 | 2026-08-10 |
-| [0007](0007-use-flyway-for-database-migrations.md) | Flyway로 데이터베이스 변경 이력을 관리한다 | 승인 | 2026-08-12 |
-| [0008](0008-deploy-with-aws-native-pipeline.md) | 액세스 키 없이 AWS 네이티브 파이프라인으로 배포한다 | 승인 | 2026-08-15 |
+| [0007](0007-use-flyway-for-database-migrations.md) | Flyway로 데이터베이스 변경 이력을 관리한다 | 대체 | 2026-08-12 |
+| [0008](0008-deploy-with-aws-native-pipeline.md) | 액세스 키 없이 AWS 네이티브 파이프라인으로 배포한다 | 대체 | 2026-08-15 |
+| [0009](0009-use-disposable-database-schema.md) | 폐기 가능한 DB를 단일 스키마로 초기화한다 | 승인 | 2026-08-22 |
+| [0010](0010-prepare-single-ec2-deployment.md) | 단일 EC2 최소 배포를 준비한다 | 승인 | 2026-08-22 |
 
 ## 새 ADR 골격
 

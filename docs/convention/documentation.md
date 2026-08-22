@@ -42,9 +42,13 @@
 
 | 문서 | 이유 |
 | --- | --- |
-| [ADR](../../backend/docs/adr/README.md) `0001`~`0008` | 그때의 결정 맥락을 보존한다 |
+| [ADR](../../backend/docs/adr/README.md) `0001`~`0010` | 그때의 결정 맥락을 보존한다 |
 | [실험 기록](../experiments/) | 실험 설계와 결과의 기록이다 |
 | [피벗 히스토리](../learnings/pivot-history.md) | 이전 검증에서 현재까지의 학습 기록이다 |
+| [MVP1 배포 아키텍처](../operations/deployment-architecture.md) | 우테코 AWS에서 구성한 당시 상태다 |
+| [MVP1 CI/CD 배포 검증](../operations/2026-08-20-cicd-deployment-validation.md) | 기존 배포의 실측 기록이다 |
+| [MVP1 백엔드 배포](../../backend/docs/operations/deployment.md)·[롤백](../../backend/docs/operations/rollback.md) | 기존 CodePipeline·CodeDeploy 절차다 |
+| [MVP1 프론트엔드 배포](../../frontend/docs/deployment.md) | 기존 S3·CloudFront 절차다 |
 
 ### ADR은 부분 동결이다
 
@@ -67,14 +71,16 @@ ADR은 전체를 동결하지 않는다. [ADR 작성 규칙](../../backend/docs/
 | [`README.md`](../../README.md) | 최상위 디렉터리와 `docs/` 하위 디렉터리 | B-1 |
 | [환경변수](../../backend/docs/guides/environment-variables.md) | `backend/.env.example` | B-2 |
 | [로컬 개발](../../backend/docs/guides/local-development.md) | `compose.yaml`, `build.gradle`, 실행 URL | 사람 |
+| [데이터베이스 초기화](../../backend/docs/guides/database-initialization.md) | `db/init/`, `compose.yaml`, 테스트 설정 | 사람 |
 | [백엔드 패키지 구조](../../backend/docs/architecture/backend-package-structure.md) | `build.gradle`의 `group`, `backend/src` 구조 | 사람 |
 | [시스템 개요](../../backend/docs/architecture/system-overview.md) | 실제 구성 요소 | 사람 |
-| [배포](../../backend/docs/operations/deployment.md) | `backend/deploy/`, 실제 AWS 파이프라인 구성 | 사람 |
-| [롤백](../../backend/docs/operations/rollback.md) | 실제 CodeDeploy 배포 그룹 설정 | 사람 |
-| [배포 아키텍처 설계](../operations/deployment-architecture.md) | 실제 AWS 리소스 구성 | 사람 |
+| [MVP2 백엔드 배포](../../backend/docs/operations/mvp2-deployment.md) | `deploy/`, 운영 프로필과 향후 AWS 구성 | 사람 |
+| [MVP2 롤백](../../backend/docs/operations/mvp2-rollback.md) | 배포 스크립트, 실제 릴리스와 DB 백업 | 사람 |
+| [MVP2 전환 기준](../operations/mvp2-transition.md) | 코드·설정, Git 태그와 GitHub Issue | 사람 |
+| [MVP2 배포 아키텍처](../operations/mvp2-deployment-architecture.md) | `deploy/`, 배포 워크플로와 향후 AWS 구성 | 사람 |
 | [핵심 가설](../product/hypotheses.md) | [실험 기록](../experiments/)의 결과 | 사람 |
 | [`frontend/README.md`](../../frontend/README.md) | `frontend/` 구조와 `package.json` | 사람 |
-| [프론트엔드 배포](../../frontend/docs/deployment.md) | `frontend/webpack.config.js`, 실제 CloudFront·파이프라인 구성 | 사람 |
+| [MVP2 프론트엔드 배포](../../frontend/docs/mvp2-deployment.md) | `frontend/webpack.config.js`, Caddy와 배포 워크플로 | 사람 |
 | [`CLAUDE.md`](../../CLAUDE.md) | `docs/convention/`과 `backend/docs/conventions/`의 규칙 | 사람 |
 | [`AGENTS.md`](../../AGENTS.md) | `CLAUDE.md` | A-3 |
 | `.agents/skills/` | `.claude/skills/` | A-4 |

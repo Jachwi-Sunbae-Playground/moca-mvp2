@@ -1,18 +1,11 @@
 spring:
   application:
-    name: jachwi-sunbae-backend
+    name: moca-mvp2-backend
   profiles:
     default: local
   sql:
     init:
       mode: never
-  flyway:
-    enabled: true
-    baseline-on-migrate: false
-    clean-disabled: true
-    locations: classpath:db/migration
-    out-of-order: false
-    validate-on-migrate: true
   servlet:
     multipart:
       max-file-size: 10MB
@@ -20,7 +13,7 @@ spring:
 
 auth:
   jwt:
-    secret: ${JWT_SECRET_BASE64}
+    secret: ${JWT_SECRET}
     issuer: jachwi-sunbae
     audience: jachwi-sunbae-api
     access-token-seconds: 43200
