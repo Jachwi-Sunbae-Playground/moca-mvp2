@@ -8,7 +8,7 @@ import type {
   PropertyMemoDocument,
   PropertyPage,
 } from '../types/Property';
-import { ApiError, apiRequest } from './apiClient';
+import { ApiError, apiBlobRequest, apiRequest } from './apiClient';
 import type {
   PropertyInputDto,
   SavePropertyMemoDocumentRequestDto,
@@ -50,14 +50,15 @@ export const fetchProperties = (
   });
 };
 
-const toPropertyRequest = ({ maintenanceFeeAmount: _maintenanceFeeAmount, ...request }: PropertyInputDto) => request;
+export const fetchPropertyCsv = (config: PublicConfig, signal?: AbortSignal): Promise<Blob> =>
+  apiBlobRequest({ config, path: '/api/properties/export.csv', signal });
 
 export const createProperty = (config: PublicConfig, request: PropertyInputDto): Promise<PropertyBasicInfo> =>
   apiRequest({
     config,
     path: '/api/properties',
     method: 'POST',
-    body: toPropertyRequest(request),
+    body: request,
     parseData: parsePropertyBasicInfo,
   });
 
@@ -77,7 +78,7 @@ export const updateProperty = (
     config,
     path: `/api/properties/${propertyId}`,
     method: 'PUT',
-    body: toPropertyRequest(request),
+    body: request,
     parseData: parsePropertyBasicInfo,
   });
 

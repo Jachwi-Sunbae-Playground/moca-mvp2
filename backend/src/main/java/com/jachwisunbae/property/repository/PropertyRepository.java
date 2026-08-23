@@ -4,6 +4,7 @@ import com.jachwisunbae.property.repository.query.PropertyListItemQuery;
 import java.util.List;
 import java.util.Optional;
 import com.jachwisunbae.property.entity.Property;
+import java.time.LocalDateTime;
 
 public interface PropertyRepository {
     List<PropertyListItemQuery> findListByMemberId(long memberId);
@@ -18,6 +19,8 @@ public interface PropertyRepository {
     Optional<Property> findByIdAndMemberIdForUpdate(long propertyId, long memberId);
 
     Property update(Property property);
+
+    void touch(long propertyId, LocalDateTime now);
 
     void deleteById(long propertyId);
 

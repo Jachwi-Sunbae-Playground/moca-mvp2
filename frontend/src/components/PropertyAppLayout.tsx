@@ -19,6 +19,10 @@ const PropertyAppLayout = () => {
           <Icon name="checklist" size={16} />
           체크리스트
         </NavLink>
+        <NavLink to="/map" aria-label="지도">
+          <Icon name="map" size={16} />
+          지도
+        </NavLink>
         <NavLink to="/me" aria-label="마이">
           <Icon name="user" size={16} />
           마이

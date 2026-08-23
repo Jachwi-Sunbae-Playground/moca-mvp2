@@ -10,10 +10,14 @@ const isBrowserTestHarness = process.env.BROWSER_TEST_HARNESS === 'true';
 module.exports = (_env, argv) => {
   const isProduction = argv.mode === 'production';
   const isMockingEnabled = !isProduction && process.env.ENABLE_MSW === 'true';
-  const apiBaseUrl = process.env.API_BASE_URL ?? (isMockingEnabled ? 'http://127.0.0.1:3000' : '');
+  const apiBaseUrl = process.env.API_BASE_URL ?? (isMockingEnabled ? 'http://127.0.0.1:3000' : 'http://localhost:8080');
   const googleClientId = process.env.GOOGLE_CLIENT_ID ?? (isMockingEnabled ? 'local-msw-client' : '');
   const googleRedirectUri =
-    process.env.GOOGLE_REDIRECT_URI ?? (isMockingEnabled ? 'http://127.0.0.1:3000/oauth/google/callback' : '');
+    process.env.GOOGLE_REDIRECT_URI ??
+    (isMockingEnabled ? 'http://127.0.0.1:3000/oauth/google/callback' : 'http://localhost:3000/oauth/google/callback');
+  const authMode = process.env.AUTH_MODE ?? 'demo';
+  const mapProviderMode = process.env.MAP_PROVIDER_MODE ?? 'demo';
+  const kakaoMapJavaScriptKey = process.env.KAKAO_MAP_JAVASCRIPT_KEY ?? '';
 
   return {
     entry: isBrowserTestHarness ? './src/test-browser/main.tsx' : './src/main.tsx',
@@ -39,6 +43,9 @@ module.exports = (_env, argv) => {
         __API_BASE_URL__: JSON.stringify(apiBaseUrl),
         __GOOGLE_CLIENT_ID__: JSON.stringify(googleClientId),
         __GOOGLE_REDIRECT_URI__: JSON.stringify(googleRedirectUri),
+        __AUTH_MODE__: JSON.stringify(authMode),
+        __MAP_PROVIDER_MODE__: JSON.stringify(mapProviderMode),
+        __KAKAO_MAP_JAVASCRIPT_KEY__: JSON.stringify(kakaoMapJavaScriptKey),
         __ENABLE_MSW__: JSON.stringify(isMockingEnabled),
       }),
       new HtmlWebpackPlugin({

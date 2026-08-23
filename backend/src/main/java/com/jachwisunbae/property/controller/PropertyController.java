@@ -1,50 +1,57 @@
 package com.jachwisunbae.property.controller;
 
 import com.jachwisunbae.auth.web.AuthenticatedMemberId;
+import com.jachwisunbae.checklist.type.CheckStage;
 import com.jachwisunbae.common.web.ApiResponse;
-import com.jachwisunbae.property.controller.dto.request.CreatePropertyRequest;
-import com.jachwisunbae.property.controller.dto.request.UpdatePropertyRequest;
 import com.jachwisunbae.property.controller.dto.request.ApplyPropertyChecklistRequest;
+import com.jachwisunbae.property.controller.dto.request.CreatePropertyRequest;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyChecklistMemoRequest;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyChecklistStatusRequest;
-import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemMemoItem;
-import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemStatusItem;
-import com.jachwisunbae.property.service.PropertyChecklistService;
-import com.jachwisunbae.checklist.type.CheckStage;
-import com.jachwisunbae.property.controller.dto.response.PropertyChecklistApplicationResponse;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyMemoRequest;
+import com.jachwisunbae.property.controller.dto.request.UpdatePropertyRequest;
 import com.jachwisunbae.property.controller.dto.response.CreatePropertyResponse;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistApplicationResponse;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemMemoItem;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemMemoResponse;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemStatusItem;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemStatusResponse;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistOverviewResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyDetailResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyListResponse;
-import com.jachwisunbae.property.controller.dto.response.UpdatePropertyResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyMemoResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyPhotoListResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyPhotoResponse;
-import com.jachwisunbae.property.controller.dto.response.PropertyChecklistOverviewResponse;
-import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemMemoResponse;
-import com.jachwisunbae.property.controller.dto.response.PropertyChecklistItemStatusResponse;
+import com.jachwisunbae.property.controller.dto.response.UpdatePropertyResponse;
 import com.jachwisunbae.property.entity.Property;
 import com.jachwisunbae.property.repository.query.PropertyPhotosQuery;
-import com.jachwisunbae.property.service.PropertyService;
+import com.jachwisunbae.property.service.PropertyChecklistService;
+import com.jachwisunbae.property.service.PropertyCsvService;
+import com.jachwisunbae.property.service.PropertyDeletionService;
 import com.jachwisunbae.property.service.PropertyMemoService;
 import com.jachwisunbae.property.service.PropertyPhotoService;
-import com.jachwisunbae.property.service.PropertyDeletionService;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.jachwisunbae.property.service.PropertyService;
+import com.jachwisunbae.property.storage.PhotoContent;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/properties")
@@ -56,23 +63,35 @@ public class PropertyController {
     private final PropertyChecklistService propertyChecklistService;
     private final PropertyPhotoService propertyPhotoService;
     private final PropertyDeletionService propertyDeletionService;
+    private final PropertyCsvService propertyCsvService;
 
     public PropertyController(final PropertyService propertyService,
                               final PropertyMemoService propertyMemoService,
                               final PropertyChecklistService propertyChecklistService,
                               final PropertyPhotoService propertyPhotoService,
-                              final PropertyDeletionService propertyDeletionService) {
+                              final PropertyDeletionService propertyDeletionService,
+                              final PropertyCsvService propertyCsvService) {
         this.propertyService = propertyService;
         this.propertyMemoService = propertyMemoService;
         this.propertyChecklistService = propertyChecklistService;
         this.propertyPhotoService = propertyPhotoService;
         this.propertyDeletionService = propertyDeletionService;
+        this.propertyCsvService = propertyCsvService;
     }
 
     @GetMapping
     @Operation(summary = "매물 목록 조회", description = "로그인 회원의 매물과 대표 사진 및 전체 체크 진행 현황을 조회합니다.")
     public ApiResponse<PropertyListResponse> findList(@AuthenticatedMemberId final Long memberId) {
         return ApiResponse.of("매물 목록을 조회했습니다.", propertyService.findList(memberId));
+    }
+
+    @GetMapping(value = "/export.csv", produces = "text/csv;charset=UTF-8")
+    @Operation(summary = "매물 비교표 CSV", description = "현재 회원의 매물 요약을 UTF-8 BOM CSV로 내려받습니다.")
+    public ResponseEntity<byte[]> exportCsv(@AuthenticatedMemberId final Long memberId) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"moca-properties.csv\"")
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .body(propertyCsvService.export(memberId));
     }
 
     @PostMapping
@@ -85,21 +104,24 @@ public class PropertyController {
                 .body(ApiResponse.of("매물을 등록했습니다.", CreatePropertyResponse.from(property)));
     }
 
-    @GetMapping("{propertyId}")
+    @GetMapping("/{propertyId}")
     @Operation(summary = "매물 상세 조회", description = "매물 기본 정보와 사진 및 전체 체크 진행 현황을 조회합니다.")
-    public ApiResponse<PropertyDetailResponse> findDetail(@AuthenticatedMemberId final Long memberId, @PathVariable final Long propertyId) {
+    public ApiResponse<PropertyDetailResponse> findDetail(
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId) {
         return ApiResponse.of("매물 상세 정보를 조회했습니다.",
                 propertyService.findDetail(memberId, propertyId));
     }
 
-    @PutMapping("{propertyId}")
+    @PutMapping("/{propertyId}")
     @Operation(summary = "매물 기본 정보 수정", description = "매물 이름과 금액 및 발견 경로를 전체 수정합니다.")
     public ApiResponse<UpdatePropertyResponse> update(
-        @AuthenticatedMemberId final Long memberId,
-        @PathVariable final Long propertyId,
-        @Valid @RequestBody final UpdatePropertyRequest request) {
-        UpdatePropertyResponse updatePropertyResponse = UpdatePropertyResponse.from(propertyService.update(memberId, propertyId, request));
-        return ApiResponse.of("매물 정보를 수정했습니다.",  updatePropertyResponse);
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId,
+            @Valid @RequestBody final UpdatePropertyRequest request) {
+        UpdatePropertyResponse response = UpdatePropertyResponse.from(
+                propertyService.update(memberId, propertyId, request));
+        return ApiResponse.of("매물 정보를 수정했습니다.", response);
     }
 
     @DeleteMapping("/{propertyId}")
@@ -117,11 +139,37 @@ public class PropertyController {
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final Long propertyId) {
         PropertyPhotosQuery query = propertyPhotoService.find(memberId, propertyId);
-        List<PropertyPhotoResponse> items =  query.photos().stream()
+        List<PropertyPhotoResponse> items = query.photos().stream()
                 .map(photo -> PropertyPhotoResponse.from(photo, photo.getId().equals(query.representativePhotoId())))
                 .toList();
         return ApiResponse.of("사진 목록을 조회했습니다.",
                 new PropertyPhotoListResponse(query.propertyId(), items.size(), items));
+    }
+
+    @PostMapping(value = "/{propertyId}/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "매물 사진 업로드", description = "JPEG, PNG, WebP 사진 한 장을 비공개 객체 저장소에 업로드합니다.")
+    public ResponseEntity<ApiResponse<PropertyPhotoResponse>> uploadPhoto(
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId,
+            @RequestPart("file") final MultipartFile file) {
+        var photo = propertyPhotoService.upload(memberId, propertyId, file);
+        boolean representative = propertyPhotoService.find(memberId, propertyId)
+                .representativePhotoId().equals(photo.getId());
+        return ResponseEntity.created(URI.create("/api/properties/" + propertyId + "/photos/" + photo.getId()))
+                .body(ApiResponse.of("사진을 업로드했습니다.", PropertyPhotoResponse.from(photo, representative)));
+    }
+
+    @GetMapping("/{propertyId}/photos/{photoId}")
+    @Operation(summary = "매물 사진 콘텐츠 조회", description = "소유자를 검증한 뒤 비공개 사진 바이트를 전달합니다.")
+    public ResponseEntity<byte[]> findPhotoContent(
+            @AuthenticatedMemberId final Long memberId,
+            @PathVariable final Long propertyId,
+            @PathVariable final Long photoId) {
+        PhotoContent content = propertyPhotoService.findContent(memberId, propertyId, photoId);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "private, max-age=300")
+                .contentType(MediaType.parseMediaType(content.contentType()))
+                .body(content.bytes());
     }
 
     @DeleteMapping("/{propertyId}/photos/{photoId}")

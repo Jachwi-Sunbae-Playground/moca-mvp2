@@ -27,14 +27,20 @@ public class DomainErrorHttpMapper {
                     CHECKLIST_ITEM_COUNT_OUT_OF_RANGE,
                     INVALID_SYSTEM_CHECK_ITEM,
                     PROPERTY_INPUT_INVALID,
+                    PROPERTY_LOCATION_INVALID,
                     PROPERTY_MEMO_INVALID,
                     PROPERTY_CHECKLIST_STAGE_MISMATCH,
-                    PROPERTY_CHECK_RESULT_INVALID -> HttpStatus.BAD_REQUEST;
+                    PROPERTY_CHECK_RESULT_INVALID,
+                    PHOTO_LIMIT_EXCEEDED,
+                    PHOTO_CONTENT_TYPE_UNSUPPORTED,
+                    PHOTO_SIZE_EXCEEDED,
+                    MAP_QUERY_INVALID -> HttpStatus.BAD_REQUEST;
             case MEMBER_NOT_FOUND,
                     CHECKLIST_NOT_FOUND,
                     CHECKLIST_ITEM_NOT_FOUND,
                     PROPERTY_NOT_FOUND,
                     PHOTO_NOT_FOUND,
+                    DEMO_AUTH_DISABLED,
                     PROPERTY_CHECKLIST_NOT_FOUND,
                     PROPERTY_CHECKLIST_ITEM_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case ACCESS_TOKEN_INVALID,
@@ -42,6 +48,8 @@ public class DomainErrorHttpMapper {
                     REFRESH_TOKEN_EXPIRED -> HttpStatus.UNAUTHORIZED;
             case REFRESH_TOKEN_REUSED,
                     PROPERTY_LIMIT_EXCEEDED -> HttpStatus.CONFLICT;
+            case PHOTO_STORAGE_FAILURE,
+                    MAP_PROVIDER_UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE;
             case GOOGLE_AUTHENTICATION_FAILED,
                     GOOGLE_IDENTITY_INVALID,
                     OAUTH_PROVIDER_UNSUPPORTED -> HttpStatus.BAD_REQUEST;

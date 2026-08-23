@@ -1,12 +1,13 @@
 # MVP2 데이터 모델
 
-- 상태: 구현 목표 v1
+- 상태: 구현 완료 v1
+- 문서 성격: 파생
 - 대조 대상: [MVP2 기능 명세](../../../docs/product/specs/README.md), [`001-schema.sql`](../../src/main/resources/db/init/001-schema.sql)
 
 ## 원칙
 
 - 제품 정책의 정본은 기능 명세와 [결정 대장](../../../docs/product/decisions/README.md)이다.
-- 이 문서는 구현 전에는 목표 계약이며, 구현 후에는 `001-schema.sql`에서 파생되는 설명 문서로 전환한다.
+- 이 문서는 `001-schema.sql`에서 파생되는 설명 문서다.
 - Flyway를 사용하지 않으므로 스키마 변경 뒤 로컬 MySQL volume을 초기화한다.
 - 주변 시설 응답은 저장하지 않고 Kakao Local API 또는 데모 adapter에서 그때 조회한다.
 

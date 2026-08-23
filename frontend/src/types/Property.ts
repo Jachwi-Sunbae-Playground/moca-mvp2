@@ -5,21 +5,28 @@ export type DiscoverySource = {
   value: string;
 };
 
+export type PropertyLocation = {
+  address: string | null;
+  roadAddress: string | null;
+  jibunAddress: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+
 export type PropertySummary = {
   propertyId: number;
   name: string;
   depositAmount: number;
   monthlyRentAmount: number;
   discoverySource: DiscoverySource;
+  location: PropertyLocation;
   representativePhoto: {
     photoId: number;
     contentUrl: string;
     contentType: 'image/jpeg' | 'image/png' | 'image/webp';
   } | null;
   progress: PropertyChecklistProgress;
-  /** @deprecated 최종 목록 API는 전체 사진 수를 반환하지 않는다. */
   photoCount: number;
-  /** @deprecated 최종 목록 API는 활동 시각을 반환하지 않는다. */
   lastActivityAt: string;
 };
 
@@ -43,8 +50,8 @@ export type PropertyDetail = {
   name: string;
   depositAmount: number;
   monthlyRentAmount: number;
-  maintenanceFeeAmount: number | null;
   discoverySource: DiscoverySource;
+  location: PropertyLocation;
   photoPreview: {
     totalCount: number;
     photos: PropertyPhotoPreview[];
@@ -59,9 +66,10 @@ export type PropertyBasicInfo = {
   name: string;
   depositAmount: number;
   monthlyRentAmount: number;
-  maintenanceFeeAmount: number | null;
   discoverySource: DiscoverySource;
+  location: PropertyLocation;
   updatedAt: string | null;
+  lastActivityAt: string | null;
 };
 
 export type PropertyPhoto = {

@@ -20,10 +20,38 @@ type AuthenticationInput = {
 };
 
 const listeners = new Set<() => void>();
+const SESSION_STORAGE_KEY = 'moca.authentication.session';
 let expirationTimer: ReturnType<typeof setTimeout> | null = null;
 let authenticationRevision = 0;
+const readStoredSession = (): AuthenticationSession | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (raw === null) return null;
+    const value: unknown = JSON.parse(raw);
+    if (
+      typeof value !== 'object' ||
+      value === null ||
+      !('accessToken' in value) ||
+      !('tokenType' in value) ||
+      !('expiresAt' in value) ||
+      typeof value.accessToken !== 'string' ||
+      value.tokenType !== 'Bearer' ||
+      typeof value.expiresAt !== 'number' ||
+      value.expiresAt <= Date.now()
+    ) {
+      window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      return null;
+    }
+    return { accessToken: value.accessToken, tokenType: value.tokenType, expiresAt: value.expiresAt };
+  } catch {
+    window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    return null;
+  }
+};
+
 let state: AuthenticationState = {
-  session: null,
+  session: readStoredSession(),
   terminationReason: null,
 };
 
@@ -56,6 +84,7 @@ export const clearAuthentication = (reason: AuthenticationTerminationReason) => 
   clearExpirationTimer();
   authenticationRevision += 1;
   state = { session: null, terminationReason: reason };
+  if (typeof window !== 'undefined') window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
   clearAuthenticationClientState();
   emitChange();
 };
@@ -76,6 +105,7 @@ export const setAuthentication = ({
   };
 
   state = { session, terminationReason: null };
+  if (typeof window !== 'undefined') window.sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
 
   const remainingMilliseconds = session.expiresAt - Date.now();
 
@@ -120,6 +150,7 @@ export const resetAuthenticationForTests = () => {
   clearExpirationTimer();
   authenticationRevision += 1;
   state = { session: null, terminationReason: null };
+  if (typeof window !== 'undefined') window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
   queryClient.clear();
   emitChange();
 };

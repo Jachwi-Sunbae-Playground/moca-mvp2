@@ -7,6 +7,6 @@ spring:
 
 photo:
   storage:
-    endpoint: ${PHOTO_STORAGE_ENDPOINT}
-    access-key: ${PHOTO_STORAGE_ACCESS_KEY}
-    secret-key: ${PHOTO_STORAGE_SECRET_KEY}
+    endpoint: ${PHOTO_STORAGE_ENDPOINT:http://localhost:9000}
+    access-key: ${PHOTO_STORAGE_ACCESS_KEY:local-photo-access-key}
+    secret-key: ${PHOTO_STORAGE_SECRET_KEY:local-photo-secret-key}

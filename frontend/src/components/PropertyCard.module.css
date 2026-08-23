@@ -93,6 +93,15 @@ article:last-child > .card {
   font-size: 0.63rem;
 }
 
+.address {
+  margin: 0.25rem 0 0;
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 0.58rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .emptyProgress {
   display: grid;
   gap: 0.35rem;

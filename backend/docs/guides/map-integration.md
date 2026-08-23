@@ -1,6 +1,7 @@
 # 지도 외부 연동
 
-- 상태: 구현 목표 v1
+- 상태: 구현 완료 v1
+- 문서 성격: 파생
 - 대조 대상: [지도 명세](../../../docs/product/specs/map.md), Kakao Maps 공식 문서
 
 ## 선택
@@ -31,9 +32,7 @@ Kakao JavaScript SDK는 JavaScript 키와 등록 도메인이 필요하고, Loca
 - [주소·좌표·장소 REST API](https://developers.kakao.com/docs/ko/local/dev-guide)
 - [사용 설정과 쿼터](https://developers.kakao.com/docs/ko/kakaomap/common)
 
-## 목표 환경변수
-
-구현 PR은 아래 변수를 각 `.env.example`과 [환경변수 문서](environment-variables.md)에 함께 추가한다.
+## 환경변수
 
 ### 백엔드
 
@@ -56,11 +55,13 @@ Kakao JavaScript SDK는 JavaScript 키와 등록 도메인이 필요하고, Loca
 
 ### 키 없이
 
-`MAP_PROVIDER_MODE=demo`로 실행한다. 고정 지도 배경·현재 위치·주소·다섯 카테고리 장소가 동일 API 계약으로 제공되어 위치 선택과 주변 분석을 확인할 수 있어야 한다.
+`MAP_PROVIDER_MODE=demo`로 실행한다. 고정 지도 배경·주소·다섯 카테고리 장소가 동일 API 계약으로 제공되어 위치 선택과 주변 분석을 확인할 수 있다.
 
 ### 실제 Kakao
 
-백엔드와 프론트엔드 모두 `kakao` 모드로 맞추고 각 키를 설정한다. 한쪽만 `kakao`면 지도 표시 또는 장소 조회가 일부만 동작하므로 시작 시 설정 오류를 명확하게 보여준다.
+백엔드와 프론트엔드 모두 `kakao` 모드로 맞추고 각 키를 설정한다. 프론트는 JavaScript SDK 키가 없으면 설정 오류 화면을 표시하고, 백엔드는 REST 키가 없으면 시작에 실패한다.
+
+프론트는 Kakao JavaScript SDK로 지도와 핀을 렌더링한다. 백엔드는 주소 검색·역지오코딩·장소 검색을 수행한다. `TRANSPORT`는 지하철 카테고리와 `버스정류장` 키워드 결과를 합치며 공급자 장소 ID로 중복을 제거한다.
 
 ## 운영 보호
 

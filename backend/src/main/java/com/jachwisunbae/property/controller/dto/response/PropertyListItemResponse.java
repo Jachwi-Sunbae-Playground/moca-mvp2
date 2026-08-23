@@ -1,12 +1,20 @@
 package com.jachwisunbae.property.controller.dto.response;
 
 import com.jachwisunbae.property.repository.query.PropertyListItemQuery;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.ZoneOffset;
 
 public record PropertyListItemResponse(Long id, String name, Long depositAmount, Long monthlyRentAmount,
-                                       String discoverySource, PropertyRepresentativePhoto representativePhoto,
-                                       PropertyProgress overallProgress) {
+                                       String discoverySource, String address, String roadAddress,
+                                       String jibunAddress, BigDecimal latitude, BigDecimal longitude,
+                                       int photoCount, PropertyRepresentativePhoto representativePhoto,
+                                       PropertyProgress overallProgress, Instant lastActivityAt) {
     public static PropertyListItemResponse from(final PropertyListItemQuery row) {
-        return from(row, null, progressFrom(row));
+        PropertyRepresentativePhoto photo = row.photoId() == null ? null : new PropertyRepresentativePhoto(
+                row.photoId(), "/api/properties/" + row.propertyId() + "/photos/" + row.photoId(),
+                row.photoContentType());
+        return from(row, photo, progressFrom(row));
     }
 
     public static PropertyListItemResponse from(final PropertyListItemQuery row,
@@ -19,9 +27,13 @@ public record PropertyListItemResponse(Long id, String name, Long depositAmount,
                                                  final PropertyProgress progress) {
         return new PropertyListItemResponse(row.propertyId(), row.propertyName(),
                 row.depositAmount(), row.monthlyRentAmount(),
-                row.discoverySource(),
-                photo,
-                progress);
+                row.discoverySource(), displayAddress(row.roadAddress(), row.jibunAddress()),
+                row.roadAddress(), row.jibunAddress(), row.latitude(), row.longitude(), row.photoCount(),
+                photo, progress, row.lastActivityAt().toInstant(ZoneOffset.UTC));
+    }
+
+    private static String displayAddress(final String roadAddress, final String jibunAddress) {
+        return roadAddress == null || roadAddress.isBlank() ? jibunAddress : roadAddress;
     }
 
     private static PropertyProgress progressFrom(final PropertyListItemQuery row) {

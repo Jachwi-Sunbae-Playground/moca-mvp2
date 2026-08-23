@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
 import PropertyForm from '../components/PropertyForm';
 import TopNavigation from '../components/ui/TopNavigation';
@@ -10,8 +10,16 @@ type CreatePropertyPageProps = { config: PublicConfig };
 
 const CreatePropertyPage = ({ config }: CreatePropertyPageProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const createMutation = useCreateProperty(config);
   const mutationError = createMutation.error instanceof ApiError ? createMutation.error : null;
+  const selectedLocation =
+    (location.state as {
+      roadAddress?: string;
+      jibunAddress?: string;
+      latitude?: number;
+      longitude?: number;
+    } | null) ?? {};
 
   return (
     <main className={styles.page}>
@@ -23,12 +31,16 @@ const CreatePropertyPage = ({ config }: CreatePropertyPageProps) => {
             name: '',
             depositAmount: '',
             monthlyRentAmount: '',
-            maintenanceFeeAmount: '',
             discoverySource: '',
+            roadAddress: selectedLocation.roadAddress,
+            jibunAddress: selectedLocation.jibunAddress,
+            latitude: selectedLocation.latitude,
+            longitude: selectedLocation.longitude,
           }}
           submitLabel="매물 등록"
           isSubmitting={createMutation.isPending}
           mutationError={mutationError}
+          onSelectLocation={() => navigate('/map/select-location', { state: { returnTo: '/properties/new' } })}
           onSubmit={(input) => {
             void createMutation
               .mutateAsync(input)

@@ -50,7 +50,7 @@ const PhotoUploadPanel = ({ config, propertyId, currentPhotoCount }: PhotoUpload
         }}
       />
       <p id="photo-upload-help" className="sr-only">
-        JPEG·PNG·WebP 형식을 사진당 10MiB 이하로 선택할 수 있어요. 원본 파일명은 저장하지 않아요.
+        JPEG·PNG·WebP 형식을 사진당 5MiB 이하로 선택할 수 있어요. 원본 파일명은 저장하지 않아요.
       </p>
       {isLimitReached && (
         <p className={`${styles.feedback} form-notice`} role="status">

@@ -1,23 +1,32 @@
 # MVP2 로컬 확인과 배포 준비
 
-- 상태: 구현 목표 v1
+- 상태: 로컬 구현 완료·실연동 미검증
+- 문서 성격: 파생
 - 대조 대상: [MVP2 구현 인계서](../product/mvp2-implementation-brief.md), `backend/.env.example`, `frontend/.env.example`, `deploy/`
 
-## 이번 단계의 경계
+## 구현 경계
 
-다음 구현 작업은 로컬 완성과 배포 준비까지 수행한다. AWS 리소스 생성, 비용 발생, DNS 변경과 실제 배포는 사용자가 MVP2를 확인한 뒤 별도로 요청할 때만 한다.
+MVP2의 로컬 실행과 배포 설정 경계까지 구현했다. AWS 리소스 생성, 비용 발생, DNS 변경과 실제 배포는 사용자가 MVP2를 확인한 뒤 별도로 요청할 때만 한다.
 
-## 사용자가 키 없이 확인할 수 있어야 하는 것
+## 키 없이 확인 가능한 범위
 
 - 데모 로그인
-- 데모 회원의 매물·사진·메모·체크리스트 CRUD
+- 데모 회원의 매물·사진·메모·체크리스트 CRUD와 상태·메모 자동 저장
 - 17개 기준 화면과 빈·로딩·오류 상태
 - 데모 지도, 주소 선택과 다섯 주변 카테고리
 - CSV 비교표
 - MySQL 영속화와 MinIO 사진 저장
 - Swagger UI
 
-구현 완료 후 저장소의 한 안내 절차만 따라 MySQL·MinIO·백엔드·프론트엔드를 실행할 수 있어야 한다.
+실행 명령과 포트는 [로컬 개발](../../backend/docs/guides/local-development.md), 변수의 정본은 [환경변수](../../backend/docs/guides/environment-variables.md)를 따른다. 데모 로그인은 암호 없이 `demo@moca.local` 회원을 사용한다.
+
+## 2026-08-24 로컬 검증 결과
+
+- Docker MySQL과 MinIO가 healthy인 상태에서 백엔드와 프론트엔드를 함께 실행했고 `/actuator/health`의 `UP`과 실제 데모 API 연결을 확인했다.
+- 백엔드 전체 테스트, 프론트엔드 22개 파일·132개 테스트, typecheck·lint·format·production build와 문서 정합성 검사를 실행했다.
+- `390x844` 브라우저 viewport에서 `00`부터 `10`, `13-1`, `13-2`까지 16개 화면과 데모 로그인·매물 생성·조회·사진·메모·체크리스트·지도 위치 선택을 확인했다.
+- 브라우저 제어 보안 검토가 이후 localhost 접근을 차단해 `13-3`의 실제 브라우저 진입과 두 번째 모바일 폭 확인은 수행하지 못했다. `13-3`의 기본 2km·반경 변경·카테고리 빈 상태는 독립 화면 테스트로 검증했다.
+- Google OAuth, Kakao 실제 SDK·Local API와 AWS S3는 키·외부 자원을 만들지 않았으므로 미검증이다.
 
 ## 실제 외부 연동에 필요한 사용자 작업
 
@@ -53,11 +62,20 @@
 | 애플리케이션 | JWT secret, CORS origin, 운영 profile |
 | GitHub | 배포 대상·SSH 또는 SSM 접근과 필요한 Actions secret |
 
+### 구현과 맞춘 값 이름
+
+- 백엔드 Google: `AUTH_MODE=google`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`
+- 프론트 Google: `AUTH_MODE=google`, `GOOGLE_CLIENT_ID`, `GOOGLE_REDIRECT_URI`
+- 백엔드 Kakao: `MAP_PROVIDER_MODE=kakao`, `KAKAO_REST_API_KEY`
+- 프론트 Kakao: `MAP_PROVIDER_MODE=kakao`, `KAKAO_MAP_JAVASCRIPT_KEY`
+- 운영 S3: `PHOTO_STORAGE_REGION`, `PHOTO_STORAGE_BUCKET`, `PHOTO_STORAGE_KEY_PREFIX`; endpoint와 정적 access key는 비우고 EC2 role을 사용한다.
+- 공통: `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`, DB 접속값
+
 비밀값은 저장소에 커밋하지 않는다.
 
 ## 배포 직전 체크리스트
 
-- [ ] 로컬 `demo` 전체 흐름이 통과한다.
+- [ ] 병합된 `main`에서 로컬 `demo` 전체 흐름을 다시 확인한다.
 - [ ] 로컬 `live`에서 Google·Kakao를 확인한다.
 - [ ] S3 테스트 객체 업로드·조회·삭제가 성공한다.
 - [ ] 운영 schema 초기화와 seed 범위를 검토한다.

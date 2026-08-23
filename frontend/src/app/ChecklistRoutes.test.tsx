@@ -350,7 +350,7 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
     expect(requestBody).toBeUndefined();
     await user.click(screen.getByRole('button', { name: '이 체크리스트 연결' }));
 
-    await waitFor(() => expect(requestBody).toEqual({ checklistId: 7 }));
+    await waitFor(() => expect(requestBody).toEqual({ sourceType: 'USER', checklistId: 7 }));
     expect(await screen.findByRole('heading', { name: '전화 문의 기본 목록', level: 1 })).toBeInTheDocument();
   });
 

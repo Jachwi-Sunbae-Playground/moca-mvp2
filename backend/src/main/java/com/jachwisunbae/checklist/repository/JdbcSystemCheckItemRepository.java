@@ -52,6 +52,7 @@ public class JdbcSystemCheckItemRepository implements SystemCheckItemRepository 
         return queryItems(sql, stage.name());
     }
 
+    @Override
     public List<SystemCheckItem> findActiveOptionalByIds(final CheckStage stage, final List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();
@@ -89,6 +90,7 @@ public class JdbcSystemCheckItemRepository implements SystemCheckItemRepository 
         return queryItems(sql, parameters);
     }
 
+    @Override
     public List<SystemCheckItem> findByIdsAndStageInOrder(final CheckStage stage, final List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();

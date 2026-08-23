@@ -20,7 +20,10 @@ public class JdbcPropertyRepository implements PropertyRepository {
             rs.getLong("id"), rs.getString("name"),
             rs.getObject("deposit_amount", Long.class), rs.getObject("monthly_rent_amount", Long.class),
             rs.getString("discovery_source"),
+            rs.getString("road_address"), rs.getString("jibun_address"),
+            rs.getBigDecimal("latitude"), rs.getBigDecimal("longitude"),
             rs.getObject("photo_id", Long.class), rs.getString("storage_key"), rs.getString("content_type"),
+            rs.getInt("photo_count"), rs.getTimestamp("last_activity_at").toLocalDateTime(),
             rs.getInt("total_count"), rs.getInt("completed_count"), rs.getInt("good_count"),
             rs.getInt("caution_count"), rs.getInt("unconfirmed_count"));
 
@@ -32,8 +35,10 @@ public class JdbcPropertyRepository implements PropertyRepository {
     public List<PropertyListItemQuery> findListByMemberId(final long memberId) {
         String sql = """
                 SELECT p.id, p.member_id, p.name, p.deposit_amount, p.monthly_rent_amount,
-                       p.discovery_source,
+                       p.discovery_source, p.road_address, p.jibun_address, p.latitude, p.longitude,
+                       p.last_activity_at,
                        ph.id AS photo_id, ph.storage_key, ph.content_type,
+                       (SELECT COUNT(*) FROM property_photos pph WHERE pph.property_id = p.id) AS photo_count,
                        COALESCE(progress.total_count, 0) AS total_count,
                        COALESCE(progress.completed_count, 0) AS completed_count,
                        COALESCE(progress.good_count, 0) AS good_count,
@@ -54,10 +59,11 @@ public class JdbcPropertyRepository implements PropertyRepository {
                 ) progress ON progress.property_id = p.id
                 WHERE p.member_id = ?
                 GROUP BY p.id, p.member_id, p.name, p.deposit_amount, p.monthly_rent_amount,
-                         p.discovery_source, ph.id, ph.storage_key, ph.content_type,
+                         p.discovery_source, p.road_address, p.jibun_address, p.latitude, p.longitude,
+                         p.last_activity_at, ph.id, ph.storage_key, ph.content_type,
                          progress.total_count, progress.completed_count, progress.good_count,
                          progress.caution_count, progress.unconfirmed_count
-                ORDER BY p.id DESC
+                ORDER BY p.last_activity_at DESC, p.id DESC
                 """;
         return jdbcTemplate.query(sql, propertyListRowMapper, memberId);
     }
@@ -77,8 +83,9 @@ public class JdbcPropertyRepository implements PropertyRepository {
         String sql = """
                 INSERT INTO properties
                     (member_id, name, deposit_amount, monthly_rent_amount,
-                     discovery_source)
-                VALUES (?, ?, ?, ?, ?)
+                     discovery_source, road_address, jibun_address, latitude, longitude,
+                     created_at, updated_at, last_activity_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -88,21 +95,34 @@ public class JdbcPropertyRepository implements PropertyRepository {
             statement.setObject(3, property.getDepositAmount());
             statement.setObject(4, property.getMonthlyRentAmount());
             statement.setString(5, property.getDiscoverySource());
+            statement.setString(6, property.getRoadAddress());
+            statement.setString(7, property.getJibunAddress());
+            statement.setBigDecimal(8, property.getLatitude());
+            statement.setBigDecimal(9, property.getLongitude());
+            statement.setObject(10, property.getCreatedAt());
+            statement.setObject(11, property.getUpdatedAt());
+            statement.setObject(12, property.getLastActivityAt());
             return statement;
         }, keyHolder);
         return Property.reconstruct(keyHolder.getKey().longValue(), property.getMemberId(), property.getName(),
                 property.getDepositAmount(), property.getMonthlyRentAmount(),
-                property.getDiscoverySource());
+                property.getDiscoverySource(), property.getRoadAddress(), property.getJibunAddress(),
+                property.getLatitude(), property.getLongitude(), property.getCreatedAt(), property.getUpdatedAt(),
+                property.getLastActivityAt());
     }
 
     @Override
     public Optional<Property> findByIdAndMemberId(final long propertyId, final long memberId) {
-        String sql = "SELECT id, member_id, name, deposit_amount, monthly_rent_amount, discovery_source "
+        String sql = "SELECT id, member_id, name, deposit_amount, monthly_rent_amount, discovery_source, "
+                + "road_address, jibun_address, latitude, longitude, created_at, updated_at, last_activity_at "
                 + "FROM properties WHERE id = ? AND member_id = ?";
         return jdbcTemplate.query(sql, (rs, row) -> Property.reconstruct(
                 rs.getLong("id"), rs.getLong("member_id"), rs.getString("name"),
                 rs.getObject("deposit_amount", Long.class), rs.getObject("monthly_rent_amount", Long.class),
-                rs.getString("discovery_source")), propertyId, memberId).stream().findFirst();
+                rs.getString("discovery_source"), rs.getString("road_address"), rs.getString("jibun_address"),
+                rs.getBigDecimal("latitude"), rs.getBigDecimal("longitude"),
+                rs.getTimestamp("created_at").toLocalDateTime(), rs.getTimestamp("updated_at").toLocalDateTime(),
+                rs.getTimestamp("last_activity_at").toLocalDateTime()), propertyId, memberId).stream().findFirst();
     }
 
     @Override
@@ -115,21 +135,33 @@ public class JdbcPropertyRepository implements PropertyRepository {
 
     @Override
     public Optional<Property> findByIdAndMemberIdForUpdate(final long propertyId, final long memberId) {
-        String sql = "SELECT id, member_id, name, deposit_amount, monthly_rent_amount, discovery_source "
+        String sql = "SELECT id, member_id, name, deposit_amount, monthly_rent_amount, discovery_source, "
+                + "road_address, jibun_address, latitude, longitude, created_at, updated_at, last_activity_at "
                 + "FROM properties WHERE id = ? AND member_id = ? FOR UPDATE";
         return jdbcTemplate.query(sql, (rs, row) -> Property.reconstruct(
                 rs.getLong("id"), rs.getLong("member_id"), rs.getString("name"),
                 rs.getObject("deposit_amount", Long.class), rs.getObject("monthly_rent_amount", Long.class),
-                rs.getString("discovery_source")), propertyId, memberId).stream().findFirst();
+                rs.getString("discovery_source"), rs.getString("road_address"), rs.getString("jibun_address"),
+                rs.getBigDecimal("latitude"), rs.getBigDecimal("longitude"),
+                rs.getTimestamp("created_at").toLocalDateTime(), rs.getTimestamp("updated_at").toLocalDateTime(),
+                rs.getTimestamp("last_activity_at").toLocalDateTime()), propertyId, memberId).stream().findFirst();
     }
 
     @Override
     public Property update(final Property property) {
-        String sql = "UPDATE properties SET name = ?, deposit_amount = ?, monthly_rent_amount = ?, discovery_source = ? "
+        String sql = "UPDATE properties SET name = ?, deposit_amount = ?, monthly_rent_amount = ?, discovery_source = ?, "
+                + "road_address = ?, jibun_address = ?, latitude = ?, longitude = ?, updated_at = ?, last_activity_at = ? "
                 + "WHERE id = ? AND member_id = ?";
         jdbcTemplate.update(sql, property.getName(), property.getDepositAmount(), property.getMonthlyRentAmount(),
-                property.getDiscoverySource(), property.getId(), property.getMemberId());
+                property.getDiscoverySource(), property.getRoadAddress(), property.getJibunAddress(),
+                property.getLatitude(), property.getLongitude(), property.getUpdatedAt(), property.getLastActivityAt(),
+                property.getId(), property.getMemberId());
         return property;
+    }
+
+    @Override
+    public void touch(final long propertyId, final java.time.LocalDateTime now) {
+        jdbcTemplate.update("UPDATE properties SET last_activity_at = ? WHERE id = ?", now, propertyId);
     }
 
     @Override

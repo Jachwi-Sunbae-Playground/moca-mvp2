@@ -117,7 +117,6 @@ describe('FE-2 API 경계', () => {
       name: '신림역 원룸',
       depositAmount: 0,
       monthlyRentAmount: 550_000,
-      maintenanceFeeAmount: null,
       discoverySource: 'https://example.com/home',
     });
 
@@ -241,7 +240,6 @@ describe('FE-2 API 경계', () => {
       name: '신림역 원룸',
       depositAmount: 10_000_000,
       monthlyRentAmount: 530_000,
-      maintenanceFeeAmount: null,
       discoverySource: null,
     });
     expect(requestBody).toEqual({

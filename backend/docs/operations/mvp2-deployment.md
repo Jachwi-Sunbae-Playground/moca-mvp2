@@ -12,7 +12,7 @@
 - Spring Boot는 `moca-backend.service`, `prod` 프로필과 `moca` 비로그인 계정으로 실행한다.
 - 운영 환경변수는 `/etc/moca/app.env`에서 주입한다.
 - MySQL은 `deploy/compose.yaml`로 실행하고 `127.0.0.1:3306`에만 바인딩한다.
-- 사진 객체는 구현 완료 후 EC2 instance role로 비공개 S3에 접근한다. 정적 Access Key를 두지 않는다.
+- 사진 객체는 EC2 instance role로 비공개 S3에 접근한다. 정적 Access Key를 두지 않는다.
 
 ## 최초 준비
 
@@ -38,6 +38,11 @@ DB 초기화 기준은 [데이터베이스 초기화](../guides/database-initial
 | `DB_PORT` | `3306` |
 | `DB_SSL_MODE` | MySQL 서버 TLS 구성에 맞추되 기본 `REQUIRED` |
 | `CORS_ALLOWED_ORIGINS` | 공개 프론트 Origin 하나 |
+| `AUTH_MODE` | `google` |
+| `JWT_SECRET` | 32바이트 이상의 운영 전용 무작위 값 |
+| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | 운영 Google Web OAuth 값 |
+| `MAP_PROVIDER_MODE` | `kakao` |
+| `KAKAO_REST_API_KEY` | 서버 전용 Kakao Local REST 키 |
 | `PHOTO_STORAGE_ENDPOINT` | AWS S3에서는 설정하지 않음 |
 | `PHOTO_STORAGE_REGION` | 사진 버킷 리전 |
 | `PHOTO_STORAGE_BUCKET` | 비공개 사진 버킷 |

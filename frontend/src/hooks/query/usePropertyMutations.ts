@@ -29,10 +29,10 @@ export const useUpdateProperty = (config: PublicConfig, propertyId: number) =>
               name: updated.name,
               depositAmount: updated.depositAmount,
               monthlyRentAmount: updated.monthlyRentAmount,
-              maintenanceFeeAmount: updated.maintenanceFeeAmount,
               discoverySource: updated.discoverySource,
+              location: updated.location,
               updatedAt: updated.updatedAt ?? current.updatedAt,
-              lastActivityAt: updated.updatedAt ?? current.lastActivityAt,
+              lastActivityAt: updated.lastActivityAt ?? updated.updatedAt ?? current.lastActivityAt,
             },
       );
       await queryClient.invalidateQueries({ queryKey: propertyQueryKeys.lists() });

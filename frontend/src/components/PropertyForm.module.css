@@ -34,6 +34,26 @@
   gap: 0.65rem;
 }
 
+.locationFields {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+}
+
+.locationCoordinates {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.detailForm .locationFields {
+  margin: 0.75rem 0;
+}
+
 .detailMoneyFields {
   display: contents;
 }

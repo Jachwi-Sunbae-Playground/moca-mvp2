@@ -26,6 +26,21 @@ public class UserChecklistValidator {
         }
     }
 
+    public void validateOptionalItemIds(final List<Long> ids) {
+        if (ids == null) {
+            throw new BusinessException(DomainErrorCode.CHECKLIST_ITEMS_INVALID,
+                    "선택 항목 목록은 null일 수 없습니다.");
+        }
+        if (ids.size() != new HashSet<>(ids).size()) {
+            throw new BusinessException(DomainErrorCode.DUPLICATE_CHECK_ITEM,
+                    "같은 시스템 체크 항목을 중복해서 추가할 수 없습니다.");
+        }
+        if (ids.size() > 30) {
+            throw new BusinessException(DomainErrorCode.CHECKLIST_ITEM_COUNT_OUT_OF_RANGE,
+                    "선택 항목은 30개 이하여야 합니다.");
+        }
+    }
+
     public void validateItemsExist(final List<Long> requestedIds, final List<SystemCheckItem> items) {
         if (requestedIds.size() != items.size()) {
             throw new BusinessException(DomainErrorCode.INVALID_SYSTEM_CHECK_ITEM,

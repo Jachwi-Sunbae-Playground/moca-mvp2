@@ -1,16 +1,19 @@
 import { Link } from 'react-router-dom';
 import type { PropertySummary } from '../types/Property';
+import type { PublicConfig } from '../types/PublicConfig';
 import { formatManwon } from '../utils/propertyFormat';
 import Icon from './ui/Icon';
 import ChecklistProgressBar from './ChecklistProgressBar';
 import styles from './PropertyCard.module.css';
+import AuthenticatedPhoto from './AuthenticatedPhoto';
 
 type PropertyCardProps = {
   property: PropertySummary;
   thumbnailUrl?: string;
+  config?: PublicConfig;
 };
 
-const PropertyCard = ({ property, thumbnailUrl }: PropertyCardProps) => {
+const PropertyCard = ({ property, thumbnailUrl, config }: PropertyCardProps) => {
   const resolvedThumbnailUrl = thumbnailUrl ?? property.representativePhoto?.contentUrl;
   const progressLabel =
     property.progress.totalCount === 0 || property.progress.completedCount < property.progress.totalCount
@@ -25,6 +28,14 @@ const PropertyCard = ({ property, thumbnailUrl }: PropertyCardProps) => {
           <div className={styles.thumbnail}>
             {resolvedThumbnailUrl === undefined ? (
               <Icon name="image" size={22} />
+            ) : config !== undefined && property.representativePhoto !== null ? (
+              <AuthenticatedPhoto
+                config={config}
+                propertyId={property.propertyId}
+                photoId={property.representativePhoto.photoId}
+                contentUrl={resolvedThumbnailUrl}
+                alt=""
+              />
             ) : (
               <img src={resolvedThumbnailUrl} alt="" />
             )}
@@ -35,6 +46,7 @@ const PropertyCard = ({ property, thumbnailUrl }: PropertyCardProps) => {
             <p className={styles.price}>
               보증금 {formatManwon(property.depositAmount)} / 월세 {formatManwon(property.monthlyRentAmount)}
             </p>
+            {property.location.address !== null && <p className={styles.address}>{property.location.address}</p>}
           </div>
         </div>
         {property.progress.totalCount === 0 ? (

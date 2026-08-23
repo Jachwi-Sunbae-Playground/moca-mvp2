@@ -23,7 +23,7 @@ public class JdbcMemberRepository implements MemberRepository {
     @Override
     public Optional<Member> findById(final Long memberId) {
         String sql = """
-                SELECT id, email, name, created_at, updated_at
+                SELECT id, email, name, last_login_at, created_at, updated_at
                 FROM members
                 WHERE id = ?
                 """;
@@ -36,7 +36,7 @@ public class JdbcMemberRepository implements MemberRepository {
     @Override
     public Optional<Member> findByIdForUpdate(final Long memberId) {
         String sql = """
-                SELECT id, email, name, created_at, updated_at
+                SELECT id, email, name, last_login_at, created_at, updated_at
                 FROM members
                 WHERE id = ?
                 FOR UPDATE
@@ -47,7 +47,7 @@ public class JdbcMemberRepository implements MemberRepository {
     @Override
     public Optional<Member> findByEmail(final String email) {
         String sql = """
-                SELECT id, email, name, created_at, updated_at
+                SELECT id, email, name, last_login_at, created_at, updated_at
                 FROM members
                 WHERE email = ?
                 """;
@@ -61,31 +61,33 @@ public class JdbcMemberRepository implements MemberRepository {
     public Member save(final Member member) {
         String sql = """
                 INSERT INTO members (
-                    email, name,
+                    email, name, last_login_at,
                     created_at, updated_at
-                ) VALUES (?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?)
                 """;
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, member.getEmail());
             statement.setString(2, member.getName());
-            statement.setObject(3, member.getCreatedAt());
-            statement.setObject(4, member.getUpdatedAt());
+            statement.setObject(3, member.getLastLoginAt());
+            statement.setObject(4, member.getCreatedAt());
+            statement.setObject(5, member.getUpdatedAt());
             return statement;
         }, keyHolder);
         return Member.reconstruct(keyHolder.getKey().longValue(), member.getEmail(), member.getName(),
-                member.getCreatedAt(), member.getUpdatedAt());
+                member.getLastLoginAt(), member.getCreatedAt(), member.getUpdatedAt());
     }
 
     @Override
     public void update(final Member member) {
         String sql = """
                 UPDATE members
-                SET email = ?, name = ?, updated_at = ?
+                SET email = ?, name = ?, last_login_at = ?, updated_at = ?
                 WHERE id = ?
                 """;
-        jdbcTemplate.update(sql, member.getEmail(), member.getName(), member.getUpdatedAt(), member.getId());
+        jdbcTemplate.update(sql, member.getEmail(), member.getName(), member.getLastLoginAt(),
+                member.getUpdatedAt(), member.getId());
     }
 
     private RowMapper<Member> memberRowMapper() {
@@ -93,6 +95,7 @@ public class JdbcMemberRepository implements MemberRepository {
                 resultSet.getLong("id"),
                 resultSet.getString("email"),
                 resultSet.getString("name"),
+                resultSet.getTimestamp("last_login_at").toLocalDateTime(),
                 resultSet.getTimestamp("created_at").toLocalDateTime(),
                 resultSet.getTimestamp("updated_at").toLocalDateTime()
         );

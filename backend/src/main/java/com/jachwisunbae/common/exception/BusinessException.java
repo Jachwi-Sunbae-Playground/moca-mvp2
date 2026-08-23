@@ -11,4 +11,9 @@ public class BusinessException extends RuntimeException {
         super(debugMessage);
         this.code = code;
     }
+
+    public BusinessException(DomainErrorCode code, String debugMessage, Throwable cause) {
+        super(debugMessage, cause);
+        this.code = code;
+    }
 }

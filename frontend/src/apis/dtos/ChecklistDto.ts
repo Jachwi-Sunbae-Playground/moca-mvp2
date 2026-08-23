@@ -24,6 +24,5 @@ export type UpdateChecklistRequestDto = {
   checkItemIds: number[];
 };
 
-export type AssignActiveChecklistRequestDto = {
-  checklistId: number;
-};
+export type AssignActiveChecklistRequestDto =
+  { sourceType?: 'USER'; checklistId: number } | { sourceType: 'SYSTEM_DEFAULT'; checklistId: null };

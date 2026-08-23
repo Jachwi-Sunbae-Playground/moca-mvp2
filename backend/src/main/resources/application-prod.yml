@@ -11,3 +11,12 @@ server:
 logging:
   level:
     root: info
+
+auth:
+  mode: ${AUTH_MODE:google}
+  jwt:
+    secret: ${JWT_SECRET}
+
+demo:
+  seed:
+    enabled: false

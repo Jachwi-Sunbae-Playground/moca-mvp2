@@ -13,28 +13,35 @@ public class Member extends BaseTimeEntity {
     private final Long id;
     private String email;
     private String name;
+    private LocalDateTime lastLoginAt;
     private Member(final Long id, final String email, final String name,
+                   final LocalDateTime lastLoginAt,
                    final LocalDateTime createdAt,
                    final LocalDateTime updatedAt) {
         super(createdAt, updatedAt);
         this.id = id;
         this.email = email;
         this.name = name;
+        this.lastLoginAt = lastLoginAt;
     }
 
     public static Member create(final String email, final String name, final LocalDateTime now) {
-        return new Member(null, validateEmail(email), validateName(name), now, now);
+        return new Member(null, validateEmail(email), validateName(name), now, now, now);
     }
 
     public static Member reconstruct(final Long id, final String email, final String name,
+                                     final LocalDateTime lastLoginAt,
                                      final LocalDateTime createdAt,
                                      final LocalDateTime updatedAt) {
-        return new Member(id, validateEmail(email), validateName(name), createdAt, updatedAt);
+        return new Member(id, validateEmail(email), validateName(name), lastLoginAt, createdAt, updatedAt);
     }
 
-    public void updateLoginProfile(final String email, final String name) {
+    public void updateLoginProfile(final String email, final String name, final LocalDateTime loginAt) {
         this.email = validateEmail(email);
         this.name = validateName(name);
+        this.lastLoginAt = DomainPreconditions.requireNonNull(loginAt, DomainErrorCode.MEMBER_NAME_INVALID,
+                "최근 로그인 시각은 필수입니다.");
+        updateUpdatedAt(loginAt);
     }
 
     private static String validateEmail(final String email) {

@@ -6,6 +6,7 @@ spring:
       data-locations: classpath:db/init/002-seed.sql
 
 auth:
+  mode: demo
   jwt:
     secret: test-jwt-secret-must-be-at-least-32-bytes
     issuer: jachwi-sunbae
@@ -26,3 +27,11 @@ photo:
     bucket: test-photos
     access-key: test-access-key
     secret-key: test-secret-key
+
+map:
+  provider:
+    mode: demo
+
+demo:
+  seed:
+    enabled: false

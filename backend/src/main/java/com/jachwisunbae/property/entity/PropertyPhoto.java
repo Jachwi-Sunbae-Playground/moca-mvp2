@@ -54,8 +54,8 @@ public class PropertyPhoto {
         String type = DomainPreconditions.requireNonBlank(value, DomainErrorCode.PROPERTY_INPUT_INVALID,
                 "사진 콘텐츠 타입은 필수입니다.").toLowerCase();
         DomainPreconditions.require(type.equals("image/jpeg") || type.equals("image/png")
-                        || type.equals("image/webp") || type.equals("image/heic") || type.equals("image/heif"),
-                DomainErrorCode.PROPERTY_INPUT_INVALID, "JPG, JPEG, PNG, WebP, Heic만 허용됩니다.");
+                        || type.equals("image/webp"),
+                DomainErrorCode.PHOTO_CONTENT_TYPE_UNSUPPORTED, "JPEG, PNG, WebP만 허용됩니다.");
         return type;
     }
 
@@ -63,7 +63,7 @@ public class PropertyPhoto {
         return DomainPreconditions.requireAtMost(
                 DomainPreconditions.requireNonNegative(sizeBytes, DomainErrorCode.PROPERTY_INPUT_INVALID,
                         "사진 크기는 0 이상의 값이어야 합니다."),
-                5L * 1024 * 1024, DomainErrorCode.PROPERTY_INPUT_INVALID,
+                5L * 1024 * 1024, DomainErrorCode.PHOTO_SIZE_EXCEEDED,
                 "사진 크기는 5MiB 이하여야 합니다.");
     }
 

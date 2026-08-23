@@ -16,13 +16,16 @@
 
 ## 빌드 타임 공개 설정
 
-| 환경변수 | 운영 값 |
-| --- | --- |
-| `API_BASE_URL` | 빈 문자열, 같은 Origin 사용 |
-| `GOOGLE_CLIENT_ID` | GitHub Environment의 공개 OAuth Client ID |
-| `GOOGLE_REDIRECT_URI` | `https://<공개 도메인>/oauth/google/callback` |
+| 환경변수                   | 운영 값                                       |
+| -------------------------- | --------------------------------------------- |
+| `API_BASE_URL`             | 빈 문자열, 같은 Origin 사용                   |
+| `AUTH_MODE`                | `google`                                      |
+| `GOOGLE_CLIENT_ID`         | GitHub Environment의 공개 OAuth Client ID     |
+| `GOOGLE_REDIRECT_URI`      | `https://<공개 도메인>/oauth/google/callback` |
+| `MAP_PROVIDER_MODE`        | `kakao`                                       |
+| `KAKAO_MAP_JAVASCRIPT_KEY` | GitHub Environment의 공개 Kakao JavaScript 키 |
 
-세 값은 브라우저 번들에서 보이므로 비밀값을 넣지 않는다. Google Client Secret은 백엔드 EC2 환경변수에서만 관리한다.
+이 값은 브라우저 번들에서 보이므로 비밀값을 넣지 않는다. Google Client Secret과 Kakao REST API 키는 백엔드 EC2 환경변수에서만 관리한다.
 
 ## 확인
 

@@ -158,10 +158,15 @@ export const assignActiveChecklist = (
     config,
     path: `/api/properties/${propertyId}/checklists/${stage}`,
     method: 'PUT',
-    body,
+    body: body.sourceType === 'SYSTEM_DEFAULT' ? body : { sourceType: 'USER', checklistId: body.checklistId },
     parseData: (value) => {
       const result = parseActiveChecklist(value);
-      if (result.propertyId !== propertyId || result.stage !== stage || result.checklistId !== body.checklistId) {
+      if (
+        result.propertyId !== propertyId ||
+        result.stage !== stage ||
+        (body.sourceType !== 'SYSTEM_DEFAULT' && result.checklistId !== body.checklistId) ||
+        (body.sourceType === 'SYSTEM_DEFAULT' && result.checklistId !== null)
+      ) {
         throw new Error('active-checklist');
       }
       return result;

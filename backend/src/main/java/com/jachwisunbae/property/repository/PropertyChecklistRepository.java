@@ -14,7 +14,7 @@ public interface PropertyChecklistRepository {
 
     void deleteByPropertyAndStage(long propertyId, CheckStage stage);
 
-    long save(long propertyId, long sourceChecklistId, String checklistName, CheckStage stage);
+    long save(long propertyId, Long sourceChecklistId, String checklistName, CheckStage stage);
 
     void saveItems(long propertyChecklistId, List<PropertyChecklistItemStateQuery> items);
 

@@ -48,7 +48,7 @@ public class JdbcPropertyChecklistRepository implements PropertyChecklistReposit
     }
 
     @Override
-    public long save(final long propertyId, final long sourceChecklistId, final String checklistName,
+    public long save(final long propertyId, final Long sourceChecklistId, final String checklistName,
                      final CheckStage stage) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -56,7 +56,7 @@ public class JdbcPropertyChecklistRepository implements PropertyChecklistReposit
                     "INSERT INTO property_checklists (property_id, user_checklist_id, checklist_name, stage) VALUES (?, ?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS);
             statement.setLong(1, propertyId);
-            statement.setLong(2, sourceChecklistId);
+            statement.setObject(2, sourceChecklistId);
             statement.setString(3, checklistName);
             statement.setString(4, stage.name());
             return statement;

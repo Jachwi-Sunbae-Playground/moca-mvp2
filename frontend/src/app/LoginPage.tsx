@@ -1,10 +1,13 @@
 import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import logo from '../assets/jachwi-sunbae-logo.png';
 import GoogleIcon from '../components/GoogleIcon';
 import Icon from '../components/ui/Icon';
 import type { PublicConfig } from '../types/PublicConfig';
 import { startGoogleLogin } from '../utils/googleOAuth';
 import { useAuthentication } from '../hooks/useAuthentication';
+import { submitDemoLogin } from '../apis/authApi';
+import { setAuthentication } from './authStore';
 import styles from './LoginPage.module.css';
 
 type LoginPageProps = {
@@ -18,6 +21,8 @@ const LoginPage = ({ config, storage, navigateExternally }: LoginPageProps) => {
   const [startError, setStartError] = useState<string | null>(null);
   const isStartingRef = useRef(false);
   const { terminationReason } = useAuthentication();
+  const navigate = useNavigate();
+  const isDemo = config.authMode === 'demo';
 
   const handleLogin = async () => {
     if (isStartingRef.current) {
@@ -29,10 +34,16 @@ const LoginPage = ({ config, storage, navigateExternally }: LoginPageProps) => {
     setStartError(null);
 
     try {
-      await startGoogleLogin(config, {
-        storage,
-        navigate: navigateExternally,
-      });
+      if (isDemo) {
+        const response = await submitDemoLogin(config);
+        setAuthentication(response);
+        navigate('/properties', { replace: true });
+      } else {
+        await startGoogleLogin(config, {
+          storage,
+          navigate: navigateExternally,
+        });
+      }
     } catch {
       isStartingRef.current = false;
       setIsRedirecting(false);
@@ -99,9 +110,10 @@ const LoginPage = ({ config, storage, navigateExternally }: LoginPageProps) => {
             </p>
           )}
           <button className={styles.googleLoginButton} type="button" onClick={handleLogin} disabled={isRedirecting}>
-            <GoogleIcon className={styles.googleIcon} />
-            {isRedirecting ? 'Google로 이동 중…' : '구글로 로그인하기'}
+            {isDemo ? <Icon name="home" size={20} /> : <GoogleIcon className={styles.googleIcon} />}
+            {isRedirecting ? '로그인 중…' : isDemo ? '데모로 시작하기' : '구글로 로그인하기'}
           </button>
+          {isDemo ? <p className={styles.demoHint}>계정이나 외부 API 키 없이 모든 기능을 체험할 수 있어요.</p> : null}
           <p className={styles.agreement}>계속하면 이용약관과 개인정보처리방침에 동의하는 것으로 간주됩니다.</p>
         </section>
       </section>

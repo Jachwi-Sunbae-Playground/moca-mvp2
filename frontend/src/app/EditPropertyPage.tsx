@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
 import type { UpdatePropertyRequestDto } from '../apis/dtos/PropertyDto';
 import { getPropertyErrorMessage } from '../apis/propertyErrorMessages';
@@ -36,6 +36,7 @@ const EditPropertyPage = ({ config }: EditPropertyPageProps) => {
 
 const ResolvedEditPropertyPage = ({ config, propertyId }: { config: PublicConfig; propertyId: number }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const property = usePropertyDetail(config, propertyId);
   const updateMutation = useUpdateProperty(config, propertyId);
   const [formNotice, setFormNotice] = useState<string | null>(null);
@@ -70,6 +71,13 @@ const ResolvedEditPropertyPage = ({ config, propertyId }: { config: PublicConfig
 
   const initial = property.data;
   const mutationError = updateMutation.error instanceof ApiError ? updateMutation.error : null;
+  const selectedLocation =
+    (location.state as {
+      roadAddress?: string;
+      jibunAddress?: string;
+      latitude?: number;
+      longitude?: number;
+    } | null) ?? {};
 
   return (
     <main className={styles.page}>
@@ -86,15 +94,20 @@ const ResolvedEditPropertyPage = ({ config, propertyId }: { config: PublicConfig
             name: initial.name,
             depositAmount: formatAmountForInput(initial.depositAmount),
             monthlyRentAmount: formatAmountForInput(initial.monthlyRentAmount),
-            maintenanceFeeAmount:
-              initial.maintenanceFeeAmount === null ? '' : formatAmountForInput(initial.maintenanceFeeAmount),
             discoverySource: initial.discoverySource.value,
+            roadAddress: selectedLocation.roadAddress ?? initial.location.roadAddress ?? '',
+            jibunAddress: selectedLocation.jibunAddress ?? initial.location.jibunAddress ?? '',
+            latitude: selectedLocation.latitude ?? initial.location.latitude,
+            longitude: selectedLocation.longitude ?? initial.location.longitude,
           }}
           submitLabel="변경사항 저장"
           isSubmitting={updateMutation.isPending}
           mutationError={mutationError}
           formNotice={formNotice}
           variant="detail"
+          onSelectLocation={() =>
+            navigate('/map/select-location', { state: { returnTo: `/properties/${propertyId}/edit` } })
+          }
           onSubmit={(input) => {
             const changes: UpdatePropertyRequestDto = input;
             setFormNotice(null);
