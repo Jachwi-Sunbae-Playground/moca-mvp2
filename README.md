@@ -16,10 +16,15 @@
 
 ### 제품
 
+- [제품 문서 안내](docs/product/README.md) — MVP1 기준선부터 MVP2 구현 문서까지의 읽기 순서
 - [자취선배 개요](docs/product/overview.md) — 한 문장 소개, 제품 범위, 하지 않는 일, 장기 방향
 - [문제와 사용자](docs/product/problem-and-users.md) — 해결하려는 문제, 타겟, 시장, 기존 플랫폼과의 차이
 - [핵심 가설](docs/product/hypotheses.md) — 핵심·하위 가설과 현재 검증 상태
 - [브랜드와 제품 원칙](docs/product/brand.md) — 미션, 비전, 제품 원칙, 브랜드 에셋
+- [MVP1 실제 구현 기준선](docs/product/scope/mvp1-baseline.md) — 태그 시점의 기능·한계와 전달 문서 차이
+- [MVP2 범위](docs/product/scope/mvp2-scope.md) — 유지·변경·신규·제외 범위와 완료 기준
+- [MVP2 구현 브리프](docs/product/mvp2-implementation-brief.md) — 한 번에 구현할 때의 정본과 작업 순서
+- [MVP2 단일 구현 프롬프트](docs/product/mvp2-implementation-prompt.md) — 다음 Codex 작업에 그대로 전달할 실행 지시문
 - [피벗 히스토리와 학습](docs/learnings/pivot-history.md) — 이전 검증에서 현재 방향까지의 학습
 - [실험 기록](docs/experiments/) — 실험별 설계·결과·판정
 
@@ -34,6 +39,10 @@
 - [MVP2 배포 아키텍처](docs/operations/mvp2-deployment-architecture.md) — 향후 단일 EC2 최소 구성과 준비 조건
 - [MVP1 배포 아키텍처 기록](docs/operations/deployment-architecture.md) — 기존 우테코 AWS 구성
 - [MVP1 CI/CD 배포 검증 기록](docs/operations/2026-08-20-cicd-deployment-validation.md) — 기존 리비전 검증과 자동 롤백의 실측 결과
+
+### 디자인
+
+- [MVP2 와이어프레임](docs/design/wireframes/README.md) — `.pen` 원본, 17개 화면 PNG와 화면 연결 기준
 
 ## 저장소 구조
 
@@ -55,7 +64,8 @@ moca-mvp2/
 │   └── pull_request_template.md
 ├── deploy/               # 향후 단일 EC2 최소 배포 파일 (현재 미배포)
 ├── docs/                 # 제품·저장소 공통 문서
-│   ├── product/          # 개요, 문제·사용자, 가설, 브랜드
+│   ├── product/          # MVP 기준선·범위·기능 명세·결정·흐름
+│   ├── design/           # MVP2 와이어프레임 원본과 화면별 PNG
 │   ├── convention/       # 브랜치·커밋, 이슈·PR, 코드 리뷰, 문서 관리
 │   ├── experiments/      # 실험별 설계·결과·판정
 │   ├── learnings/        # 피벗 히스토리와 학습

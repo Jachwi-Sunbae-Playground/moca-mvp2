@@ -11,6 +11,7 @@
 | [`guides`](guides/local-development.md) | 개발자가 그대로 따라 할 수 있는 실행 절차 |
 | [`conventions`](conventions/backend-code-convention.md) | 팀이 반복해서 적용하는 코드·API·예외 규칙 |
 | [`architecture`](architecture/system-overview.md) | 시스템 경계와 패키지 구조 |
+| [`api`](api/README.md) | 구현 전 API 계약과 구현 후 OpenAPI 대조 기준 |
 | [`operations`](operations/deployment.md) | 배포, 롤백, 모니터링과 장애 대응 절차 |
 
 Git·GitHub 협업 규칙은 백엔드에 한정되지 않으므로 [`docs/convention`](../../docs/convention/README.md)에서 관리한다.
@@ -21,6 +22,10 @@ Git·GitHub 협업 규칙은 백엔드에 한정되지 않으므로 [`docs/conve
 - [환경변수](guides/environment-variables.md)
 - [데이터베이스 초기화](guides/database-initialization.md)
 - [시스템 개요](architecture/system-overview.md)
+- [MVP1 데이터 모델 전달 원문](architecture/mvp1-data-model-source.md)
+- [MVP2 데이터 모델](architecture/mvp2-data-model.md)
+- [MVP2 API 계약](api/mvp2-api-contract.md)
+- [지도 연동](guides/map-integration.md)
 - [MVP2 백엔드 배포](operations/mvp2-deployment.md)
 - [MVP2 롤백](operations/mvp2-rollback.md)
 
