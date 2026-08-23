@@ -25,24 +25,36 @@ public class AuthService {
     private final JwtTokenProvider jwtProvider;
     private final Clock clock;
     private final long accessTokenSeconds;
+    private final String demoEmail;
+    private final String demoName;
 
     public AuthService(
             OAuthProviderRegistry providerRegistry,
             MemberRepository memberRepository,
             JwtTokenProvider jwtProvider,
             Clock clock,
-            @Value("${auth.jwt.access-token-seconds}") long accessTokenSeconds) {
+            @Value("${auth.jwt.access-token-seconds}") long accessTokenSeconds,
+            @Value("${auth.demo.email:demo@moca.local}") String demoEmail,
+            @Value("${auth.demo.name:이자취}") String demoName) {
         this.providerRegistry = providerRegistry;
         this.memberRepository = memberRepository;
         this.jwtProvider = jwtProvider;
         this.clock = clock;
         this.accessTokenSeconds = accessTokenSeconds;
+        this.demoEmail = demoEmail;
+        this.demoName = demoName;
     }
 
     @Transactional
     public LoginResponse login(OAuthProviderType providerType, OAuthLoginRequest request) {
         OAuthProfile profile = authenticate(providerType, request);
         Member member = findOrCreateMember(profile);
+        return createLoginResponse(member);
+    }
+
+    @Transactional
+    public LoginResponse loginDemo() {
+        Member member = findOrCreateMember(new OAuthProfile("demo", demoEmail, demoName));
         return createLoginResponse(member);
     }
 
@@ -60,7 +72,7 @@ public class AuthService {
     }
 
     private Member updateMember(Member member, OAuthProfile profile, LocalDateTime loginAt) {
-        member.updateLoginProfile(profile.email(), profile.name());
+        member.updateLoginProfile(profile.email(), profile.name(), loginAt);
         memberRepository.update(member);
         return member;
     }

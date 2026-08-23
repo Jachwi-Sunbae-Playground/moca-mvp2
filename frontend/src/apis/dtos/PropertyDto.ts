@@ -2,8 +2,11 @@ export type PropertyInputDto = {
   name: string;
   depositAmount?: number;
   monthlyRentAmount?: number;
-  maintenanceFeeAmount: number | null;
   discoverySource: string | null;
+  roadAddress?: string | null;
+  jibunAddress?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export type UpdatePropertyRequestDto = PropertyInputDto;

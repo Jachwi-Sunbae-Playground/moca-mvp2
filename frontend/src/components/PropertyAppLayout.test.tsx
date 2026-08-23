@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import PropertyAppLayout from './PropertyAppLayout';
 
 describe('모바일 앱 셸', () => {
-  it('현재 화면과 주요 메뉴 세 개를 함께 표시한다', () => {
+  it('현재 화면과 주요 메뉴 네 개를 함께 표시한다', () => {
     render(
       <MemoryRouter initialEntries={['/properties']}>
         <Routes>

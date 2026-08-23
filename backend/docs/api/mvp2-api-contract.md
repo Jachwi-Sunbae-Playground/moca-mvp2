@@ -1,6 +1,7 @@
 # MVP2 API 계약
 
-- 상태: 구현 목표 v1
+- 상태: 구현 완료 v1
+- 문서 성격: 파생
 - 대조 대상: [MVP2 기능 명세](../../../docs/product/specs/README.md), 실제 Spring MVC 컨트롤러와 `/v3/api-docs`
 
 ## 공통
@@ -26,6 +27,7 @@
 | 메서드 | 경로 | 설명 |
 | --- | --- | --- |
 | `GET` | `/api/properties` | 최근 활동순 목록과 대표 사진·사진 수·전체 진행 현황 |
+| `GET` | `/api/properties/export.csv` | UTF-8 BOM 매물 비교표 다운로드 |
 | `POST` | `/api/properties` | 매물 생성 |
 | `GET` | `/api/properties/{propertyId}` | 상세 조회 |
 | `PUT` | `/api/properties/{propertyId}` | 기본 정보 전체 교체 |
@@ -59,6 +61,7 @@
 | `PUT` | `/api/properties/{propertyId}/photos/{photoId}/representative` | 대표 지정 |
 
 업로드 성공은 201과 새 사진 메타데이터를 반환한다. 크기·형식·개수 위반은 400, 소유자가 아니면 404다.
+서버는 선언된 MIME뿐 아니라 실제 이미지 형식도 확인한다. 저장소 업로드 뒤 DB 저장이 실패하면 같은 객체 key를 보상 삭제한다.
 
 ## 메모
 
@@ -144,8 +147,8 @@
 | `MAP_QUERY_INVALID` | 400 | 좌표·반경·카테고리 오류 |
 | `MAP_PROVIDER_UNAVAILABLE` | 503 | Kakao 장애·429·타임아웃 |
 
-## 정합성 완료 조건
+## 정합성 확인
 
-- Swagger UI에서 모든 endpoint와 보안 요구를 확인한다.
-- 생성 OpenAPI JSON을 저장하거나 snapshot 테스트해 컨트롤러와 이 문서의 경로 차이를 검출한다.
-- 프론트 DTO parser와 mock handler가 실제 응답 계약을 사용한다.
+- Swagger UI와 `/v3/api-docs`는 실행 중인 컨트롤러에서 생성된다.
+- 통합 테스트가 데모 로그인부터 주소·매물·메모·체크·사진·CSV·지도·삭제까지 실제 HTTP 계약을 검증한다.
+- 프론트 DTO parser와 MSW handler는 같은 응답 계약을 사용한다.

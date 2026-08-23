@@ -45,10 +45,11 @@ public class UserChecklistService {
     public UserChecklist create(final Long memberId, final CreateUserChecklistRequest request) {
 
         List<Long> optionalIds = request.optionalSystemCheckItemIds();
-        validator.validateItemIds(optionalIds);
+        validator.validateOptionalItemIds(optionalIds);
 
         List<SystemCheckItem> coreItems = findActiveCore(request.stage());
-        List<SystemCheckItem> optionalItems = systemCheckItemRepository.findByIdsInOrder(optionalIds);
+        List<SystemCheckItem> optionalItems = systemCheckItemRepository
+                .findActiveOptionalByIds(request.stage(), optionalIds);
         validator.validateItemsExist(optionalIds, optionalItems);
         validator.validateItemIds(orderedIds(coreItems, optionalIds));
 
@@ -88,7 +89,7 @@ public class UserChecklistService {
         validator.validateItemIds(request.systemCheckItemIds());
 
         List<SystemCheckItem> systemItems = systemCheckItemRepository
-                .findByIdsInOrder(request.systemCheckItemIds());
+                .findByIdsAndStageInOrder(checklist.getStage(), request.systemCheckItemIds());
         validator.validateItemsExist(request.systemCheckItemIds(), systemItems);
         checklist.rename(request.name());
         userChecklistRepository.updateName(checklistId, checklist.getName());

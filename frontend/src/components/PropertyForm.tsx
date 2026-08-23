@@ -25,14 +25,16 @@ type PropertyFormProps = {
   formNotice?: string | null;
   variant?: 'default' | 'detail';
   onSubmit: (input: PropertyInputDto, values: PropertyFormValues) => void;
+  onSelectLocation?: () => void;
 };
 
 const fields: PropertyFormField[] = [
   'name',
   'depositAmount',
   'monthlyRentAmount',
-  'maintenanceFeeAmount',
   'discoverySource',
+  'roadAddress',
+  'jibunAddress',
 ];
 
 const PropertyForm = ({
@@ -43,6 +45,7 @@ const PropertyForm = ({
   formNotice,
   variant = 'default',
   onSubmit,
+  onSelectLocation,
 }: PropertyFormProps) => {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<PropertyFormErrors>({});
@@ -59,7 +62,7 @@ const PropertyForm = ({
     setErrors((current) => ({ ...current, [field]: undefined }));
   };
 
-  const setMoneyValue = (field: 'depositAmount' | 'monthlyRentAmount' | 'maintenanceFeeAmount', value: string) => {
+  const setMoneyValue = (field: 'depositAmount' | 'monthlyRentAmount', value: string) => {
     const formatted = formatMoneyInput(value);
     if (formatted !== null) setValue(field, formatted);
   };
@@ -96,6 +99,47 @@ const PropertyForm = ({
         onChange={(event) => setValue('name', event.target.value)}
       />
 
+      <div className={styles.locationFields}>
+        <TextField
+          id="property-road-address"
+          name="roadAddress"
+          label="주소"
+          requirement="선택"
+          value={values.roadAddress ?? ''}
+          maxLength={255}
+          autoComplete="street-address"
+          placeholder="도로명 주소"
+          fieldClassName={variant === 'detail' ? styles.detailField : styles.defaultField}
+          className={variant === 'detail' ? styles.detailInput : styles.defaultInput}
+          error={displayedErrors.roadAddress}
+          onChange={(event) => setValue('roadAddress', event.target.value)}
+        />
+        <TextField
+          id="property-jibun-address"
+          name="jibunAddress"
+          label="지번 주소"
+          requirement="선택"
+          value={values.jibunAddress ?? ''}
+          maxLength={255}
+          autoComplete="off"
+          placeholder="지번 주소"
+          fieldClassName={variant === 'detail' ? styles.detailField : styles.defaultField}
+          className={variant === 'detail' ? styles.detailInput : styles.defaultInput}
+          error={displayedErrors.jibunAddress}
+          onChange={(event) => setValue('jibunAddress', event.target.value)}
+        />
+        {onSelectLocation !== undefined && (
+          <Button type="button" variant="secondary" fullWidth onClick={onSelectLocation}>
+            {values.latitude == null ? '지도에서 위치 선택' : '선택한 위치 바꾸기'}
+          </Button>
+        )}
+        {values.latitude != null && values.longitude != null && (
+          <p className={styles.locationCoordinates}>
+            선택 위치 {values.latitude.toFixed(5)}, {values.longitude.toFixed(5)}
+          </p>
+        )}
+      </div>
+
       <div className={variant === 'detail' ? styles.detailMoneyFields : styles.moneyFields}>
         <TextField
           id="property-deposit"
@@ -129,22 +173,6 @@ const PropertyForm = ({
           onChange={(event) => setMoneyValue('monthlyRentAmount', event.target.value)}
         />
       </div>
-
-      <TextField
-        id="property-maintenance-fee"
-        name="maintenanceFeeAmount"
-        label="관리비"
-        requirement="선택"
-        value={values.maintenanceFeeAmount}
-        inputMode="numeric"
-        autoComplete="off"
-        placeholder="입력하지 않아도 돼요"
-        suffix="만원"
-        fieldClassName={variant === 'detail' ? styles.detailField : styles.defaultField}
-        className={variant === 'detail' ? styles.detailInput : styles.defaultInput}
-        error={displayedErrors.maintenanceFeeAmount}
-        onChange={(event) => setMoneyValue('maintenanceFeeAmount', event.target.value)}
-      />
 
       {variant === 'detail' ? (
         <TextAreaField

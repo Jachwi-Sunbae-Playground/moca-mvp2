@@ -9,8 +9,10 @@ import com.jachwisunbae.common.exception.DomainErrorCode;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Component
+@ConditionalOnProperty(name = "auth.mode", havingValue = "google")
 public class GoogleIdentityVerifier {
 
     private final GoogleIdTokenVerifier verifier;

@@ -13,6 +13,8 @@ import com.jachwisunbae.property.repository.query.PropertyMemoQuery;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 @Service
 @Transactional(readOnly = true)
@@ -20,13 +22,16 @@ public class PropertyMemoService {
     private final PropertyRepository propertyRepository;
     private final PropertyMemoRepository propertyMemoRepository;
     private final SystemMemoItemRepository systemMemoItemRepository;
+    private final Clock clock;
 
     public PropertyMemoService(final PropertyRepository propertyRepository,
                                final PropertyMemoRepository propertyMemoRepository,
-                               final SystemMemoItemRepository systemMemoItemRepository) {
+                               final SystemMemoItemRepository systemMemoItemRepository,
+                               final Clock clock) {
         this.propertyRepository = propertyRepository;
         this.propertyMemoRepository = propertyMemoRepository;
         this.systemMemoItemRepository = systemMemoItemRepository;
+        this.clock = clock;
     }
 
     public PropertyMemoQuery find(final Long memberId, final Long propertyId) {
@@ -51,7 +56,8 @@ public class PropertyMemoService {
                 .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_MEMO_INVALID,
                         "매물 메모를 먼저 생성해야 합니다."));
         updateMemo(memo, request.freeMemo());
-        updateItems(request.items());
+        updateItems(memo.getId(), request.items());
+        propertyRepository.touch(propertyId, LocalDateTime.now(clock));
         return propertyMemoRepository.findQuery(propertyId);
     }
 
@@ -66,9 +72,14 @@ public class PropertyMemoService {
                 PropertyMemoItem.create(memo.getId(), item.getId(), item.getLabel(), item.getDisplayOrder(), "")));
     }
 
-    private void updateItems(final List<PropertyMemoItemRequest> requests) {
+    private void updateItems(final long propertyMemoId, final List<PropertyMemoItemRequest> requests) {
         for (PropertyMemoItemRequest request : requests) {
-            propertyMemoRepository.updateItem(request.propertyMemoItemId(), request.content());
+            int updated = propertyMemoRepository.updateItem(
+                    propertyMemoId, request.systemMemoItemId(), request.content());
+            if (updated != 1) {
+                throw new BusinessException(DomainErrorCode.PROPERTY_MEMO_INVALID,
+                        "다른 매물의 메모 항목은 저장할 수 없습니다.");
+            }
         }
     }
 

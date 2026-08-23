@@ -10,12 +10,10 @@ export const server = setupServer(
     success({
       propertyId: Number(params.propertyId),
       items: [
-        { propertyMemoItemId: 101, systemMemoItemId: 1, label: '집 주소', displayOrder: 1, content: '' },
-        { propertyMemoItemId: 102, systemMemoItemId: 2, label: '입주 가능일', displayOrder: 2, content: '' },
-        { propertyMemoItemId: 103, systemMemoItemId: 3, label: '가계약금', displayOrder: 3, content: '' },
-        { propertyMemoItemId: 104, systemMemoItemId: 4, label: '방 옵션', displayOrder: 4, content: '' },
-        { propertyMemoItemId: 105, systemMemoItemId: 5, label: '관리비 및 공과금', displayOrder: 5, content: '' },
-        { propertyMemoItemId: 106, systemMemoItemId: 6, label: '통학 통근 시간', displayOrder: 6, content: '' },
+        { propertyMemoItemId: 101, systemMemoItemId: 1, label: '입주 가능일', displayOrder: 1, content: '' },
+        { propertyMemoItemId: 102, systemMemoItemId: 2, label: '방 옵션', displayOrder: 2, content: '' },
+        { propertyMemoItemId: 103, systemMemoItemId: 3, label: '관리비 및 공과금', displayOrder: 3, content: '' },
+        { propertyMemoItemId: 104, systemMemoItemId: 4, label: '방문 일정', displayOrder: 4, content: '' },
       ],
       freeMemo: '',
     }),

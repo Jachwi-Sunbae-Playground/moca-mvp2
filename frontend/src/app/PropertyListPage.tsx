@@ -9,6 +9,7 @@ import InlineNotice from '../components/ui/InlineNotice';
 import SearchField from '../components/ui/SearchField';
 import TopNavigation from '../components/ui/TopNavigation';
 import { usePropertyList } from '../hooks/query/useProperties';
+import { fetchPropertyCsv } from '../apis/propertyApi';
 import type { PublicConfig } from '../types/PublicConfig';
 import styles from './PropertyListPage.module.css';
 
@@ -26,6 +27,8 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
   const [draftQuery, setDraftQuery] = useState('');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PropertyStatusFilter>('ALL');
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const properties = usePropertyList(config);
   const items = properties.data?.pages.flatMap((page) => page.content) ?? [];
@@ -45,6 +48,25 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
   }, [shouldFocusHeading]);
 
   const search = () => setQuery(draftQuery.trim());
+  const exportCsv = async () => {
+    setIsExporting(true);
+    setExportError(false);
+    try {
+      const blob = await fetchPropertyCsv(config);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `moca-properties-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError(true);
+    } finally {
+      setIsExporting(false);
+    }
+  };
   const propertySearch = (
     <div className={styles.search}>
       <SearchField
@@ -67,9 +89,15 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
           className={styles.topNavigation}
           title="최근 담은 매물"
           endSlot={
-            <ButtonLink className={styles.compareButton} to="/compare" variant="secondary">
-              비교표 보기
-            </ButtonLink>
+            <Button
+              className={styles.compareButton}
+              variant="secondary"
+              isLoading={isExporting}
+              loadingLabel="받는 중…"
+              onClick={() => void exportCsv()}
+            >
+              비교표 받기
+            </Button>
           }
         />
         <h1 ref={headingRef} className="sr-only" tabIndex={-1}>
@@ -77,6 +105,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
         </h1>
 
         <div className={styles.searchRow}>{propertySearch}</div>
+        {exportError && <InlineNotice tone="error">비교표를 받지 못했어요. 잠시 후 다시 시도해 주세요.</InlineNotice>}
 
         {properties.isSuccess && items.length > 0 && (
           <div className={styles.statusFilters} aria-label="매물 진행 상태 필터">
@@ -160,7 +189,7 @@ const PropertyListPage = ({ config }: PropertyListPageProps) => {
         {!hasInitialError && filteredItems.length > 0 && (
           <section className={styles.cardList} aria-label="매물 목록">
             {filteredItems.map((property) => (
-              <PropertyCard key={property.propertyId} property={property} />
+              <PropertyCard key={property.propertyId} property={property} config={config} />
             ))}
           </section>
         )}

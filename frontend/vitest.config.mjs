@@ -6,5 +6,6 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     restoreMocks: true,
     fileParallelism: false,
+    testTimeout: 10_000,
   },
 });

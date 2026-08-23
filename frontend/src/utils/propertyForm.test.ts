@@ -33,7 +33,6 @@ describe('매물 입력 검증', () => {
         name: ' ',
         depositAmount: '',
         monthlyRentAmount: '',
-        maintenanceFeeAmount: '',
         discoverySource: ' ',
       }),
     ).toEqual({
@@ -44,7 +43,6 @@ describe('매물 입력 검증', () => {
         name: '가'.repeat(31),
         depositAmount: '0',
         monthlyRentAmount: '0',
-        maintenanceFeeAmount: '',
         discoverySource: '나'.repeat(501),
       }),
     ).toMatchObject({
@@ -54,7 +52,7 @@ describe('매물 입력 검증', () => {
   });
 
   it('URL과 일반 텍스트 발견 경로를 같은 요청 문자열로 보존한다', () => {
-    const base = { name: ' 매물 ', depositAmount: '0', monthlyRentAmount: '55', maintenanceFeeAmount: '' };
+    const base = { name: ' 매물 ', depositAmount: '0', monthlyRentAmount: '55' };
     expect(toPropertyInputDto({ ...base, discoverySource: ' https://example.com/home ' })?.discoverySource).toBe(
       'https://example.com/home',
     );
@@ -70,9 +68,8 @@ describe('매물 입력 검증', () => {
         name: '매물',
         depositAmount: '',
         monthlyRentAmount: '',
-        maintenanceFeeAmount: '',
         discoverySource: '',
       }),
-    ).toEqual({ name: '매물', maintenanceFeeAmount: null, discoverySource: null });
+    ).toEqual({ name: '매물', discoverySource: null });
   });
 });

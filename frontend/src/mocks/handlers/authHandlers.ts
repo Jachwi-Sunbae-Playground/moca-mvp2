@@ -2,6 +2,14 @@ import { http } from 'msw';
 import { failure, success } from '../mockStore';
 
 export const authHandlers = [
+  http.post('*/api/auth/demo', () =>
+    success({
+      accessToken: 'local-msw-demo-access-token',
+      tokenType: 'Bearer',
+      expiresIn: 28_800,
+      member: { memberId: 1, name: '모카 데모', email: 'demo@moca.local' },
+    }),
+  ),
   http.post('*/api/auth/google', async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     if (

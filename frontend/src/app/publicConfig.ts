@@ -21,16 +21,29 @@ const requireHttpUrl = (value: string, variableName: string): string => {
 };
 
 export const getPublicConfig = (): PublicConfig => {
-  if (typeof __GOOGLE_CLIENT_ID__ !== 'string' || __GOOGLE_CLIENT_ID__.trim().length === 0) {
+  const authMode = typeof __AUTH_MODE__ === 'string' && __AUTH_MODE__ === 'google' ? 'google' : 'demo';
+  const mapProviderMode =
+    typeof __MAP_PROVIDER_MODE__ === 'string' && __MAP_PROVIDER_MODE__ === 'kakao' ? 'kakao' : 'demo';
+
+  if (authMode === 'google' && (typeof __GOOGLE_CLIENT_ID__ !== 'string' || __GOOGLE_CLIENT_ID__.trim().length === 0)) {
     throw new Error('GOOGLE_CLIENT_ID 환경변수가 필요합니다.');
+  }
+  if (
+    mapProviderMode === 'kakao' &&
+    (typeof __KAKAO_MAP_JAVASCRIPT_KEY__ !== 'string' || __KAKAO_MAP_JAVASCRIPT_KEY__.trim().length === 0)
+  ) {
+    throw new Error('KAKAO_MAP_JAVASCRIPT_KEY 환경변수가 필요합니다.');
   }
 
   return {
     apiBaseUrl: requireHttpUrl(typeof __API_BASE_URL__ === 'string' ? __API_BASE_URL__ : '', 'API_BASE_URL'),
-    googleClientId: __GOOGLE_CLIENT_ID__.trim(),
+    googleClientId: typeof __GOOGLE_CLIENT_ID__ === 'string' ? __GOOGLE_CLIENT_ID__.trim() : '',
     googleRedirectUri: requireHttpUrl(
       typeof __GOOGLE_REDIRECT_URI__ === 'string' ? __GOOGLE_REDIRECT_URI__ : '',
       'GOOGLE_REDIRECT_URI',
     ),
+    authMode,
+    mapProviderMode,
+    kakaoMapJavaScriptKey: typeof __KAKAO_MAP_JAVASCRIPT_KEY__ === 'string' ? __KAKAO_MAP_JAVASCRIPT_KEY__.trim() : '',
   };
 };

@@ -79,9 +79,10 @@ public class JdbcPropertyMemoRepository implements PropertyMemoRepository {
     }
 
     @Override
-    public void updateItem(final long propertyMemoItemId, final String content) {
-        jdbcTemplate.update("UPDATE property_memo_items SET content = ? WHERE id = ?",
-                content, propertyMemoItemId);
+    public int updateItem(final long propertyMemoId, final long systemMemoItemId, final String content) {
+        return jdbcTemplate.update(
+                "UPDATE property_memo_items SET content = ? WHERE system_memo_item_id = ? AND property_memo_id = ?",
+                content, systemMemoItemId, propertyMemoId);
     }
 
     @Override

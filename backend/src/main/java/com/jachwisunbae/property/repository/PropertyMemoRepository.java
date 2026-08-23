@@ -16,7 +16,7 @@ public interface PropertyMemoRepository {
 
     void deleteByPropertyId(long propertyId);
 
-    void updateItem(long propertyMemoItemId, String content);
+    int updateItem(long propertyMemoId, long systemMemoItemId, String content);
 
 
     void saveItem(PropertyMemoItem item);

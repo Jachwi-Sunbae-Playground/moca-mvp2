@@ -23,7 +23,7 @@ Gradle은 별도로 설치하지 않는다. 저장소의 Gradle Wrapper를 사�
 cp .env.example .env
 ```
 
-Google OAuth 값과 JWT 비밀키를 개인 개발 값으로 바꾼다. `.env`는 Git에 커밋하지 않는다. 전체 목록은 [환경변수](environment-variables.md)를 따른다.
+기본 예시는 외부 키가 필요 없는 `demo` 인증·지도 모드와 로컬 MinIO 값을 포함한다. `.env`는 Git에 커밋하지 않는다. 전체 목록은 [환경변수](environment-variables.md)를 따른다.
 
 ## 3. 로컬 인프라 실행
 
@@ -60,7 +60,7 @@ curl --fail http://localhost:8080/actuator/health
 curl --fail http://localhost:8080/v3/api-docs
 ```
 
-두 요청이 성공해야 한다. API 계약은 별도 Markdown 문서로 관리하지 않고 구현과 함께 생성되는 Swagger/OpenAPI를 사용한다.
+두 요청이 성공해야 한다. 실제 실행 계약은 구현에서 생성되는 Swagger/OpenAPI이며 [MVP2 API 계약](../api/mvp2-api-contract.md)은 endpoint 대응과 핵심 불변식만 요약한다.
 
 ## 5. 프론트엔드 실행
 
@@ -68,13 +68,16 @@ curl --fail http://localhost:8080/v3/api-docs
 
 ```bash
 npm ci
-API_BASE_URL=http://localhost:8080 \
-GOOGLE_CLIENT_ID=<로컬-Google-Client-ID> \
-GOOGLE_REDIRECT_URI=http://localhost:3000/oauth/google/callback \
+cp .env.example .env.local
+set -a
+source .env.local
+set +a
 npm run dev
 ```
 
-브라우저에서 `http://localhost:3000`을 연다. Google Console의 허용 redirect URI에도 같은 callback 주소를 등록한다.
+브라우저에서 `http://localhost:3000`을 열고 `데모로 시작하기`를 누른다. 데모 회원은 `demo@moca.local`, 표시 이름은 `이자취`이며 암호 입력은 없다. 데모 데이터는 백엔드가 최초 실행 시 멱등하게 만든다.
+
+실제 Google·Kakao를 확인할 때만 양쪽 `.env`의 adapter 모드를 바꾸고 [지도 외부 연동](map-integration.md)을 따른다.
 
 ## 6. 검사
 
@@ -92,3 +95,4 @@ npm run dev
 - [ ] Docker MySQL과 MinIO가 healthy다.
 - [ ] `./gradlew test --no-daemon`이 성공한다.
 - [ ] 프론트엔드가 백엔드 `/api` 요청을 보낼 수 있다.
+- [ ] 데모 로그인 뒤 매물·사진·메모·체크리스트·CSV·지도 흐름이 동작한다.

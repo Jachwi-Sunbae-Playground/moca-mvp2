@@ -6,6 +6,10 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 
 @Repository
 public class JdbcPropertyPhotoRepository implements PropertyPhotoRepository {
@@ -29,6 +33,34 @@ public class JdbcPropertyPhotoRepository implements PropertyPhotoRepository {
                 ORDER BY created_at ASC, id ASC
                 """;
         return jdbcTemplate.query(sql, propertyPhotoRowMapper, propertyId);
+    }
+
+    @Override
+    public int countByPropertyId(final long propertyId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM property_photos WHERE property_id = ?", Integer.class, propertyId);
+        return count == null ? 0 : count;
+    }
+
+    @Override
+    public PropertyPhoto save(final long memberId, final PropertyPhoto photo, final String checksumSha256) {
+        String sql = "INSERT INTO property_photos "
+                + "(property_id, member_id, storage_key, content_type, size_bytes, checksum_sha256, created_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setLong(1, photo.getPropertyId());
+            statement.setLong(2, memberId);
+            statement.setString(3, photo.getStorageKey());
+            statement.setString(4, photo.getContentType());
+            statement.setLong(5, photo.getSizeBytes());
+            statement.setString(6, checksumSha256);
+            statement.setObject(7, photo.getCreatedAt());
+            return statement;
+        }, keyHolder);
+        return PropertyPhoto.reconstruct(keyHolder.getKey().longValue(), photo.getPropertyId(), photo.getStorageKey(),
+                photo.getContentType(), photo.getSizeBytes(), photo.getCreatedAt());
     }
 
     @Override

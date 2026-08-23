@@ -3,17 +3,17 @@ import { calculateExpiresAt, getAccessToken, getAuthenticationSnapshot, setAuthe
 import { propertyQueryKeys } from './propertyQueryKeys';
 import { queryClient, currentMemberQueryKey } from './queryClient';
 
-describe('메모리 인증 저장소', () => {
+describe('탭 단위 인증 저장소', () => {
   it('expiresIn을 기준으로 만료 시각을 계산한다', () => {
     expect(calculateExpiresAt(43_200, 1_000)).toBe(43_201_000);
   });
 
-  it('토큰을 Web Storage에 쓰지 않고 메모리에서만 읽는다', () => {
+  it('토큰을 localStorage에는 쓰지 않고 탭 단위 sessionStorage에서 복원할 수 있게 저장한다', () => {
     setAuthentication({ accessToken: 'memory-token', tokenType: 'Bearer', expiresIn: 60 });
 
     expect(getAccessToken()).toBe('memory-token');
     expect(window.localStorage).toHaveLength(0);
-    expect(window.sessionStorage).toHaveLength(0);
+    expect(window.sessionStorage).toHaveLength(1);
   });
 
   it('만료되면 인증과 인증 Query Cache를 정리한다', () => {

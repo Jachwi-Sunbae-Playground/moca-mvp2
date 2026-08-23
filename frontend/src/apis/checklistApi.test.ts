@@ -186,7 +186,7 @@ describe('최종 체크리스트 API 계약', () => {
       checklistId: 7,
       itemCount: 1,
     });
-    expect(body).toEqual({ checklistId: 7 });
+    expect(body).toEqual({ sourceType: 'USER', checklistId: 7 });
   });
 
   it('서버 오류 코드는 안전한 사용자 문구로 매핑한다', async () => {

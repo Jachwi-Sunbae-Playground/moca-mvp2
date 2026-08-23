@@ -17,3 +17,13 @@ export const submitGoogleLogin = (
     requiresAuthentication: false,
     parseData: parseGoogleLoginResponseDto,
   });
+
+export const submitDemoLogin = (config: PublicConfig, signal?: AbortSignal): Promise<GoogleLoginResponseDto> =>
+  apiRequest({
+    config,
+    path: '/api/auth/demo',
+    method: 'POST',
+    signal,
+    requiresAuthentication: false,
+    parseData: parseGoogleLoginResponseDto,
+  });

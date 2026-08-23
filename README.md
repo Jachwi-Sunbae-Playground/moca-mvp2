@@ -92,3 +92,5 @@ moca-mvp2/
 
 - [백엔드 문서 안내](backend/docs/README.md)
 - [백엔드 로컬 개발 환경 구성 및 실행](backend/docs/guides/local-development.md)
+
+외부 키 없이 MVP2를 실행하려면 `backend/.env.example`과 `frontend/.env.example`을 각각 복사한 뒤 MySQL·MinIO, 백엔드, 프론트엔드 순으로 실행합니다. 접속 주소는 `http://localhost:3000`이고 로그인 화면의 `데모로 시작하기`를 사용합니다.

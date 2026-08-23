@@ -10,6 +10,7 @@ export type IconName =
   | 'info'
   | 'external-link'
   | 'link'
+  | 'map'
   | 'more-vertical'
   | 'plus'
   | 'search'
@@ -107,6 +108,14 @@ const IconPaths = ({ name }: { name: IconName }) => {
         <>
           <path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.1 1.1" />
           <path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.1-1.1" />
+        </>
+      );
+    case 'map':
+      return (
+        <>
+          <path d="m3 6 5-2 8 2 5-2v14l-5 2-8-2-5 2Z" />
+          <path d="M8 4v14" />
+          <path d="M16 6v14" />
         </>
       );
     case 'more-vertical':

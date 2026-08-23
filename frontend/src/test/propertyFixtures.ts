@@ -9,7 +9,6 @@ export const propertySummaryFixture = {
   name: '신림역 원룸',
   depositAmount: 10_000_000,
   monthlyRentAmount: 550_000,
-  maintenanceFeeAmount: 50_000,
   discoverySource: { type: 'URL', value: 'https://example.com/listings/10' },
   photoCount: 2,
   representativePhoto: {

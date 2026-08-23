@@ -5,8 +5,10 @@ import com.jachwisunbae.auth.provider.OAuthProfile;
 import com.jachwisunbae.auth.provider.OAuthProvider;
 import com.jachwisunbae.auth.provider.OAuthProviderType;
 import org.springframework.stereotype.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Component
+@ConditionalOnProperty(name = "auth.mode", havingValue = "google")
 public class GoogleOAuthProvider implements OAuthProvider {
 
     private final GoogleOAuthClient client;

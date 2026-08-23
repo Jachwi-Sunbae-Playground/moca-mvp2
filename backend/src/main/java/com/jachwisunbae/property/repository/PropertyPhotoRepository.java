@@ -7,6 +7,10 @@ import java.util.Optional;
 public interface PropertyPhotoRepository {
     List<PropertyPhoto> findByPropertyId(long propertyId);
 
+    int countByPropertyId(long propertyId);
+
+    PropertyPhoto save(long memberId, PropertyPhoto photo, String checksumSha256);
+
     Optional<PropertyPhoto> findByIdAndPropertyId(long photoId, long propertyId);
 
     void deleteById(long photoId);

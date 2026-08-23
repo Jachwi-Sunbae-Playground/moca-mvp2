@@ -107,6 +107,13 @@ const ResolvedPropertyDetailPage = ({ config, propertyId }: { config: PublicConf
             보증금 {formatManwon(detail.depositAmount)} <span aria-hidden="true">/</span> 월세{' '}
             {formatManwon(detail.monthlyRentAmount)}
           </p>
+          {detail.location.address !== null && (
+            <Link className={styles.addressLink} to={`/properties/${propertyId}/nearby`}>
+              <Icon name="map" size={17} />
+              <span>{detail.location.address}</span>
+              <Icon name="arrow-right" size={16} />
+            </Link>
+          )}
           {detail.discoverySource.value !== '' && (
             <div className={styles.discoverySource}>
               <span className={styles.discoveryLabel}>

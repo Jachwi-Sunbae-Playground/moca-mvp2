@@ -3,7 +3,7 @@ import { getPropertyErrorMessage } from '../apis/propertyErrorMessages';
 import { useUploadPropertyPhoto } from './query/usePropertyMutations';
 import type { PublicConfig } from '../types/PublicConfig';
 
-export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 export const MAX_PROPERTY_PHOTOS = 30;
 export const acceptedPhotoTypes = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
@@ -44,7 +44,7 @@ const prepareFiles = (files: File[], availableCount: number): PreparedFile[] =>
 
     if (file.size > MAX_PHOTO_BYTES) {
       return {
-        item: { ...item, status: 'error', message: '사진 한 장은 10MiB 이하만 등록할 수 있습니다.' },
+        item: { ...item, status: 'error', message: '사진 한 장은 5MiB 이하만 등록할 수 있습니다.' },
         file: null,
       };
     }

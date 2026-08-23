@@ -3,6 +3,8 @@ package com.jachwisunbae.property.service;
 import com.jachwisunbae.checklist.entity.UserChecklist;
 import com.jachwisunbae.checklist.entity.UserChecklistItem;
 import com.jachwisunbae.checklist.repository.UserChecklistRepository;
+import com.jachwisunbae.checklist.repository.SystemCheckItemRepository;
+import com.jachwisunbae.checklist.entity.SystemCheckItem;
 import com.jachwisunbae.checklist.type.CheckStage;
 import com.jachwisunbae.checklist.type.CheckStatus;
 import com.jachwisunbae.common.exception.BusinessException;
@@ -23,6 +25,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 @Service
 @Transactional(readOnly = true)
@@ -31,15 +35,21 @@ public class PropertyChecklistService {
     private final UserChecklistRepository userChecklistRepository;
     private final PropertyChecklistRepository propertyChecklistRepository;
     private final PropertyProgressRepository propertyProgressRepository;
+    private final SystemCheckItemRepository systemCheckItemRepository;
+    private final Clock clock;
 
     public PropertyChecklistService(final PropertyRepository propertyRepository,
                                      final UserChecklistRepository userChecklistRepository,
                                      final PropertyChecklistRepository propertyChecklistRepository,
-                                     final PropertyProgressRepository propertyProgressRepository) {
+                                     final PropertyProgressRepository propertyProgressRepository,
+                                     final SystemCheckItemRepository systemCheckItemRepository,
+                                     final Clock clock) {
         this.propertyRepository = propertyRepository;
         this.userChecklistRepository = userChecklistRepository;
         this.propertyChecklistRepository = propertyChecklistRepository;
         this.propertyProgressRepository = propertyProgressRepository;
+        this.systemCheckItemRepository = systemCheckItemRepository;
+        this.clock = clock;
     }
 
     @Transactional
@@ -49,20 +59,51 @@ public class PropertyChecklistService {
         propertyRepository.findByIdAndMemberIdForUpdate(propertyId, memberId)
                 .orElseThrow(() -> new BusinessException(DomainErrorCode.PROPERTY_NOT_FOUND,
                         "매물을 찾을 수 없습니다."));
-        UserChecklist checklist = userChecklistRepository.findByIdAndMemberIdForUpdate(request.checklistId(), memberId)
-                .orElseThrow(() -> new BusinessException(DomainErrorCode.CHECKLIST_NOT_FOUND,
-                        "체크리스트를 찾을 수 없습니다."));
-        if (checklist.getStage() != stage) {
-            throw new BusinessException(DomainErrorCode.PROPERTY_CHECKLIST_STAGE_MISMATCH,
-                    "매물 적용 단계와 체크리스트 단계가 다릅니다.");
-        }
         List<PropertyChecklistItemStateQuery> previous = propertyChecklistRepository.findCurrentItems(propertyId, stage);
         propertyChecklistRepository.deleteByPropertyAndStage(propertyId, stage);
-        long propertyChecklistId = propertyChecklistRepository.save(
-                propertyId, checklist.getId(), checklist.getName(), stage);
-        propertyChecklistRepository.saveItems(propertyChecklistId,
-                createSnapshotItems(userChecklistRepository.findItems(checklist.getId()), previous));
+        long propertyChecklistId;
+        if (request.sourceType() == ApplyPropertyChecklistRequest.SourceType.SYSTEM_DEFAULT) {
+            List<SystemCheckItem> coreItems = systemCheckItemRepository.findActiveCoreByStage(stage);
+            if (coreItems.isEmpty()) {
+                throw new BusinessException(DomainErrorCode.CHECKLIST_ITEMS_INVALID,
+                        "현재 단계의 기본 체크 항목이 없습니다.");
+            }
+            propertyChecklistId = propertyChecklistRepository.save(propertyId, null, "기본체크리스트", stage);
+            propertyChecklistRepository.saveItems(propertyChecklistId, createDefaultSnapshotItems(coreItems, previous));
+        } else {
+            if (request.checklistId() == null) {
+                throw new BusinessException(DomainErrorCode.CHECKLIST_NOT_FOUND,
+                        "적용할 체크리스트 ID가 필요합니다.");
+            }
+            UserChecklist checklist = userChecklistRepository.findByIdAndMemberIdForUpdate(request.checklistId(), memberId)
+                    .orElseThrow(() -> new BusinessException(DomainErrorCode.CHECKLIST_NOT_FOUND,
+                            "체크리스트를 찾을 수 없습니다."));
+            if (checklist.getStage() != stage) {
+                throw new BusinessException(DomainErrorCode.PROPERTY_CHECKLIST_STAGE_MISMATCH,
+                        "매물 적용 단계와 체크리스트 단계가 다릅니다.");
+            }
+            propertyChecklistId = propertyChecklistRepository.save(
+                    propertyId, checklist.getId(), checklist.getName(), stage);
+            propertyChecklistRepository.saveItems(propertyChecklistId,
+                    createSnapshotItems(userChecklistRepository.findItems(checklist.getId()), previous));
+        }
+        propertyRepository.touch(propertyId, LocalDateTime.now(clock));
         return findApplication(memberId, propertyId, propertyChecklistId);
+    }
+
+    private List<PropertyChecklistItemStateQuery> createDefaultSnapshotItems(
+            final List<SystemCheckItem> sourceItems,
+            final List<PropertyChecklistItemStateQuery> previousItems) {
+        Map<Long, PropertyChecklistItemStateQuery> previousBySystemItem = previousItems.stream()
+                .collect(Collectors.toMap(PropertyChecklistItemStateQuery::systemCheckItemId, Function.identity()));
+        return java.util.stream.IntStream.range(0, sourceItems.size())
+                .mapToObj(index -> {
+                    SystemCheckItem item = sourceItems.get(index);
+                    PropertyChecklistItemStateQuery previous = previousBySystemItem.get(item.getId());
+                    return new PropertyChecklistItemStateQuery(item.getId(), item.getQuestion(), index + 1,
+                            previous == null ? CheckStatus.UNCONFIRMED : previous.status(),
+                            previous == null ? "" : previous.memo());
+                }).toList();
     }
 
     private List<PropertyChecklistItemStateQuery> createSnapshotItems(final List<UserChecklistItem> sourceItems,
@@ -105,6 +146,7 @@ public class PropertyChecklistService {
         findItem(memberId, propertyId, propertyChecklistId, itemId);
         propertyChecklistRepository.updateStatus(memberId, propertyId, propertyChecklistId, itemId,
                 request.status().name());
+        propertyRepository.touch(propertyId, LocalDateTime.now(clock));
         return findItem(memberId, propertyId, propertyChecklistId, itemId);
     }
 
@@ -115,6 +157,7 @@ public class PropertyChecklistService {
         findItem(memberId, propertyId, propertyChecklistId, itemId);
         propertyChecklistRepository.updateMemo(memberId, propertyId, propertyChecklistId, itemId,
                 request.memo());
+        propertyRepository.touch(propertyId, LocalDateTime.now(clock));
         return findItem(memberId, propertyId, propertyChecklistId, itemId);
     }
 

@@ -98,8 +98,11 @@ export type MockProperty = {
   name: string;
   depositAmount: number;
   monthlyRentAmount: number;
-  maintenanceFeeAmount: number | null;
   discoverySource: string | null;
+  roadAddress: string | null;
+  jibunAddress: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 let properties: MockProperty[] = [
@@ -108,23 +111,29 @@ let properties: MockProperty[] = [
     name: '신림역 원룸',
     depositAmount: 10_000_000,
     monthlyRentAmount: 550_000,
-    maintenanceFeeAmount: 50_000,
     discoverySource: 'https://example.com/listings/10',
+    roadAddress: '서울 관악구 신림로 12길 3',
+    jibunAddress: '서울 관악구 신림동 1433-12',
+    latitude: 37.4841234,
+    longitude: 126.9291234,
   },
   {
     id: 11,
     name: '망원동 투룸',
     depositAmount: 30_000_000,
     monthlyRentAmount: 750_000,
-    maintenanceFeeAmount: null,
     discoverySource: null,
+    roadAddress: '서울 마포구 월드컵로 10길 12',
+    jibunAddress: '서울 마포구 서교동 12-3',
+    latitude: 37.5551234,
+    longitude: 126.9101234,
   },
 ];
 
 export const createMockPhoto = (propertyId: number, photoId: number, representative = false): MockPhoto => ({
   id: photoId,
   propertyId,
-  url: `/api/properties/${propertyId}/photos/${photoId}/content`,
+  url: `/api/properties/${propertyId}/photos/${photoId}`,
   contentType: 'image/png',
   sizeBytes: createMockPhotoBytes(photoId).byteLength,
   representative,
@@ -228,9 +237,13 @@ export const propertyProgress = (propertyId: number) => {
 
 export const propertyResponse = (property: MockProperty) => {
   const photos = photosByProperty.get(property.id) ?? [];
-  const basicInfo = { ...property, maintenanceFeeAmount: undefined };
   return {
-    ...basicInfo,
+    ...property,
+    address: property.roadAddress ?? property.jibunAddress,
+    photoCount: photos.length,
+    createdAt: now,
+    updatedAt: now,
+    lastActivityAt: now,
     photos,
     representativePhoto: photos.find((photo) => photo.representative) ?? null,
     overallProgress: propertyProgress(property.id),
@@ -238,12 +251,10 @@ export const propertyResponse = (property: MockProperty) => {
 };
 
 export const systemMemoItems = [
-  { id: 1, label: '집 주소', displayOrder: 1 },
-  { id: 2, label: '입주 가능일', displayOrder: 2 },
-  { id: 3, label: '가계약금', displayOrder: 3 },
-  { id: 4, label: '방 옵션', displayOrder: 4 },
-  { id: 5, label: '관리비 및 공과금', displayOrder: 5 },
-  { id: 6, label: '통학 통근 시간', displayOrder: 6 },
+  { id: 1, label: '입주 가능일', displayOrder: 1 },
+  { id: 2, label: '방 옵션', displayOrder: 2 },
+  { id: 3, label: '관리비 및 공과금', displayOrder: 3 },
+  { id: 4, label: '방문 일정', displayOrder: 4 },
 ];
 
 export type MockMemo = {

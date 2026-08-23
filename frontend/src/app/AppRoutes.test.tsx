@@ -35,7 +35,11 @@ const successEnvelope = (data: unknown) => ({
 
 const errorEnvelope = (code: string, message: string) => ({ code, message, errors: [] });
 
-const renderRoutes = (path: string, options: { navigateExternally?: (url: string) => void } = {}) => {
+const renderRoutes = (
+  path: string,
+  options: { navigateExternally?: (url: string) => void; config?: PublicConfig } = {},
+) => {
+  const routeConfig = options.config ?? config;
   server.use(
     http.get(`${config.apiBaseUrl}/api/properties`, () =>
       HttpResponse.json(
@@ -55,7 +59,11 @@ const renderRoutes = (path: string, options: { navigateExternally?: (url: string
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[path]}>
-          <AppRoutes config={config} storage={window.sessionStorage} navigateExternally={options.navigateExternally} />
+          <AppRoutes
+            config={routeConfig}
+            storage={window.sessionStorage}
+            navigateExternally={options.navigateExternally}
+          />
         </MemoryRouter>
       </QueryClientProvider>
     </StrictMode>,
@@ -83,6 +91,30 @@ describe('FE-1 인증 흐름', () => {
     renderRoutes('/');
 
     expect(await screen.findByRole('button', { name: '구글로 로그인하기' })).toBeInTheDocument();
+  });
+
+  it('demo 모드는 외부 이동 없이 데모 토큰을 발급해 매물 목록으로 이동한다', async () => {
+    const user = userEvent.setup();
+    const demoConfig = { ...config, authMode: 'demo' as const, googleClientId: '' };
+    server.use(
+      http.post(`${config.apiBaseUrl}/api/auth/demo`, () =>
+        HttpResponse.json(
+          successEnvelope({
+            accessToken: 'demo-access-token',
+            tokenType: 'Bearer',
+            expiresIn: 43_200,
+            member: { memberId: 1, name: '이자취', email: 'demo@moca.local' },
+          }),
+        ),
+      ),
+    );
+
+    renderRoutes('/login', { config: demoConfig });
+    await user.click(screen.getByRole('button', { name: '데모로 시작하기' }));
+
+    expect(await screen.findByRole('heading', { name: '내 매물' })).toBeInTheDocument();
+    expect(getAccessToken()).toBe('demo-access-token');
+    expect(window.sessionStorage.length).toBe(1);
   });
 
   it('로그인 버튼을 누르면 PKCE 요청을 저장하고 올바른 Google URL로 이동한다', async () => {

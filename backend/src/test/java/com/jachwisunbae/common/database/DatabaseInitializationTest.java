@@ -36,8 +36,16 @@ class DatabaseInitializationTest extends IntegrationTest {
         );
 
         assertThat(tables).containsExactlyInAnyOrderElementsOf(APPLICATION_TABLES);
-        assertThat(count("system_check_items")).isEqualTo(10);
-        assertThat(count("system_memo_items")).isEqualTo(6);
+        assertThat(count("system_check_items")).isEqualTo(18);
+        assertThat(count("system_memo_items")).isEqualTo(4);
+        assertThat(jdbcTemplate.queryForList(
+                "SELECT label FROM system_memo_items ORDER BY display_order",
+                String.class
+        )).containsExactly("입주 가능일", "방 옵션", "관리비 및 공과금", "방문 일정");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT question FROM system_check_items WHERE id = 1",
+                String.class
+        )).isEqualTo("매물의 정확한 주소와 동·층·호수를 확인했나요?");
     }
 
     private Long count(String tableName) {

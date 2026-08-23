@@ -66,9 +66,9 @@ const ResolvedPropertyActiveChecklist = ({
   const isReplacing = searchParams.get('mode') === 'replace';
   const overviewStage = overview.data?.stages.find((item) => item.stage === stage);
   const current =
-    overviewStage?.applied === true && overviewStage.sourceChecklistId !== null && overviewStage.checklistName !== null
+    overviewStage?.applied === true && overviewStage.checklistName !== null
       ? {
-          checklistId: overviewStage.sourceChecklistId,
+          checklistId: overviewStage.sourceChecklistId ?? -1,
           name: overviewStage.checklistName,
         }
       : null;
@@ -158,7 +158,7 @@ const ResolvedPropertyActiveChecklist = ({
   const saveSelection = async () => {
     if (selectedId === null) return;
     try {
-      const applied = await assign.mutateAsync(selectedId);
+      const applied = await assign.mutateAsync(selectedId === -1 ? 'SYSTEM_DEFAULT' : selectedId);
       navigate(`/properties/${propertyId}/checklists/${applied.propertyChecklistId}`, {
         replace: true,
         ...(fromPropertyDetail ? { state: { from: 'property-detail' } } : {}),
@@ -199,34 +199,49 @@ const ResolvedPropertyActiveChecklist = ({
 
       <p className={styles.description}>이 단계에서 사용할 체크리스트를 선택해요.</p>
 
-      {items.length === 0 ? (
+      <fieldset className="active-checklist-options">
+        <legend className="sr-only">연결할 체크리스트</legend>
+        <label className={selectedId === -1 ? 'is-selected' : undefined}>
+          <input
+            type="checkbox"
+            name="active-checklist"
+            value="SYSTEM_DEFAULT"
+            checked={selectedId === -1}
+            disabled={assign.isPending}
+            onChange={() => toggleSelection(-1)}
+          />
+          <span>
+            <strong>자취선배 기본 체크리스트</strong>
+            <small>이 단계의 필수 항목으로 바로 시작</small>
+          </span>
+          <em>추천</em>
+        </label>
+        {items.map((item) => (
+          <label key={item.checklistId} className={selectedId === item.checklistId ? 'is-selected' : undefined}>
+            <input
+              type="checkbox"
+              name="active-checklist"
+              value={item.checklistId}
+              checked={selectedId === item.checklistId}
+              disabled={assign.isPending}
+              onChange={() => toggleSelection(item.checklistId)}
+            />
+            <span>
+              <strong>{item.name}</strong>
+              <small>
+                {item.itemCount}개 항목 · 매물 {item.assignedPropertyCount}곳에서 사용
+              </small>
+            </span>
+            {newlyCreatedId === item.checklistId && <em>방금 생성</em>}
+          </label>
+        ))}
+      </fieldset>
+
+      {items.length === 0 && (
         <section className={styles.startOptions} aria-label="새 체크리스트 시작 방식">
-          <p>바로 사용할 구성을 선택해 체크리스트를 만들어 주세요.</p>
+          <p>내 체크리스트가 필요하다면 원하는 항목을 골라 만들 수 있어요.</p>
           <ChecklistStartOptions onSelect={(mode) => navigate(createPath(mode))} />
         </section>
-      ) : (
-        <fieldset className="active-checklist-options">
-          <legend className="sr-only">연결할 체크리스트</legend>
-          {items.map((item) => (
-            <label key={item.checklistId} className={selectedId === item.checklistId ? 'is-selected' : undefined}>
-              <input
-                type="checkbox"
-                name="active-checklist"
-                value={item.checklistId}
-                checked={selectedId === item.checklistId}
-                disabled={assign.isPending}
-                onChange={() => toggleSelection(item.checklistId)}
-              />
-              <span>
-                <strong>{item.name}</strong>
-                <small>
-                  {item.itemCount}개 항목 · 매물 {item.assignedPropertyCount}곳에서 사용
-                </small>
-              </span>
-              {newlyCreatedId === item.checklistId && <em>방금 생성</em>}
-            </label>
-          ))}
-        </fieldset>
       )}
 
       <Link className={styles.createCard} to={createPath()}>

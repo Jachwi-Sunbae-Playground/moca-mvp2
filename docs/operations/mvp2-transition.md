@@ -45,7 +45,7 @@ MVP1 요구사항·정책·ERD·API 명세 통합과 MVP2 기능 정의는 후�
 | 로컬 | MySQL·MinIO Compose | 유지·수정 | 빈 MySQL 자동 초기화와 S3 호환 로컬 개발에 사용한다 |
 | 식별자 | 애플리케이션·DB·프론트 패키지 이름 | 대체 | 새 환경에서 `moca-mvp2` 이름을 사용한다 |
 | 설정 | 실제로 Base64를 해석하지 않는 `JWT_SECRET_BASE64` | 대체 | 의미에 맞게 `JWT_SECRET`으로 바꾼다 |
-| 사진 | S3 SDK와 비공개 저장 정책 | 유지 | 실제 S3 저장 구현은 MVP2 기능 작업에서 완성한다 |
+| 사진 | S3 SDK와 비공개 저장 정책 | 유지·완성 | MVP2에서 실제 MinIO/S3 객체 저장과 소유자 검증 조회를 완성했다 |
 | 배포 | ALB·WAF·RDS·CloudFront·CodePipeline·CodeDeploy | 제거 | 개인 계정의 단일 EC2·Caddy·로컬 MySQL·S3·Actions로 대체한다 |
 | 배포 | `main` 병합 자동 배포 | 제거 | MVP2 기능 완료 전 오배포를 막고 수동 배포만 준비한다 |
 | CI | push 중복 검사와 전체 FE 검사 | 제거 | PR의 변경 영역에서 백엔드 테스트 또는 프론트 빌드만 수행한다 |

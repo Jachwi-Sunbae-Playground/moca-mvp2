@@ -61,7 +61,15 @@ export const useRemoveChecklist = (config: PublicConfig, checklistId: number) =>
 
 export const useAssignActiveChecklist = (config: PublicConfig, propertyId: number, stage: ChecklistStage) =>
   useMutation({
-    mutationFn: (checklistId: number) => assignActiveChecklist(config, propertyId, stage, { checklistId }),
+    mutationFn: (checklistId: number | 'SYSTEM_DEFAULT') =>
+      assignActiveChecklist(
+        config,
+        propertyId,
+        stage,
+        checklistId === 'SYSTEM_DEFAULT'
+          ? { sourceType: 'SYSTEM_DEFAULT', checklistId: null }
+          : { sourceType: 'USER', checklistId },
+      ),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: propertyQueryKeys.detail(propertyId), exact: true }),

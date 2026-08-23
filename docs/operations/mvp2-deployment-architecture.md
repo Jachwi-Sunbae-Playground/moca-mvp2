@@ -60,8 +60,9 @@ EC2에서는 소스 빌드를 실행하지 않는다. 빌드는 GitHub Actions�
 | `RELEASE_BUCKET` | 비공개 릴리스 아카이브 버킷 |
 | `MOCA_DOMAIN` | 공개 서비스 도메인 |
 | `GOOGLE_CLIENT_ID` | 브라우저 번들에 들어가는 공개 OAuth Client ID |
+| `KAKAO_MAP_JAVASCRIPT_KEY` | 등록 도메인에서 사용하는 공개 Kakao JavaScript 키 |
 
-애플리케이션의 JWT, Google Client Secret, DB 비밀번호는 GitHub 변수에 두지 않는다. S3 사진 구현이 완료되면 EC2 instance role에 해당 사진 버킷의 필요한 객체 권한만 추가한다.
+애플리케이션의 JWT, Google Client Secret, Kakao REST 키, DB 비밀번호는 GitHub 변수에 두지 않는다. EC2 instance role에는 사진 버킷의 `GetObject`, `PutObject`, `DeleteObject`와 필요한 버킷 조회 권한만 추가한다.
 
 ## 최초 배포 전 준비
 
@@ -88,7 +89,7 @@ EC2에서는 소스 빌드를 실행하지 않는다. 빌드는 GitHub Actions�
 - EC2 내부 health가 `UP`이고 systemd 재시작 뒤에도 기동한다.
 - 외부에서 3306·8080과 SSH에 접근할 수 없다.
 - Google OAuth callback과 CORS가 같은 공개 Origin에서 동작한다.
-- 사진 기능 구현 후 인증 없는 S3 객체 직접 조회가 차단된다.
+- 인증 없는 S3 객체 직접 조회가 차단된다.
 - 실패 릴리스로 애플리케이션 롤백을 한 번 리허설한다.
 - MySQL 백업을 별도 볼륨 또는 S3에서 복원하는 절차를 검증한다.
 

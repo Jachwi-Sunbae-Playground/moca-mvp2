@@ -26,8 +26,11 @@ jobs:
         working-directory: frontend
     env:
       API_BASE_URL: http://localhost:8080
-      GOOGLE_CLIENT_ID: ci-example-client-id.apps.googleusercontent.com
+      AUTH_MODE: demo
+      GOOGLE_CLIENT_ID: ""
       GOOGLE_REDIRECT_URI: http://localhost:3000/oauth/google/callback
+      MAP_PROVIDER_MODE: demo
+      KAKAO_MAP_JAVASCRIPT_KEY: ""
 
     steps:
       - name: Checkout repository
