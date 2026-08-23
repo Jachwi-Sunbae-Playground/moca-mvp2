@@ -49,6 +49,9 @@
 | [MVP1 CI/CD 배포 검증](../operations/2026-08-20-cicd-deployment-validation.md) | 기존 배포의 실측 기록이다 |
 | [MVP1 백엔드 배포](../../backend/docs/operations/deployment.md)·[롤백](../../backend/docs/operations/rollback.md) | 기존 CodePipeline·CodeDeploy 절차다 |
 | [MVP1 프론트엔드 배포](../../frontend/docs/deployment.md) | 기존 S3·CloudFront 절차다 |
+| [MVP1 요구사항 전달 원문](../product/scope/mvp1-requirements-source.md) | MVP2 시작 시 전달받은 요구사항과 정책을 보존한다 |
+| [MVP1 실제 구현 기준선](../product/scope/mvp1-baseline.md) | `mvp1-baseline` 태그 시점의 코드 상태를 보존한다 |
+| [MVP1 데이터 모델 전달 원문](../../backend/docs/architecture/mvp1-data-model-source.md) | MVP2 시작 시 전달받은 ERD 표를 보존한다 |
 
 ### ADR은 부분 동결이다
 
@@ -78,6 +81,16 @@ ADR은 전체를 동결하지 않는다. [ADR 작성 규칙](../../backend/docs/
 | [MVP2 롤백](../../backend/docs/operations/mvp2-rollback.md) | 배포 스크립트, 실제 릴리스와 DB 백업 | 사람 |
 | [MVP2 전환 기준](../operations/mvp2-transition.md) | 코드·설정, Git 태그와 GitHub Issue | 사람 |
 | [MVP2 배포 아키텍처](../operations/mvp2-deployment-architecture.md) | `deploy/`, 배포 워크플로와 향후 AWS 구성 | 사람 |
+| [MVP2 와이어프레임 안내](../design/wireframes/README.md) | `mvp2-moca.pen`, `screens/`와 화면 흐름 | 사람 |
+| [MVP2 사용자 흐름](../product/flows/mvp2-user-flow.md) | MVP2 와이어프레임과 기능 명세 | 사람 |
+| [MVP2 문서화 인계 준비](../product/mvp2-codex-handoff-prep.md) | MVP2 구현 브리프와 결정 대장 | 사람 |
+| [MVP1 → MVP2 변경점](../product/scope/mvp1-to-mvp2-changes.md) | MVP1 기준선, MVP2 범위·기능 명세·결정 대장 | 사람 |
+| [MVP2 구현 브리프](../product/mvp2-implementation-brief.md) | MVP2 범위·기능 명세·결정·API·데이터 모델 | 사람 |
+| [MVP2 구현 프롬프트](../product/mvp2-implementation-prompt.md) | MVP2 구현 브리프와 연결된 정본 문서 | 사람 |
+| [MVP2 데이터 모델](../../backend/docs/architecture/mvp2-data-model.md) | 구현된 스키마와 도메인 모델 | 사람 |
+| [MVP2 API 계약](../../backend/docs/api/mvp2-api-contract.md) | 구현된 API와 생성된 OpenAPI JSON | 사람 |
+| [지도 연동](../../backend/docs/guides/map-integration.md) | 프론트 지도 어댑터, 백엔드 Kakao Local 연동과 환경변수 | 사람 |
+| [MVP2 로컬 미리보기·배포 준비](../operations/mvp2-preview-and-deployment-readiness.md) | 로컬 실행 경로, 데모/실연동 설정과 배포 파일 | 사람 |
 | [핵심 가설](../product/hypotheses.md) | [실험 기록](../experiments/)의 결과 | 사람 |
 | [`frontend/README.md`](../../frontend/README.md) | `frontend/` 구조와 `package.json` | 사람 |
 | [MVP2 프론트엔드 배포](../../frontend/docs/mvp2-deployment.md) | `frontend/webpack.config.js`, Caddy와 배포 워크플로 | 사람 |
