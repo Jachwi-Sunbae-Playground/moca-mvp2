@@ -4,8 +4,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { fetchNearby } from '../apis/mapApi';
 import MapAddressSearchPanel from '../components/MapAddressSearchPanel';
 import MapCanvas from '../components/MapCanvas';
-import type { MapMarker } from '../components/MapCanvas';
+import type { MapMarker, MapRadiusCircle } from '../components/MapCanvas';
 import MapCategoryRail from '../components/MapCategoryRail';
+import { clusterNearbyPlaces } from '../components/mapClustering';
 import { ALL_MAP_CATEGORIES } from '../components/mapPresentation';
 import Icon from '../components/ui/Icon';
 import TopNavigation from '../components/ui/TopNavigation';
@@ -24,7 +25,10 @@ import styles from './MapPage.module.css';
 const toggleCategory = (categories: MapCategory[], category: MapCategory): MapCategory[] =>
   categories.includes(category) ? categories.filter((item) => item !== category) : [...categories, category];
 
-const MAX_VISIBLE_PLACES_PER_CATEGORY = 2;
+type MapRadius = 500 | 1000 | 2000;
+
+const radiusLabel = (radius: MapRadius): string => (radius === 500 ? '500m' : `${radius / 1000}km`);
+const levelForRadius = (radius: MapRadius): number => (radius === 500 ? 4 : radius === 1000 ? 5 : 6);
 
 const MapPage = ({ config }: { config: PublicConfig }) => {
   const navigate = useNavigate();
@@ -32,22 +36,19 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
   const items = properties.data?.pages.flatMap((page) => page.content) ?? [];
   const mapped = items.filter((item) => item.location.latitude !== null && item.location.longitude !== null);
   const [viewportCenter, setViewportCenter] = useState(() => readLastMapCenter() ?? SEOUL_MAP_CENTER);
-  const [queryCenter, setQueryCenter] = useState(viewportCenter);
   const [currentPosition, setCurrentPosition] = useState(viewportCenter);
   const [locationStatus, setLocationStatus] = useState<'locating' | 'ready' | 'fallback'>('locating');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [radius, setRadius] = useState<MapRadius>(2000);
+  const [mapLevel, setMapLevel] = useState(6);
+  const [allMode, setAllMode] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState<MapCategory[]>(ALL_MAP_CATEGORIES);
 
   const nearby = useQuery({
-    queryKey: [
-      'map-explore-nearby',
-      queryCenter.latitude.toFixed(4),
-      queryCenter.longitude.toFixed(4),
-      selectedCategories.slice().sort().join(','),
-    ],
+    queryKey: ['map-explore-nearby', currentPosition.latitude.toFixed(4), currentPosition.longitude.toFixed(4), radius],
     queryFn: ({ signal }) =>
-      fetchNearby(config, queryCenter.latitude, queryCenter.longitude, 2000, selectedCategories, signal),
-    enabled: locationStatus !== 'locating' && selectedCategories.length > 0,
+      fetchNearby(config, currentPosition.latitude, currentPosition.longitude, radius, ALL_MAP_CATEGORIES, signal),
+    enabled: locationStatus !== 'locating',
   });
 
   const moveToCurrentLocation = useCallback(async () => {
@@ -55,14 +56,12 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
     try {
       const coordinate = await requestCurrentMapLocation();
       setViewportCenter(coordinate);
-      setQueryCenter(coordinate);
       setCurrentPosition(coordinate);
       writeLastMapCenter(coordinate);
       setLocationStatus('ready');
     } catch {
       const fallback = readLastMapCenter() ?? SEOUL_MAP_CENTER;
       setViewportCenter(fallback);
-      setQueryCenter(fallback);
       setCurrentPosition(fallback);
       setLocationStatus('fallback');
       setSearchOpen(true);
@@ -73,21 +72,11 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
     void moveToCurrentLocation();
   }, [moveToCurrentLocation]);
 
-  useEffect(() => {
-    const timeout = window.setTimeout(() => setQueryCenter(viewportCenter), 450);
-    return () => window.clearTimeout(timeout);
-  }, [viewportCenter]);
-
-  const visiblePlaces = useMemo(
-    () =>
-      selectedCategories.flatMap((category) =>
-        (nearby.data?.places ?? [])
-          .filter((place) => place.category === category)
-          .sort((left, right) => left.distanceMeters - right.distanceMeters)
-          .slice(0, MAX_VISIBLE_PLACES_PER_CATEGORY),
-      ),
+  const filteredPlaces = useMemo(
+    () => (nearby.data?.places ?? []).filter((place) => selectedCategories.includes(place.category)),
     [nearby.data?.places, selectedCategories],
   );
+  const facilityMarkers = useMemo(() => clusterNearbyPlaces(filteredPlaces, mapLevel), [filteredPlaces, mapLevel]);
 
   const markers = useMemo<MapMarker[]>(() => {
     const propertyMarkers: MapMarker[] = mapped.map((item) => ({
@@ -97,14 +86,6 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
       label: item.name,
       tone: 'property',
       actionable: true,
-    }));
-    const facilityMarkers: MapMarker[] = visiblePlaces.map((place) => ({
-      id: `place-${place.providerPlaceId}`,
-      latitude: place.latitude,
-      longitude: place.longitude,
-      label: place.name,
-      tone: 'place',
-      category: place.category,
     }));
     return [
       ...propertyMarkers,
@@ -116,13 +97,29 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
         tone: 'current',
       },
     ];
-  }, [currentPosition, locationStatus, mapped, visiblePlaces]);
+  }, [currentPosition, facilityMarkers, locationStatus, mapped]);
+
+  const circles = useMemo<MapRadiusCircle[]>(
+    () =>
+      ([500, 1000, 2000] as const)
+        .filter((value) => value <= radius)
+        .map((value) => ({ radiusMeters: value, label: radiusLabel(value) })),
+    [radius],
+  );
+
+  const selectRadius = (nextRadius: MapRadius, nextAllMode = false) => {
+    setRadius(nextRadius);
+    setMapLevel(levelForRadius(nextRadius));
+    setViewportCenter(currentPosition);
+    writeLastMapCenter(currentPosition);
+    setAllMode(nextAllMode);
+  };
 
   const applySearchedAddress = (address: MapAddress) => {
     const coordinate = { latitude: address.latitude, longitude: address.longitude };
     setViewportCenter(coordinate);
-    setQueryCenter(coordinate);
     setCurrentPosition(coordinate);
+    setMapLevel(levelForRadius(radius));
     writeLastMapCenter(coordinate);
     setLocationStatus('ready');
   };
@@ -141,6 +138,10 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
           config={config}
           center={viewportCenter}
           markers={markers}
+          circles={circles}
+          radiusCenter={currentPosition}
+          level={mapLevel}
+          showRadiusLabels
           selectedMarkerId="current-location"
           onSelectMarker={(id) => {
             if (id.startsWith('property-')) navigate(`/properties/${id.slice('property-'.length)}/nearby`);
@@ -150,12 +151,39 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
             setViewportCenter((current) => (coordinatesAreClose(current, coordinate) ? current : coordinate));
             writeLastMapCenter(coordinate);
           }}
+          onLevelChange={setMapLevel}
         />
+
+        <div className={styles.radiusFilters} aria-label="지도 반경">
+          <button
+            type="button"
+            aria-pressed={allMode}
+            onClick={() => {
+              setSelectedCategories(ALL_MAP_CATEGORIES);
+              selectRadius(2000, true);
+            }}
+          >
+            전체
+          </button>
+          {([500, 1000, 2000] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={!allMode && radius === value}
+              onClick={() => selectRadius(value)}
+            >
+              {radiusLabel(value)}
+            </button>
+          ))}
+        </div>
 
         <MapCategoryRail
           selectedCategories={selectedCategories}
           counts={nearby.data?.counts}
-          onToggle={(category) => setSelectedCategories((current) => toggleCategory(current, category))}
+          onToggle={(category) => {
+            setSelectedCategories((current) => toggleCategory(current, category));
+            setAllMode(false);
+          }}
         />
 
         <MapAddressSearchPanel
@@ -176,7 +204,7 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
           </p>
         )}
         {properties.isError && <p className={styles.mapNotice}>매물 위치를 불러오지 못했어요.</p>}
-        {nearby.isError && selectedCategories.length > 0 && (
+        {nearby.isError && (
           <div className={styles.mapNotice} role="alert">
             시설 정보를 불러오지 못했어요.
             <button type="button" onClick={() => void nearby.refetch()}>

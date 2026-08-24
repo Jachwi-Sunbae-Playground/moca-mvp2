@@ -11,6 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.IntFunction;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
@@ -22,11 +24,18 @@ import org.springframework.web.client.RestClient;
 @ConditionalOnProperty(name = "map.provider.mode", havingValue = "kakao")
 public class KakaoMapProvider implements MapProvider {
 
+    private static final int PAGE_SIZE = 15;
+    private static final int MAX_PAGE_COUNT = 3;
     private final RestClient client;
 
+    @Autowired
     public KakaoMapProvider(@Value("${map.kakao.rest-api-key}") String restApiKey,
                             @Value("${map.connect-timeout-millis:2000}") long connectTimeoutMillis,
                             @Value("${map.read-timeout-millis:5000}") long readTimeoutMillis) {
+        this(createClient(restApiKey, connectTimeoutMillis, readTimeoutMillis));
+    }
+
+    private static RestClient createClient(String restApiKey, long connectTimeoutMillis, long readTimeoutMillis) {
         if (restApiKey == null || restApiKey.isBlank()) {
             throw new IllegalStateException("kakao 지도 모드에는 KAKAO_REST_API_KEY가 필요합니다.");
         }
@@ -35,11 +44,15 @@ public class KakaoMapProvider implements MapProvider {
                 .build();
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(Duration.ofMillis(readTimeoutMillis));
-        this.client = RestClient.builder()
+        return RestClient.builder()
                 .baseUrl("https://dapi.kakao.com")
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "KakaoAK " + restApiKey)
                 .requestFactory(requestFactory)
                 .build();
+    }
+
+    KakaoMapProvider(RestClient client) {
+        this.client = client;
     }
 
     @Override
@@ -76,20 +89,30 @@ public class KakaoMapProvider implements MapProvider {
         Map<String, NearbyPlace> unique = new LinkedHashMap<>();
         for (MapCategory category : categories) {
             String code = categoryCode(category);
-            JsonNode root = request(uri -> uri.path("/v2/local/search/category.json")
+            appendPages(unique, category, page -> request(uri -> uri.path("/v2/local/search/category.json")
                     .queryParam("category_group_code", code)
                     .queryParam("x", longitude).queryParam("y", latitude)
-                    .queryParam("radius", radius).queryParam("sort", "distance").build());
-            appendPlaces(unique, root, category);
+                    .queryParam("radius", radius).queryParam("sort", "distance")
+                    .queryParam("page", page).queryParam("size", PAGE_SIZE).build()));
             if (category == MapCategory.TRANSPORT) {
-                JsonNode buses = request(uri -> uri.path("/v2/local/search/keyword.json")
+                appendPages(unique, category, page -> request(uri -> uri.path("/v2/local/search/keyword.json")
                         .queryParam("query", "버스정류장")
                         .queryParam("x", longitude).queryParam("y", latitude)
-                        .queryParam("radius", radius).queryParam("sort", "distance").build());
-                appendPlaces(unique, buses, category);
+                        .queryParam("radius", radius).queryParam("sort", "distance")
+                        .queryParam("page", page).queryParam("size", PAGE_SIZE).build()));
             }
         }
         return List.copyOf(unique.values());
+    }
+
+    private void appendPages(Map<String, NearbyPlace> unique, MapCategory category, IntFunction<JsonNode> fetchPage) {
+        for (int page = 1; page <= MAX_PAGE_COUNT; page++) {
+            JsonNode root = fetchPage.apply(page);
+            appendPlaces(unique, root, category);
+            if (root.path("meta").path("is_end").asBoolean(true)) {
+                return;
+            }
+        }
     }
 
     private void appendPlaces(Map<String, NearbyPlace> unique, JsonNode root, MapCategory category) {

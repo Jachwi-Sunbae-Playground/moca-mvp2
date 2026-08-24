@@ -9,6 +9,7 @@ declare const __ENABLE_MSW__: boolean;
 type KakaoLatLng = { getLat: () => number; getLng: () => number };
 type KakaoMap = {
   getCenter: () => KakaoLatLng;
+  getLevel: () => number;
   setCenter: (center: KakaoLatLng) => void;
   setLevel: (level: number) => void;
 };

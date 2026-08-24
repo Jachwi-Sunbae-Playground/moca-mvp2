@@ -117,7 +117,8 @@ describe('MVP2 지도 화면', () => {
     Object.defineProperty(navigator, 'geolocation', { configurable: true, value: originalGeolocation });
   });
 
-  it('현재 위치와 매물·시설을 표시하고 매물 핀에서 주변 분석으로 이동한다', async () => {
+  it('현재 위치와 매물·시설 군집을 표시하고 반경 변경과 매물 주변 분석 이동을 제공한다', async () => {
+    const requestedRadii: string[] = [];
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties`, () =>
         HttpResponse.json(successEnvelope({ totalCount: 1, items: [property] })),
@@ -125,6 +126,7 @@ describe('MVP2 지도 화면', () => {
       http.get(`${config.apiBaseUrl}/api/properties/10`, () => HttpResponse.json(successEnvelope(property))),
       http.get(`${config.apiBaseUrl}/api/maps/nearby`, ({ request }) => {
         const radius = Number(new URL(request.url).searchParams.get('radius'));
+        requestedRadii.push(String(radius));
         const result = nearbyResult(radius);
         return HttpResponse.json(
           successEnvelope({
@@ -155,9 +157,11 @@ describe('MVP2 지도 화면', () => {
 
     expect(await screen.findByRole('generic', { name: '데모 지도' })).toBeInTheDocument();
     expect(await screen.findByRole('img', { name: '현재 위치' })).toBeInTheDocument();
-    expect(await screen.findByRole('img', { name: '신림 가까운 의원' })).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: '신림 안심의원' })).toBeInTheDocument();
-    expect(screen.queryByRole('img', { name: '신림 먼 의원' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('img', { name: '병원 3개' })).toBeInTheDocument();
+    await waitFor(() => expect(requestedRadii).toContain('2000'));
+    await user.click(screen.getByRole('button', { name: '1km' }));
+    await waitFor(() => expect(requestedRadii).toContain('1000'));
+    expect(screen.getByRole('button', { name: '1km' })).toHaveAttribute('aria-pressed', 'true');
     await user.click(await screen.findByRole('button', { name: '신림역 원룸' }));
 
     expect(await screen.findByRole('heading', { name: '매물 주변 분석' })).toBeInTheDocument();

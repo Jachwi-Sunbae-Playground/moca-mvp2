@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fetchNearby } from '../apis/mapApi';
 import MapCanvas from '../components/MapCanvas';
 import type { MapMarker, MapRadiusCircle } from '../components/MapCanvas';
 import MapCategoryRail from '../components/MapCategoryRail';
+import { clusterNearbyPlaces } from '../components/mapClustering';
 import { ALL_MAP_CATEGORIES, getMapCategoryLabel } from '../components/mapPresentation';
 import { ButtonLink } from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
@@ -12,47 +13,17 @@ import Icon from '../components/ui/Icon';
 import InlineNotice from '../components/ui/InlineNotice';
 import TopNavigation from '../components/ui/TopNavigation';
 import { usePropertyDetail } from '../hooks/query/useProperties';
-import type { MapCategory, NearbyPlace } from '../types/Map';
+import type { MapCategory } from '../types/Map';
 import type { PublicConfig } from '../types/PublicConfig';
-import { SEOUL_MAP_CENTER } from '../utils/mapLocation';
+import { coordinatesAreClose, SEOUL_MAP_CENTER } from '../utils/mapLocation';
 import { parsePositiveId } from '../utils/propertyFormat';
 import styles from './MapPage.module.css';
 
 const toggleCategory = (categories: MapCategory[], category: MapCategory): MapCategory[] =>
   categories.includes(category) ? categories.filter((item) => item !== category) : [...categories, category];
 
-const CATEGORY_SUMMARY_ANGLE: Record<MapCategory, number> = {
-  HOSPITAL: 145,
-  TRANSPORT: 215,
-  SCHOOL: 90,
-  CONVENIENCE: 25,
-  AGENCY: 320,
-};
-
-const categorySummaryMarker = (
-  category: MapCategory,
-  places: NearbyPlace[],
-  center: { latitude: number; longitude: number },
-  radius: 500 | 1000 | 2000,
-): MapMarker | null => {
-  if (places.length === 0) return null;
-  const angle = (CATEGORY_SUMMARY_ANGLE[category] * Math.PI) / 180;
-  const distanceMeters = radius * 0.3;
-  const latitude = center.latitude + (Math.sin(angle) * distanceMeters) / 111_320;
-  const longitude =
-    center.longitude + (Math.cos(angle) * distanceMeters) / (111_320 * Math.cos((center.latitude * Math.PI) / 180));
-  return {
-    id: `summary-${category}`,
-    latitude,
-    longitude,
-    label: `${getMapCategoryLabel(category)} ${places.length}개`,
-    tone: 'place',
-    category,
-    count: places.length,
-  };
-};
-
 const radiusLabel = (radius: 500 | 1000 | 2000): string => (radius === 500 ? '500m' : `${radius / 1000}km`);
+const levelForRadius = (radius: 500 | 1000 | 2000): number => (radius === 500 ? 4 : radius === 1000 ? 5 : 6);
 
 const NearbyAnalysisPage = ({ config }: { config: PublicConfig }) => {
   const propertyId = parsePositiveId(useParams().propertyId);
@@ -66,7 +37,9 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
   const latitude = property.data?.location.latitude ?? null;
   const longitude = property.data?.location.longitude ?? null;
   const center = latitude === null || longitude === null ? SEOUL_MAP_CENTER : { latitude, longitude };
+  const [viewportCenter, setViewportCenter] = useState(center);
   const [radius, setRadius] = useState<500 | 1000 | 2000>(2000);
+  const [mapLevel, setMapLevel] = useState(6);
   const [selectedCategories, setSelectedCategories] = useState<MapCategory[]>(ALL_MAP_CATEGORIES);
   const [listExpanded, setListExpanded] = useState(false);
   const [allMode, setAllMode] = useState(false);
@@ -76,24 +49,15 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
     enabled: latitude !== null && longitude !== null,
   });
 
+  useEffect(() => {
+    setViewportCenter(center);
+  }, [center.latitude, center.longitude]);
+
   const filteredPlaces = useMemo(
     () => nearby.data?.places.filter((place) => selectedCategories.includes(place.category)) ?? [],
     [nearby.data?.places, selectedCategories],
   );
-  const summaryMarkers = useMemo(
-    () =>
-      selectedCategories
-        .map((category) =>
-          categorySummaryMarker(
-            category,
-            filteredPlaces.filter((place) => place.category === category),
-            center,
-            radius,
-          ),
-        )
-        .filter((marker): marker is MapMarker => marker !== null),
-    [center, filteredPlaces, radius, selectedCategories],
-  );
+  const facilityMarkers = useMemo(() => clusterNearbyPlaces(filteredPlaces, mapLevel), [filteredPlaces, mapLevel]);
   const markers = useMemo<MapMarker[]>(
     () => [
       {
@@ -102,9 +66,9 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
         label: '선택한 매물',
         tone: 'selected',
       },
-      ...summaryMarkers,
+      ...facilityMarkers,
     ],
-    [center, propertyId, summaryMarkers],
+    [center, facilityMarkers, propertyId],
   );
   const circles = useMemo<MapRadiusCircle[]>(
     () =>
@@ -140,11 +104,17 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
         <section className={styles.mapStage} aria-label="매물 주변 분석 지도">
           <MapCanvas
             config={config}
-            center={center}
+            center={viewportCenter}
             markers={markers}
             circles={circles}
-            level={radius === 500 ? 4 : radius === 1000 ? 5 : 6}
+            radiusCenter={center}
+            level={mapLevel}
             showRadiusLabels
+            onCenterChange={(nextLatitude, nextLongitude) => {
+              const nextCenter = { latitude: nextLatitude, longitude: nextLongitude };
+              setViewportCenter((current) => (coordinatesAreClose(current, nextCenter) ? current : nextCenter));
+            }}
+            onLevelChange={setMapLevel}
           />
 
           <div className={styles.radiusFilters} aria-label="분석 반경">
@@ -153,6 +123,8 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
               aria-pressed={allMode}
               onClick={() => {
                 setRadius(2000);
+                setMapLevel(levelForRadius(2000));
+                setViewportCenter(center);
                 setSelectedCategories(ALL_MAP_CATEGORIES);
                 setAllMode(true);
               }}
@@ -166,6 +138,8 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
                 aria-pressed={!allMode && radius === value}
                 onClick={() => {
                   setRadius(value);
+                  setMapLevel(levelForRadius(value));
+                  setViewportCenter(center);
                   setAllMode(false);
                 }}
               >

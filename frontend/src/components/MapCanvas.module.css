@@ -146,6 +146,40 @@ button.marker {
   background: #64748b;
 }
 
+.clusterMarker {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-width: 3px;
+  background: rgb(52 116 236 / 90%);
+  box-shadow:
+    0 0 0 0.38rem rgb(52 116 236 / 20%),
+    0 0.3rem 0.9rem rgb(31 65 127 / 24%);
+}
+
+.clusterMarker[data-category='HOSPITAL'] {
+  background: rgb(240 107 87 / 92%);
+}
+
+.clusterMarker[data-category='TRANSPORT'] {
+  background: rgb(121 99 232 / 92%);
+}
+
+.clusterMarker[data-category='SCHOOL'] {
+  background: rgb(245 158 11 / 92%);
+}
+
+.clusterMarker[data-category='CONVENIENCE'] {
+  background: rgb(8 169 130 / 92%);
+}
+
+.clusterMarker[data-category='AGENCY'] {
+  background: rgb(100 116 139 / 92%);
+}
+
+.clusterMarker .markerIcon {
+  font-size: 0.82rem;
+}
+
 .markerIcon {
   font-size: 1.1rem;
   font-weight: 900;

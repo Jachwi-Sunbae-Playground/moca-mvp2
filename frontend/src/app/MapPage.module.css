@@ -207,7 +207,15 @@ button.addressNotice {
   top: 4.15rem;
 }
 
+.explorePage .mapStage > aside {
+  top: 4.15rem;
+}
+
 .nearbyPage .mapNotice {
+  top: 4.3rem;
+}
+
+.explorePage .mapNotice {
   top: 4.3rem;
 }
 
