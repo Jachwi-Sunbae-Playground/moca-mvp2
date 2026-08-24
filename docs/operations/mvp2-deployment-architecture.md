@@ -1,11 +1,11 @@
 # MVP2 배포 아키텍처
 
-- 상태: 운영 인프라 구성 완료, 최초 배포 검증 중
+- 상태: 운영 인프라 구성·최초 배포 검증 완료
 - 결정일: 2026-08-22
 - 문서 성격: 파생
 - 대조 대상: `deploy/`, `.github/workflows/deploy-production.yml`, 실제 개인 AWS 구성
 
-MVP2 기능은 로컬 검증을 마쳤다. 외부 사용자가 확인할 수 있는 환경 하나를 위해 도메인, EC2, 비공개 S3, GitHub OIDC와 SSM을 구성했고 최초 배포를 검증하는 중이다. 중심 결정은 [ADR-0010](../../backend/docs/adr/0010-prepare-single-ec2-deployment.md)에 기록한다.
+MVP2 기능은 로컬 검증을 마쳤다. 외부 사용자가 확인할 수 있는 `jachwisunbae.shop`을 위해 도메인, EC2, 비공개 S3, GitHub OIDC와 SSM을 구성했고 Google 로그인과 사진 업로드를 포함한 최초 배포를 검증했다. 중심 결정은 [ADR-0010](../../backend/docs/adr/0010-prepare-single-ec2-deployment.md)에 기록한다.
 
 ## 전체 구성
 

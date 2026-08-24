@@ -1,261 +1,412 @@
 .page {
-  min-height: calc(100dvh - var(--bottom-navigation-height));
-  padding: 0 1rem 1.25rem;
-  background: var(--color-canvas);
-}
-
-.mapSection {
-  margin: 0 -0.25rem;
-}
-
-.locationFallback {
-  margin: 0 0 0.5rem;
-  padding: 0.5rem 0.65rem;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary-soft);
-  color: var(--color-muted);
-  font-size: 0.62rem;
-}
-.locationFallback a {
-  color: var(--color-primary-dark);
-  font-weight: 800;
-}
-
-.mapSection > :global(.empty-state) {
-  min-height: 22rem;
-}
-
-.state {
   display: grid;
-  min-height: 12rem;
-  gap: 0.75rem;
-  place-content: center;
-  color: var(--color-muted);
-  font-size: 0.78rem;
-  text-align: center;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-surface);
 }
 
-.state button {
+.mapNavigation {
+  position: relative;
+  z-index: 40;
+  min-height: 3.9rem;
+  margin: 0;
+  padding: 0.55rem 1rem 0.35rem;
+  background: rgb(255 255 255 / 98%);
+  box-shadow: 0 1px 0 rgb(205 203 194 / 45%);
+}
+
+.mapStage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mapNotice {
+  position: absolute;
+  z-index: 20;
+  top: 0.75rem;
+  left: 50%;
+  display: flex;
+  width: max-content;
+  max-width: calc(100% - 6rem);
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid rgb(224 222 213 / 84%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 0.3rem 0.9rem rgb(44 50 39 / 14%);
+  color: var(--color-ink-soft);
+  font-size: 0.6rem;
+  font-weight: 750;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.mapNotice button {
+  padding: 0;
   border: 0;
   background: transparent;
   color: var(--color-primary-dark);
-  font: inherit;
-  font-weight: 800;
+  font-size: inherit;
+  font-weight: 900;
   cursor: pointer;
 }
 
-.propertySheet {
-  position: relative;
-  z-index: 3;
-  margin: -2.5rem 0.6rem 0;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: 0 10px 30px rgb(65 58 38 / 14%);
+.mapControls,
+.selectMapControls {
+  position: absolute;
+  z-index: 15;
+  right: 0.78rem;
+  bottom: 4.9rem;
+  display: grid;
+  gap: 0.52rem;
 }
 
-.eyebrow,
-.selectedAddress span,
-.nearbyHeading span {
+.mapControls > button,
+.selectMapControls > button {
+  display: grid;
+  width: 2.9rem;
+  height: 2.9rem;
+  padding: 0;
+  border: 1px solid rgb(221 220 212 / 88%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 0.35rem 1rem rgb(42 48 35 / 18%);
+  color: #30342e;
+  cursor: pointer;
+  place-items: center;
+}
+
+.mapControls > button:disabled,
+.selectMapControls > button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.addPropertyButton {
+  position: absolute;
+  z-index: 16;
+  right: 0.78rem;
+  bottom: 0.72rem;
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0.45rem 1.15rem rgb(46 62 31 / 30%);
+  color: white;
+  place-items: center;
+}
+
+.selectMapControls {
+  bottom: 13.8rem;
+}
+
+.addressSheet,
+.nearbySheet {
+  position: absolute;
+  z-index: 18;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  gap: 0.62rem;
+  padding: 1.15rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  border-radius: 1.2rem 1.2rem 0 0;
+  background: rgb(255 255 255 / 97%);
+  box-shadow: 0 -0.5rem 1.5rem rgb(44 50 39 / 14%);
+  backdrop-filter: blur(10px);
+}
+
+.addressSheet > strong {
+  overflow: hidden;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.addressSheet > p {
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.addressNotice {
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0.7rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #fff0ee;
+  color: #ee625d !important;
+  font-size: 0.66rem !important;
+  font-weight: 800;
+  text-align: center;
+}
+
+button.addressNotice {
+  cursor: pointer;
+}
+
+.confirmLocationButton {
+  min-height: 3.25rem;
+  padding: 0.8rem 1rem;
+  border: 0;
+  border-radius: 0.85rem;
+  background: #111;
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.confirmLocationButton:disabled {
+  background: #d8d8d5;
+  cursor: not-allowed;
+}
+
+.radiusFilters {
+  position: absolute;
+  z-index: 14;
+  top: 0.6rem;
+  right: 0.5rem;
+  left: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.radiusFilters button {
+  min-height: 2.65rem;
+  padding: 0.45rem 0.3rem;
+  border: 1px solid rgb(218 218 214 / 92%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 95%);
+  box-shadow: 0 0.25rem 0.8rem rgb(44 50 39 / 12%);
+  color: #464945;
+  font-size: 0.7rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.radiusFilters button[aria-pressed='true'] {
+  border-color: #367ff0;
+  background: #3d82ee;
+  color: white;
+}
+
+.nearbyPage .mapStage > aside {
+  top: 4.15rem;
+}
+
+.nearbyPage .mapNotice {
+  top: 4.3rem;
+}
+
+.nearbySheet {
+  max-height: 53%;
+  gap: 0.75rem;
+  padding-bottom: 0.85rem;
+  transition: max-height 180ms ease-out;
+}
+
+.nearbySheet[data-expanded='true'] {
+  max-height: 72%;
+}
+
+.sheetHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sheetHeader span {
+  display: block;
+  max-width: 12rem;
+  overflow: hidden;
+  color: var(--color-primary-dark);
+  font-size: 0.58rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheetHeader h1 {
+  margin: 0.15rem 0 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.sheetHeader > button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.35rem 0;
+  border: 0;
+  background: transparent;
   color: var(--color-primary-dark);
   font-size: 0.62rem;
-  font-weight: 900;
-}
-
-.propertySheet h1,
-.nearbyHeading h1,
-.locationContent h1 {
-  margin: 0.25rem 0;
-  font-size: 1.05rem;
-}
-.propertySheet p,
-.propertySheet strong,
-.nearbyHeading p,
-.locationContent > p {
-  margin: 0.2rem 0;
-  font-size: 0.7rem;
-}
-.propertySheet p,
-.nearbyHeading p,
-.locationContent > p {
-  color: var(--color-muted);
-}
-
-.sheetActions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-}
-
-.sheetActions a {
-  padding: 0.6rem;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary-soft);
-  color: var(--color-primary-dark);
-  font-size: 0.66rem;
   font-weight: 850;
-  text-align: center;
-  text-decoration: none;
+  cursor: pointer;
 }
 
-.locationContent,
-.nearbyContent {
-  display: grid;
-  gap: 0.8rem;
-}
-.locationContent > h1,
-.nearbyHeading {
-  margin-top: 0.5rem;
-}
-
-.helper {
+.summaryChips {
+  display: flex;
+  gap: 0.4rem;
   margin: 0;
-  color: var(--color-muted);
-  font-size: 0.7rem;
+  padding: 0 0 0.1rem;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: none;
 }
 
-.addressResults,
-.countGrid,
-.placeList {
+.summaryChips::-webkit-scrollbar {
+  display: none;
+}
+
+.summaryChips li {
+  display: inline-flex;
+  min-height: 2.2rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: #f7f7f6;
+  color: #444842;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.summaryChips li > span {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 50%;
+  background: #64748b;
+}
+
+.summaryChips li[data-category='HOSPITAL'] > span {
+  background: #f06b57;
+}
+
+.summaryChips li[data-category='TRANSPORT'] > span {
+  background: #7963e8;
+}
+
+.summaryChips li[data-category='SCHOOL'] > span {
+  background: #f59e0b;
+}
+
+.summaryChips li[data-category='CONVENIENCE'] > span {
+  background: #08a982;
+}
+
+.expandedPlaces {
+  min-height: 0;
+  overflow: auto;
+}
+
+.expandedPlaces > p {
+  margin: 0.5rem 0;
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+.expandedPlaces > ul {
+  display: grid;
+  gap: 0.45rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.addressResults {
+.expandedPlaces li {
   display: grid;
-  max-height: 9rem;
-  overflow: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-}
-
-.addressResults li + li {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.08rem 0.5rem;
+  padding: 0.55rem 0;
   border-top: 1px solid var(--color-border);
-}
-.addressResults button {
-  display: grid;
-  width: 100%;
-  gap: 0.2rem;
-  padding: 0.7rem;
-  border: 0;
-  background: transparent;
-  color: var(--color-ink);
-  font: inherit;
-  font-size: 0.7rem;
-  text-align: left;
-  cursor: pointer;
-}
-.addressResults span {
-  color: var(--color-muted);
-  font-size: 0.62rem;
+  font-size: 0.68rem;
 }
 
-.selectedAddress {
-  display: grid;
-  gap: 0.22rem;
-  padding: 0.75rem;
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  font-size: 0.72rem;
-}
-.selectedAddress small {
-  color: var(--color-muted);
-}
-
-.countGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.35rem;
-}
-.countGrid li,
-.countGrid button {
-  display: grid;
-  min-height: 3.8rem;
-  padding: 0.5rem 0.2rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  font-size: 0.55rem;
-  place-items: center;
-}
-.countGrid button {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-.countGrid button[aria-pressed='true'] {
-  border-radius: calc(var(--radius-md) - 2px);
-  background: var(--color-primary-soft);
-}
-.countGrid strong {
-  color: var(--color-primary-dark);
-  font-size: 1rem;
-}
-
-.radiusFilters {
-  display: flex;
-  gap: 0.4rem;
-}
-.radiusFilters button {
-  min-height: 2rem;
-  padding: 0.35rem 0.7rem;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  background: var(--color-surface);
-  color: var(--color-muted);
-  font: inherit;
-  font-size: 0.64rem;
-  font-weight: 800;
-  cursor: pointer;
-}
-.radiusFilters button[aria-pressed='true'] {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-}
-
-.placeList {
-  display: grid;
-  gap: 0.45rem;
-}
-.placeList li {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.15rem 0.5rem;
-  padding: 0.7rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  font-size: 0.7rem;
-}
-.placeList li > span {
+.expandedPlaces li > span {
   grid-row: 1 / span 2;
   align-self: center;
   padding: 0.25rem 0.4rem;
   border-radius: 999px;
   background: var(--color-primary-soft);
   color: var(--color-primary-dark);
-  font-size: 0.55rem;
-  font-weight: 800;
+  font-size: 0.52rem;
+  font-weight: 850;
 }
-.placeList small {
-  color: var(--color-muted);
+
+.expandedPlaces strong,
+.expandedPlaces small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.sourceNote {
+
+.expandedPlaces small {
   color: var(--color-muted);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
+}
+
+.expandedPlaces > a {
+  display: block;
+  margin-top: 0.6rem;
+  color: var(--color-muted);
+  font-size: 0.58rem;
   text-align: center;
 }
 
-@media (max-width: 350px) {
-  .countGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+.fullState {
+  display: grid;
+  min-height: 0;
+  padding: 1rem;
+  place-content: center;
+}
+
+.fullState > button {
+  margin-top: 0.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary-dark);
+  font-weight: 850;
+}
+
+@media (max-width: 340px) {
+  .mapNavigation {
+    min-height: 3.55rem;
+    padding-inline: 0.8rem;
+  }
+
+  .radiusFilters {
+    gap: 0.22rem;
+  }
+
+  .radiusFilters button {
+    min-height: 2.35rem;
+    font-size: 0.62rem;
+  }
+
+  .nearbyPage .mapStage > aside {
+    top: 3.75rem;
+  }
+
+  .addressSheet,
+  .nearbySheet {
+    padding-inline: 0.8rem;
   }
 }

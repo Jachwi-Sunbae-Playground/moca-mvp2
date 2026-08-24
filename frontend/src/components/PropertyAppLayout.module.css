@@ -8,6 +8,10 @@
   background: var(--color-canvas);
 }
 
+.root[data-full-screen='true'] {
+  grid-template-rows: minmax(0, 1fr);
+}
+
 .content {
   min-height: 0;
   overflow-x: hidden;

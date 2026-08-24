@@ -106,7 +106,21 @@ const ResolvedEditPropertyPage = ({ config, propertyId }: { config: PublicConfig
           formNotice={formNotice}
           variant="detail"
           onSelectLocation={() =>
-            navigate('/map/select-location', { state: { returnTo: `/properties/${propertyId}/edit` } })
+            navigate('/map/select-location', {
+              state: {
+                returnTo: `/properties/${propertyId}/edit`,
+                initialLocation:
+                  initial.location.latitude === null || initial.location.longitude === null
+                    ? undefined
+                    : {
+                        address: initial.location.address,
+                        roadAddress: initial.location.roadAddress,
+                        jibunAddress: initial.location.jibunAddress,
+                        latitude: initial.location.latitude,
+                        longitude: initial.location.longitude,
+                      },
+              },
+            })
           }
           onSubmit={(input) => {
             const changes: UpdatePropertyRequestDto = input;

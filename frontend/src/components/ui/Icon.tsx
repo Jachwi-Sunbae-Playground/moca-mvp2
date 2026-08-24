@@ -2,6 +2,8 @@ export type IconName =
   | 'arrow-left'
   | 'arrow-right'
   | 'checklist'
+  | 'chevron-down'
+  | 'chevron-up'
   | 'close'
   | 'edit'
   | 'home'
@@ -14,6 +16,7 @@ export type IconName =
   | 'more-vertical'
   | 'plus'
   | 'search'
+  | 'target'
   | 'trash'
   | 'user';
 
@@ -50,6 +53,10 @@ const IconPaths = ({ name }: { name: IconName }) => {
           <path d="m3.5 18 1.2 1.2L7 16.8" />
         </>
       );
+    case 'chevron-down':
+      return <path d="m6 9 6 6 6-6" />;
+    case 'chevron-up':
+      return <path d="m6 15 6-6 6 6" />;
     case 'close':
       return (
         <>
@@ -138,6 +145,17 @@ const IconPaths = ({ name }: { name: IconName }) => {
         <>
           <circle cx="11" cy="11" r="7" />
           <path d="m16.5 16.5 4 4" />
+        </>
+      );
+    case 'target':
+      return (
+        <>
+          <circle cx="12" cy="12" r="7" />
+          <circle cx="12" cy="12" r="2" />
+          <path d="M12 2v3" />
+          <path d="M12 19v3" />
+          <path d="M2 12h3" />
+          <path d="M19 12h3" />
         </>
       );
     case 'trash':

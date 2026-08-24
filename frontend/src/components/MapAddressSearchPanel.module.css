@@ -1,0 +1,75 @@
+.panel {
+  position: absolute;
+  z-index: 24;
+  top: 0.75rem;
+  left: 0.75rem;
+  display: grid;
+  width: min(calc(100% - 5rem), 18rem);
+  max-height: calc(100% - 1.5rem);
+  gap: 0.55rem;
+  overflow: auto;
+  padding: 0.75rem;
+  border: 1px solid rgb(225 226 218 / 92%);
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 0.5rem 1.6rem rgb(42 48 35 / 20%);
+  backdrop-filter: blur(10px);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+}
+
+.heading > button {
+  display: grid;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+  place-items: center;
+}
+
+.panel > p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.66rem;
+}
+
+.panel ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  list-style: none;
+}
+
+.panel li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.panel li > button {
+  display: grid;
+  width: 100%;
+  gap: 0.2rem;
+  padding: 0.65rem;
+  border: 0;
+  background: white;
+  color: var(--color-ink);
+  font-size: 0.65rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.panel li span {
+  color: var(--color-muted);
+  font-size: 0.58rem;
+}
