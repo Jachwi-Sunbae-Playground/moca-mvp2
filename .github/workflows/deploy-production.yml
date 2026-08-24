@@ -52,7 +52,7 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         env:
-          API_BASE_URL: ""
+          API_BASE_URL: https://${{ vars.MOCA_DOMAIN }}
           AUTH_MODE: google
           GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
           GOOGLE_REDIRECT_URI: https://${{ vars.MOCA_DOMAIN }}/oauth/google/callback
