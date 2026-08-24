@@ -225,10 +225,9 @@ const ResolvedPropertyDetailPage = ({ config, propertyId }: { config: PublicConf
             <ol className={styles.checklistList}>
               {CHECKLIST_STAGES.map((stage, index) => {
                 const item = checklists.data?.stages.find((candidate) => candidate.stage === stage);
-                const checklistPath =
-                  item?.applied === true && item.propertyChecklistId !== null
-                    ? `/properties/${propertyId}/checklists/${item.propertyChecklistId}`
-                    : `/properties/${propertyId}/active-checklists/${stage}?from=property-detail`;
+                const checklistPath = `/properties/${propertyId}/active-checklists/${stage}?from=property-detail${
+                  item?.applied === true ? '&mode=replace' : ''
+                }`;
                 return (
                   <li key={stage}>
                     <Link to={checklistPath} state={{ from: 'property-detail' }}>

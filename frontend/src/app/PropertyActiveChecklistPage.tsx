@@ -183,11 +183,11 @@ const ResolvedPropertyActiveChecklist = ({
       stage={stage}
       getStageTo={(nextStage) => {
         const next = overview.data.stages.find((item) => item.stage === nextStage);
-        if (next?.applied === true && next.propertyChecklistId !== null) {
-          return `/properties/${propertyId}/checklists/${next.propertyChecklistId}`;
-        }
-        const query = fromPropertyDetail ? '?from=property-detail' : '';
-        return `/properties/${propertyId}/active-checklists/${nextStage}${query}`;
+        const query = new URLSearchParams();
+        if (fromPropertyDetail) query.set('from', 'property-detail');
+        if (next?.applied === true) query.set('mode', 'replace');
+        const search = query.toString();
+        return `/properties/${propertyId}/active-checklists/${nextStage}${search.length > 0 ? `?${search}` : ''}`;
       }}
       className={`${styles.page} property-page checklist-page active-checklist-page`}
       containerClassName="page-container checklist-page__narrow"

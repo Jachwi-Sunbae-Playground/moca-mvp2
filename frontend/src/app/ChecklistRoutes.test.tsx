@@ -122,7 +122,7 @@ describe('체크리스트 탐색과 편집', () => {
     expect(screen.getByRole('link', { name: '직방 매물 문의 목록 편집' })).toBeInTheDocument();
   });
 
-  it('새 체크리스트는 선택 화면 없이 원룸 제공 항목으로 열리고 OPTIONAL 시스템 항목 ID만 보낸다', async () => {
+  it('새 체크리스트는 CORE로 열리고 항목 추가에서 고른 OPTIONAL 시스템 항목 ID만 보낸다', async () => {
     let requestBody: unknown;
     server.use(
       http.get(`${config.apiBaseUrl}/api/check-items`, () =>
@@ -141,9 +141,16 @@ describe('체크리스트 탐색과 편집', () => {
 
     expect(await screen.findByLabelText('체크리스트 이름')).toHaveValue('원룸 온라인·전화 체크리스트');
     expect(screen.getByText(onlineItemFixture.question)).toBeInTheDocument();
-    expect(screen.getByText(secondOnlineItemFixture.question)).toBeInTheDocument();
+    expect(screen.queryByText(secondOnlineItemFixture.question)).not.toBeInTheDocument();
     expect(screen.queryByText('빈 목록')).not.toBeInTheDocument();
     expect(screen.queryByText('원룸 제공 항목')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '+ 체크 항목 추가' }));
+    const optionalItem = await screen.findByRole('checkbox', { name: secondOnlineItemFixture.question });
+    expect(optionalItem).not.toBeChecked();
+    await user.click(optionalItem);
+    await user.click(screen.getByRole('button', { name: '선택한 1개 항목 추가' }));
+    expect(screen.getByText(secondOnlineItemFixture.question)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '체크리스트 만들기' }));
     await waitFor(() =>
@@ -205,7 +212,7 @@ describe('체크리스트 탐색과 편집', () => {
 });
 
 describe('매물 체크리스트 연결과 자동 저장', () => {
-  it('연결된 단계는 적용 체크리스트로, 미연결 단계는 연결 화면으로 이동한다', async () => {
+  it('매물의 모든 단계는 체크리스트 적용 여부와 관계없이 선택 화면으로 이동한다', async () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
         HttpResponse.json(successEnvelope({ ...propertyDetailResponseFixture(), photos: [] })),
@@ -252,7 +259,7 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
     expect(section).not.toBeNull();
     expect(
       within(section as HTMLElement).getByRole('link', { name: /온라인·전화.*전화 문의 기본 목록/ }),
-    ).toHaveAttribute('href', '/properties/10/checklists/47');
+    ).toHaveAttribute('href', '/properties/10/active-checklists/ONLINE_PHONE?from=property-detail&mode=replace');
     expect(
       within(section as HTMLElement).getByRole('link', { name: /계약 전.*연결된 체크리스트 없음/ }),
     ).toHaveAttribute('href', '/properties/10/active-checklists/PRE_CONTRACT?from=property-detail');

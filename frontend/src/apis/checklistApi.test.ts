@@ -71,13 +71,13 @@ describe('최종 체크리스트 API 계약', () => {
     });
   });
 
-  it('삭제된 프리셋 API 대신 시스템 체크 항목으로 화면 시작 구성을 만든다', async () => {
+  it('삭제된 프리셋 API 대신 시스템 체크 항목의 CORE만 화면 시작 구성으로 만든다', async () => {
     server.use(
       http.get(`${config.apiBaseUrl}/api/check-items`, () => HttpResponse.json(successEnvelope(checkItemsResponse))),
     );
 
     const result = await fetchChecklistPreset(config, 'ONLINE_PHONE', 'ONE_ROOM');
-    expect(result.items.map((item) => item.order)).toEqual([0, 1]);
+    expect(result.items).toMatchObject([{ checkItemId: 101, itemType: 'CORE', order: 0 }]);
   });
 
   it('체크리스트 목록의 items와 totalCount를 읽는다', async () => {

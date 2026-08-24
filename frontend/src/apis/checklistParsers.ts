@@ -50,12 +50,15 @@ export const parseCheckItemPage = (value: unknown, stage: ChecklistStage): Check
   };
 };
 
-/** 원룸 프리셋은 최종 API에 없으며, 체크 항목 조회 결과를 화면 시작 구성으로만 변환한다. */
-export const toChecklistPreset = (stage: ChecklistStage, items: CheckItem[]): ChecklistPreset => ({
-  presetType: 'ONE_ROOM',
-  stage,
-  items: items.map((item, order) => ({ ...item, order })),
-});
+/** 원룸 프리셋은 최종 API에 없으며, 활성 CORE만 화면 시작 구성으로 변환한다. */
+export const toChecklistPreset = (stage: ChecklistStage, items: CheckItem[]): ChecklistPreset => {
+  const coreItems = items.filter((item) => item.itemType === 'CORE');
+  return {
+    presetType: 'ONE_ROOM',
+    stage,
+    items: coreItems.map((item, order) => ({ ...item, order })),
+  };
+};
 
 const parseChecklistSummary = (value: unknown): ChecklistSummary => {
   const result = readRecord(value);
