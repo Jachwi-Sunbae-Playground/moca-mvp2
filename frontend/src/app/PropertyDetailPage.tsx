@@ -141,7 +141,7 @@ const ResolvedPropertyDetailPage = ({ config, propertyId }: { config: PublicConf
             </Link>
           </div>
           {detail.photoPreview.photos.length > 0 ? (
-            <div className={styles.photoGrid} data-photo-count={Math.min(detail.photoPreview.photos.length, 3)}>
+            <div className={styles.photoGrid}>
               {detail.photoPreview.photos.slice(0, 3).map((photo, index) => {
                 const isMorePreview = index === 2 && detail.photoPreview.totalCount > 3;
                 return (
@@ -232,10 +232,20 @@ const ResolvedPropertyDetailPage = ({ config, propertyId }: { config: PublicConf
                   <li key={stage}>
                     <Link to={checklistPath} state={{ from: 'property-detail' }}>
                       <span className={styles.stageNumber}>{index + 1}</span>
-                      <span className={styles.stageCopy}>
-                        <strong>{getChecklistStageLabel(stage)}</strong>
+                      <div className={styles.stageCopy}>
+                        <div className={styles.stageTitleRow}>
+                          <strong>{getChecklistStageLabel(stage)}</strong>
+                          {item !== undefined && (
+                            <span
+                              aria-label={`${getChecklistStageLabel(stage)} \uC9C4\uD589 ${item.progress.completedCount}/${item.progress.totalCount}`}
+                            >
+                              {item.progress.completedCount}/{item.progress.totalCount}
+                            </span>
+                          )}
+                        </div>
                         <small>{item?.applied === true ? item.checklistName : '연결된 체크리스트 없음'}</small>
-                      </span>
+                        {item !== undefined && <ChecklistProgressBar progress={item.progress} compact />}
+                      </div>
                       <Icon name="arrow-right" size={18} />
                     </Link>
                   </li>
