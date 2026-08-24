@@ -251,7 +251,7 @@ const MapCanvas = ({
           content: createMarkerContent(marker, selectedMarkerId, onSelectMarker),
           xAnchor: 0.5,
           yAnchor: marker.tone === 'property' || marker.tone === 'current' || marker.tone === 'selected' ? 0.82 : 0.5,
-          zIndex: marker.tone === 'selected' ? 8 : marker.tone === 'current' ? 7 : 5,
+          zIndex: marker.tone === 'selected' ? 9 : marker.tone === 'property' ? 8 : marker.tone === 'current' ? 7 : 5,
         }),
     );
     return () => {
