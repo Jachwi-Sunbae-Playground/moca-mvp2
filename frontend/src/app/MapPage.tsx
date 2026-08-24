@@ -24,6 +24,8 @@ import styles from './MapPage.module.css';
 const toggleCategory = (categories: MapCategory[], category: MapCategory): MapCategory[] =>
   categories.includes(category) ? categories.filter((item) => item !== category) : [...categories, category];
 
+const MAX_VISIBLE_PLACES_PER_CATEGORY = 2;
+
 const MapPage = ({ config }: { config: PublicConfig }) => {
   const navigate = useNavigate();
   const properties = usePropertyList(config);
@@ -76,6 +78,17 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
     return () => window.clearTimeout(timeout);
   }, [viewportCenter]);
 
+  const visiblePlaces = useMemo(
+    () =>
+      selectedCategories.flatMap((category) =>
+        (nearby.data?.places ?? [])
+          .filter((place) => place.category === category)
+          .sort((left, right) => left.distanceMeters - right.distanceMeters)
+          .slice(0, MAX_VISIBLE_PLACES_PER_CATEGORY),
+      ),
+    [nearby.data?.places, selectedCategories],
+  );
+
   const markers = useMemo<MapMarker[]>(() => {
     const propertyMarkers: MapMarker[] = mapped.map((item) => ({
       id: `property-${item.propertyId}`,
@@ -85,15 +98,14 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
       tone: 'property',
       actionable: true,
     }));
-    const facilityMarkers: MapMarker[] =
-      nearby.data?.places.map((place) => ({
-        id: `place-${place.providerPlaceId}`,
-        latitude: place.latitude,
-        longitude: place.longitude,
-        label: place.name,
-        tone: 'place',
-        category: place.category,
-      })) ?? [];
+    const facilityMarkers: MapMarker[] = visiblePlaces.map((place) => ({
+      id: `place-${place.providerPlaceId}`,
+      latitude: place.latitude,
+      longitude: place.longitude,
+      label: place.name,
+      tone: 'place',
+      category: place.category,
+    }));
     return [
       ...propertyMarkers,
       ...facilityMarkers,
@@ -104,7 +116,7 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
         tone: 'current',
       },
     ];
-  }, [currentPosition, locationStatus, mapped, nearby.data?.places]);
+  }, [currentPosition, locationStatus, mapped, visiblePlaces]);
 
   const applySearchedAddress = (address: MapAddress) => {
     const coordinate = { latitude: address.latitude, longitude: address.longitude };

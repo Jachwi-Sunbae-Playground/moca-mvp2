@@ -125,7 +125,28 @@ describe('MVP2 지도 화면', () => {
       http.get(`${config.apiBaseUrl}/api/properties/10`, () => HttpResponse.json(successEnvelope(property))),
       http.get(`${config.apiBaseUrl}/api/maps/nearby`, ({ request }) => {
         const radius = Number(new URL(request.url).searchParams.get('radius'));
-        return HttpResponse.json(successEnvelope(nearbyResult(radius)));
+        const result = nearbyResult(radius);
+        return HttpResponse.json(
+          successEnvelope({
+            ...result,
+            counts: { ...result.counts, HOSPITAL: 3 },
+            places: [
+              ...result.places,
+              {
+                ...result.places[0],
+                providerPlaceId: 'demo-hospital-nearest',
+                name: '신림 가까운 의원',
+                distanceMeters: 120,
+              },
+              {
+                ...result.places[0],
+                providerPlaceId: 'demo-hospital-far',
+                name: '신림 먼 의원',
+                distanceMeters: 890,
+              },
+            ],
+          }),
+        );
       }),
     );
 
@@ -134,6 +155,9 @@ describe('MVP2 지도 화면', () => {
 
     expect(await screen.findByRole('generic', { name: '데모 지도' })).toBeInTheDocument();
     expect(await screen.findByRole('img', { name: '현재 위치' })).toBeInTheDocument();
+    expect(await screen.findByRole('img', { name: '신림 가까운 의원' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: '신림 안심의원' })).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: '신림 먼 의원' })).not.toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: '신림역 원룸' }));
 
     expect(await screen.findByRole('heading', { name: '매물 주변 분석' })).toBeInTheDocument();
