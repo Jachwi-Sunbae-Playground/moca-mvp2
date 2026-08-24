@@ -1,11 +1,11 @@
 # MVP2 배포 아키텍처
 
-- 상태: 설계·저장소 기반 준비 완료, AWS 미구축
+- 상태: 운영 인프라 구성 완료, 최초 배포 검증 중
 - 결정일: 2026-08-22
 - 문서 성격: 파생
 - 대조 대상: `deploy/`, `.github/workflows/deploy-production.yml`, 실제 개인 AWS 구성
 
-MVP2 기능 개발이 끝날 때까지 로컬에서만 개발한다. 이 문서는 나중에 외부 사용자가 확인할 수 있는 환경 하나를 빠르게 만들기 위한 목표 구성이다. 현재 AWS 리소스, 도메인과 운영 비밀값은 만들거나 등록하지 않았다. 중심 결정은 [ADR-0010](../../backend/docs/adr/0010-prepare-single-ec2-deployment.md)에 기록한다.
+MVP2 기능은 로컬 검증을 마쳤다. 외부 사용자가 확인할 수 있는 환경 하나를 위해 도메인, EC2, 비공개 S3, GitHub OIDC와 SSM을 구성했고 최초 배포를 검증하는 중이다. 중심 결정은 [ADR-0010](../../backend/docs/adr/0010-prepare-single-ec2-deployment.md)에 기록한다.
 
 ## 전체 구성
 
@@ -47,6 +47,8 @@ EC2에서는 소스 빌드를 실행하지 않는다. 빌드는 GitHub Actions�
 - PR에서 통과한 테스트를 배포 시 다시 실행하지 않고 백엔드 JAR와 프론트 정적 파일만 빌드한다.
 - 장기 AWS Access Key와 SSH 개인키를 GitHub에 저장하지 않는다.
 - SSM 명령에는 비밀값을 넣지 않는다. 런타임 비밀값은 EC2의 `/etc/moca/app.env`에 `root:root`, `0600`으로 둔다.
+- Actions는 SSM `commands` 매개변수를 JSON 문자열 배열로 직렬화한다. AWS CLI shorthand에 셀 따옴표를 중첩하지 않는다.
+- SSM 대기가 실패하면 `GetCommandInvocation`을 출력해 EC2 배포 스크립트의 표준 출력과 표준 오류를 Actions 로그에 남긴다.
 - 배포 후 `127.0.0.1:8080/actuator/health`가 실패하면 애플리케이션 심볼릭 링크를 직전 릴리스로 되돌린다.
 - DB 스키마와 데이터는 애플리케이션 롤백 대상이 아니다.
 

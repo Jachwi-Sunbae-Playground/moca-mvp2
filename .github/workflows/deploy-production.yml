@@ -86,11 +86,17 @@ jobs:
           INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
           RELEASE_BUCKET: ${{ vars.RELEASE_BUCKET }}
         run: |
+          ssm_parameters="$(jq -cn \
+            --arg command "sudo /usr/local/bin/moca-deploy ${RELEASE_BUCKET} releases/${GITHUB_SHA}.tgz ${GITHUB_SHA}" \
+            '{commands: [$command]}')"
           command_id="$(aws ssm send-command \
             --instance-ids "${INSTANCE_ID}" \
             --document-name AWS-RunShellScript \
-            --parameters commands="sudo /usr/local/bin/moca-deploy '${RELEASE_BUCKET}' 'releases/${GITHUB_SHA}.tgz' '${GITHUB_SHA}'" \
+            --parameters "${ssm_parameters}" \
             --query 'Command.CommandId' \
             --output text)"
-          aws ssm wait command-executed --command-id "${command_id}" --instance-id "${INSTANCE_ID}"
+          if ! aws ssm wait command-executed --command-id "${command_id}" --instance-id "${INSTANCE_ID}"; then
+            aws ssm get-command-invocation --command-id "${command_id}" --instance-id "${INSTANCE_ID}" || true
+            exit 1
+          fi
           aws ssm get-command-invocation --command-id "${command_id}" --instance-id "${INSTANCE_ID}"
