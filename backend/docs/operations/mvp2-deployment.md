@@ -1,6 +1,6 @@
 # MVP2 백엔드 배포
 
-- 상태: 저장소 기반 준비 완료, 미배포
+- 상태: 운영 인프라 구성 완료, 최초 배포 검증 중
 - 문서 성격: 파생
 - 대조 대상: `deploy/`, `.github/workflows/deploy-production.yml`, 백엔드 운영 설정
 
