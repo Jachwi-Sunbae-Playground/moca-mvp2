@@ -122,7 +122,7 @@ describe('체크리스트 탐색과 편집', () => {
     expect(screen.getByRole('link', { name: '직방 매물 문의 목록 편집' })).toBeInTheDocument();
   });
 
-  it('생성 요청에는 CORE를 제외한 OPTIONAL 시스템 항목 ID만 보낸다', async () => {
+  it('새 체크리스트는 선택 화면 없이 원룸 제공 항목으로 열리고 OPTIONAL 시스템 항목 ID만 보낸다', async () => {
     let requestBody: unknown;
     server.use(
       http.get(`${config.apiBaseUrl}/api/check-items`, () =>
@@ -137,9 +137,15 @@ describe('체크리스트 탐색과 편집', () => {
       }),
     );
     const user = userEvent.setup();
-    renderAuthenticated('/checklists/new?stage=ONLINE_PHONE&start=ONE_ROOM');
+    renderAuthenticated('/checklists/new?stage=ONLINE_PHONE');
 
-    await user.click(await screen.findByRole('button', { name: '체크리스트 만들기' }));
+    expect(await screen.findByLabelText('체크리스트 이름')).toHaveValue('원룸 온라인·전화 체크리스트');
+    expect(screen.getByText(onlineItemFixture.question)).toBeInTheDocument();
+    expect(screen.getByText(secondOnlineItemFixture.question)).toBeInTheDocument();
+    expect(screen.queryByText('빈 목록')).not.toBeInTheDocument();
+    expect(screen.queryByText('원룸 제공 항목')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '체크리스트 만들기' }));
     await waitFor(() =>
       expect(requestBody).toEqual({
         name: '원룸 온라인·전화 체크리스트',
@@ -151,6 +157,21 @@ describe('체크리스트 탐색과 편집', () => {
       'href',
       '/checklists/new?stage=ONLINE_PHONE',
     );
+  });
+
+  it('원룸 제공 항목을 불러오지 못하면 빈 목록으로 우회하지 않고 재시도한다', async () => {
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/check-items`, () =>
+        HttpResponse.json({ code: 'INTERNAL_SERVER_ERROR', message: '조회 실패', data: null }, { status: 503 }),
+      ),
+    );
+    renderAuthenticated('/checklists/new?stage=ONLINE_PHONE');
+
+    const error = await screen.findByRole('alert');
+    expect(within(error).getByText('프리셋을 불러오지 못했어요.')).toBeInTheDocument();
+    expect(within(error).getByRole('button', { name: '다시 시도' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '빈 목록으로 시작' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('체크리스트 이름')).not.toBeInTheDocument();
   });
 
   it('수정 요청에는 현재 시스템 항목의 전체 순서를 보낸다', async () => {
@@ -235,6 +256,60 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
     expect(
       within(section as HTMLElement).getByRole('link', { name: /계약 전.*연결된 체크리스트 없음/ }),
     ).toHaveAttribute('href', '/properties/10/active-checklists/PRE_CONTRACT?from=property-detail');
+  });
+
+  it('내 체크리스트가 없어도 시작 방식 선택 없이 새 체크리스트 만들기만 제공한다', async () => {
+    server.use(
+      http.get(`${config.apiBaseUrl}/api/properties/10`, () =>
+        HttpResponse.json(successEnvelope(propertyDetailResponseFixture())),
+      ),
+      http.get(`${config.apiBaseUrl}/api/properties/10/checklists`, () =>
+        HttpResponse.json(
+          successEnvelope({
+            propertyId: 10,
+            overallProgress: {
+              totalCount: 0,
+              completedCount: 0,
+              goodCount: 0,
+              cautionCount: 0,
+              unconfirmedCount: 0,
+              progressRate: 0,
+            },
+            stages: [
+              {
+                stage: 'ONLINE_PHONE',
+                applied: false,
+                propertyChecklistId: null,
+                checklistName: null,
+                sourceChecklistId: null,
+                progress: {
+                  totalCount: 0,
+                  completedCount: 0,
+                  goodCount: 0,
+                  cautionCount: 0,
+                  unconfirmedCount: 0,
+                  progressRate: 0,
+                },
+              },
+              emptyStageProgress('ON_SITE'),
+              emptyStageProgress('PRE_CONTRACT'),
+            ],
+          }),
+        ),
+      ),
+      http.get(`${config.apiBaseUrl}/api/checklists`, () =>
+        HttpResponse.json(successEnvelope(checklistPageFixture([]))),
+      ),
+    );
+    renderAuthenticated('/properties/10/active-checklists/ONLINE_PHONE?from=property-detail');
+
+    expect(await screen.findByRole('checkbox', { name: /자취선배 기본 체크리스트/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '새 체크리스트 만들기' })).toHaveAttribute(
+      'href',
+      '/checklists/new?stage=ONLINE_PHONE&returnTo=%2Fproperties%2F10%2Factive-checklists%2FONLINE_PHONE%3Ffrom%3Dproperty-detail',
+    );
+    expect(screen.queryByText('빈 목록')).not.toBeInTheDocument();
+    expect(screen.queryByText('원룸 제공 항목')).not.toBeInTheDocument();
   });
 
   it('목록을 고른 뒤 확인할 때 최종 연결 API를 호출하고 적용 상세로 이동한다', async () => {

@@ -10,31 +10,6 @@
   margin-top: -0.15rem;
 }
 
-.presetSection {
-  margin-top: 0.65rem;
-}
-
-.presetSection h2,
-.presetSection p {
-  margin: 0;
-}
-
-.presetSection h2 {
-  font-size: 0.78rem;
-  letter-spacing: -0.025em;
-}
-
-.presetSection > p {
-  margin-top: 0.3rem;
-  color: var(--color-muted);
-  font-size: 0.64rem;
-  line-height: 1.5;
-}
-
-.presetSection > div {
-  margin-top: 0.75rem;
-}
-
 .presetStatus,
 .presetError {
   display: flex;
@@ -47,7 +22,7 @@
 
 .presetError {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   padding: 0.65rem 0;
   color: var(--color-error);
 }
@@ -67,15 +42,4 @@
   min-height: 2.5rem;
   padding: 0.4rem 0.5rem;
   white-space: nowrap;
-}
-
-@media (max-width: 360px) {
-  .presetError {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .presetError :global(button:last-child) {
-    grid-column: 1 / -1;
-    justify-self: start;
-  }
 }

@@ -1,9 +1,6 @@
-import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import ChecklistEditor from '../components/ChecklistEditor';
-import ChecklistStartOptions from '../components/ChecklistStartOptions';
-import type { ChecklistStartMode } from '../components/ChecklistStartOptions';
 import ChecklistStageTabs from '../components/ChecklistStageTabs';
 import { Button } from '../components/ui/Button';
 import TopNavigation from '../components/ui/TopNavigation';
@@ -27,13 +24,9 @@ const CreateChecklistPage = ({ config }: { config: PublicConfig }) => {
       config={config}
       stage={stageParam}
       returnTo={searchParams.get('returnTo')}
-      requestedStartMode={parseStartMode(searchParams.get('start'))}
     />
   );
 };
-
-const parseStartMode = (value: string | null): ChecklistStartMode | null =>
-  value === 'EMPTY' || value === 'ONE_ROOM' ? value : null;
 
 const InvalidCreateStage = () => (
   <main className="property-page">
@@ -50,25 +43,15 @@ const ResolvedCreateChecklistPage = ({
   config,
   stage,
   returnTo,
-  requestedStartMode,
 }: {
   config: PublicConfig;
   stage: ChecklistStage;
   returnTo: string | null;
-  requestedStartMode: ChecklistStartMode | null;
 }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const safeReturn = parseChecklistReturnTo(returnTo);
-  const [startMode, setStartMode] = useState<ChecklistStartMode | null>(requestedStartMode);
-  const [editorInitialName, setEditorInitialName] = useState(() =>
-    requestedStartMode === null
-      ? ''
-      : requestedStartMode === 'ONE_ROOM'
-        ? `원룸 ${checklistStageMeta[stage].label} 체크리스트`
-        : `${checklistStageMeta[stage].label} 체크리스트`,
-  );
-  const preset = useChecklistPreset(config, stage, 'ONE_ROOM', startMode === 'ONE_ROOM');
+  const preset = useChecklistPreset(config, stage, 'ONE_ROOM', true);
   const create = useCreateChecklist(config);
   const isAddingItems = searchParams.get('mode') === 'add-items';
 
@@ -95,27 +78,12 @@ const ResolvedCreateChecklistPage = ({
         <h1 className="sr-only">새 체크리스트</h1>
         <ChecklistStageTabs stage={stage} getTo={tabTarget} fullBleed />
 
-        {startMode === null ? (
-          <section className={styles.presetSection} aria-labelledby="preset-heading">
-            <h2 id="preset-heading">항목 구성 선택</h2>
-            <p>빈 목록이나 원룸 제공 항목으로 시작한 뒤 필요한 항목을 고르고 순서를 바꿀 수 있어요.</p>
-            <ChecklistStartOptions
-              onSelect={(mode) => {
-                if (mode === 'EMPTY') {
-                  setEditorInitialName(`${checklistStageMeta[stage].label} 체크리스트`);
-                } else {
-                  setEditorInitialName(`원룸 ${checklistStageMeta[stage].label} 체크리스트`);
-                }
-                setStartMode(mode);
-              }}
-            />
-          </section>
-        ) : startMode === 'ONE_ROOM' && preset.isPending ? (
+        {preset.isPending ? (
           <div className={styles.presetStatus} role="status">
             <span className="spinner" />
             프리셋을 불러오는 중이에요.
           </div>
-        ) : startMode === 'ONE_ROOM' && preset.isError ? (
+        ) : preset.isError ? (
           <div className={styles.presetError} role="alert">
             <div>
               <strong>프리셋을 불러오지 못했어요.</strong>
@@ -124,24 +92,14 @@ const ResolvedCreateChecklistPage = ({
             <Button variant="text" type="button" onClick={() => void preset.refetch()}>
               다시 시도
             </Button>
-            <Button
-              variant="text"
-              type="button"
-              onClick={() => {
-                setEditorInitialName(`${checklistStageMeta[stage].label} 체크리스트`);
-                setStartMode('EMPTY');
-              }}
-            >
-              빈 목록으로 시작
-            </Button>
           </div>
         ) : (
           <ChecklistEditor
-            key={`${stage}-${startMode}`}
+            key={stage}
             config={config}
             stage={stage}
-            initialName={editorInitialName}
-            initialItems={startMode === 'ONE_ROOM' ? (preset.data?.items ?? []).map(checkItemToEditorItem) : []}
+            initialName={`원룸 ${checklistStageMeta[stage].label} 체크리스트`}
+            initialItems={(preset.data?.items ?? []).map(checkItemToEditorItem)}
             submitLabel="체크리스트 만들기"
             isSubmitting={create.isPending}
             actionDivider={false}

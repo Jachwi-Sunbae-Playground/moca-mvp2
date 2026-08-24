@@ -101,18 +101,6 @@
   outline-offset: 2px;
 }
 
-.startOptions {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.startOptions > p {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 0.76rem;
-  line-height: 1.5;
-}
-
 .loadMore {
   display: grid;
   gap: 0.45rem;
