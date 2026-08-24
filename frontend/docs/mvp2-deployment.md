@@ -1,6 +1,6 @@
 # MVP2 프론트엔드 배포
 
-- 상태: 저장소 기반 준비 완료, 미배포
+- 상태: 운영 인프라 구성 완료, 최초 배포 검증 중
 - 문서 성격: 파생
 - 대조 대상: `frontend/webpack.config.js`, `deploy/Caddyfile.example`, `.github/workflows/deploy-production.yml`
 
@@ -11,14 +11,14 @@
 - GitHub Actions가 Node 버전과 `package-lock.json`을 기준으로 `npm ci`, `npm run build`를 실행한다.
 - `frontend/dist`를 백엔드 JAR와 같은 릴리스에 묶는다.
 - Caddy가 정적 파일을 직접 제공하고 실제 파일이 없는 경로는 `index.html`로 보낸다.
-- 프론트와 API가 같은 Origin을 사용하므로 운영 `API_BASE_URL`은 빈 문자열로 빌드한다. API 경로 `/api`는 그대로 Caddy를 거쳐 백엔드에 전달된다.
+- 프론트와 API는 같은 Origin을 사용한다. 운영 `API_BASE_URL`에는 `https://<공개 도메인>`을 주입하고 API 경로 `/api`는 Caddy를 거쳐 백엔드에 전달된다.
 - 파일명에 `contenthash`가 있으므로 새 릴리스는 새로운 JS·CSS 파일을 사용한다.
 
 ## 빌드 타임 공개 설정
 
 | 환경변수                   | 운영 값                                       |
 | -------------------------- | --------------------------------------------- |
-| `API_BASE_URL`             | 빈 문자열, 같은 Origin 사용                   |
+| `API_BASE_URL`             | `https://<공개 도메인>`, 같은 Origin 사용     |
 | `AUTH_MODE`                | `google`                                      |
 | `GOOGLE_CLIENT_ID`         | GitHub Environment의 공개 OAuth Client ID     |
 | `GOOGLE_REDIRECT_URI`      | `https://<공개 도메인>/oauth/google/callback` |
