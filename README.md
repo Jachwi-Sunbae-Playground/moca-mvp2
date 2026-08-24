@@ -8,7 +8,7 @@
 
 이 저장소는 [자취선배 원본 저장소](https://github.com/woowacourse-teams/2026-jachwi-sunbae)의 MVP1 `develop`을 전체 Git 이력과 함께 옮긴 개인 MVP2 실험 공간입니다. 기준 커밋은 `021a1b8b2565323a8963f6e8fe6dc72bb33eff0b`, 태그는 `mvp1-baseline`입니다.
 
-현재는 로컬에서만 개발합니다. 개인 AWS용 최소 배포 파일은 준비했지만 AWS 리소스를 생성하거나 실제 배포하지 않았습니다.
+로컬에서는 외부 키 없는 데모 모드로 실행할 수 있고, 운영 환경은 개인 AWS의 단일 EC2·비공개 S3와 `jachwisunbae.shop`에서 실행합니다. 운영 배포는 GitHub Actions의 수동 워크플로만 사용합니다.
 
 ## 문서
 
@@ -36,7 +36,7 @@
 ### 운영
 
 - [MVP2 전환 기준](docs/operations/mvp2-transition.md) — Git 기준선, 제거·유지·대체 항목과 작업 추적
-- [MVP2 배포 아키텍처](docs/operations/mvp2-deployment-architecture.md) — 향후 단일 EC2 최소 구성과 준비 조건
+- [MVP2 배포 아키텍처](docs/operations/mvp2-deployment-architecture.md) — 운영 단일 EC2 구성과 배포 정책
 - [MVP1 배포 아키텍처 기록](docs/operations/deployment-architecture.md) — 기존 우테코 AWS 구성
 - [MVP1 CI/CD 배포 검증 기록](docs/operations/2026-08-20-cicd-deployment-validation.md) — 기존 리비전 검증과 자동 롤백의 실측 결과
 
@@ -62,7 +62,7 @@ moca-mvp2/
 │   ├── scripts/          # 문서 정합성 검사와 훅 스크립트
 │   ├── workflows/        # CI 워크플로
 │   └── pull_request_template.md
-├── deploy/               # 향후 단일 EC2 최소 배포 파일 (현재 미배포)
+├── deploy/               # 운영 단일 EC2 배포 파일
 ├── docs/                 # 제품·저장소 공통 문서
 │   ├── product/          # MVP 기준선·범위·기능 명세·결정·흐름
 │   ├── design/           # MVP2 와이어프레임 원본과 화면별 PNG
