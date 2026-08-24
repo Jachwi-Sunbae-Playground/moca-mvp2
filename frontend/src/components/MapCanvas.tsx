@@ -9,7 +9,7 @@ export type MapMarker = {
   latitude: number;
   longitude: number;
   label: string;
-  tone?: 'property' | 'current' | 'place' | 'selected';
+  tone?: 'property' | 'current' | 'place' | 'selected' | 'cluster';
   category?: MapCategory;
   count?: number;
   actionable?: boolean;
@@ -33,6 +33,8 @@ type MapCanvasProps = {
   onSelectMarker?: (id: string) => void;
   onSelectLocation?: (latitude: number, longitude: number) => void;
   onCenterChange?: (latitude: number, longitude: number) => void;
+  onLevelChange?: (level: number) => void;
+  radiusCenter?: { latitude: number; longitude: number };
 };
 
 let kakaoSdkPromise: Promise<void> | null = null;
@@ -84,6 +86,7 @@ const loadKakaoSdk = (key: string): Promise<void> => {
 };
 
 const markerSymbol = (marker: MapMarker): string => {
+  if (marker.tone === 'cluster') return String(marker.count ?? '');
   if (marker.tone === 'current') return '◎';
   if (marker.tone === 'property' || marker.tone === 'selected') return '⌂';
   switch (marker.category) {
@@ -109,6 +112,7 @@ const markerClassName = (marker: MapMarker, selectedMarkerId: string | null): st
     marker.tone === 'current' ? styles.currentMarker : '',
     marker.tone === 'selected' ? styles.selectedMarker : '',
     marker.tone === 'place' ? styles.placeMarker : '',
+    marker.tone === 'cluster' ? styles.clusterMarker : '',
     selectedMarkerId === marker.id ? styles.activeMarker : '',
   ]
     .filter(Boolean)
@@ -131,20 +135,20 @@ const createMarkerContent = (
     element.addEventListener('click', () => onSelectMarker(marker.id));
   }
 
-  const icon = document.createElement('span');
+  const icon = document.createElement(marker.tone === 'cluster' ? 'strong' : 'span');
   icon.className = styles.markerIcon;
   icon.setAttribute('aria-hidden', 'true');
   icon.textContent = markerSymbol(marker);
   element.append(icon);
 
-  if (marker.count !== undefined) {
+  if (marker.count !== undefined && marker.tone !== 'cluster') {
     const count = document.createElement('strong');
     count.className = styles.markerCount;
     count.textContent = String(marker.count);
     element.append(count);
   }
 
-  if (marker.tone === 'current' || marker.tone === 'selected' || marker.count !== undefined) {
+  if (marker.tone === 'current' || marker.tone === 'selected') {
     const caption = document.createElement('span');
     caption.className = styles.markerCaption;
     caption.textContent = marker.label;
@@ -173,17 +177,19 @@ const MapCanvas = ({
   onSelectMarker,
   onSelectLocation,
   onCenterChange,
+  onLevelChange,
+  radiusCenter = center,
 }: MapCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<KakaoMap | null>(null);
   const overlaysRef = useRef<KakaoCustomOverlay[]>([]);
   const circlesRef = useRef<KakaoCircle[]>([]);
-  const callbackRef = useRef({ onSelectLocation, onCenterChange });
+  const callbackRef = useRef({ onSelectLocation, onCenterChange, onLevelChange });
   const [mapReady, setMapReady] = useState(false);
   const [sdkError, setSdkError] = useState(false);
   const liveMode = config.mapProviderMode === 'kakao' && (config.kakaoMapJavaScriptKey ?? '') !== '';
 
-  callbackRef.current = { onSelectLocation, onCenterChange };
+  callbackRef.current = { onSelectLocation, onCenterChange, onLevelChange };
 
   useEffect(() => {
     if (!liveMode || containerRef.current === null) return;
@@ -208,6 +214,7 @@ const MapCanvas = ({
           if (map === null) return;
           const nextCenter = map.getCenter();
           callbackRef.current.onCenterChange?.(nextCenter.getLat(), nextCenter.getLng());
+          callbackRef.current.onLevelChange?.(map.getLevel());
         };
         maps.event.addListener(map, 'click', clickListener);
         maps.event.addListener(map, 'idle', idleListener);
@@ -234,9 +241,20 @@ const MapCanvas = ({
   useEffect(() => {
     const maps = window.kakao?.maps;
     if (!liveMode || !mapReady || maps === undefined || mapRef.current === null) return;
+    const current = mapRef.current.getCenter();
+    if (
+      Math.abs(current.getLat() - center.latitude) < 0.0000001 &&
+      Math.abs(current.getLng() - center.longitude) < 0.0000001
+    )
+      return;
     mapRef.current.setCenter(new maps.LatLng(center.latitude, center.longitude));
-    mapRef.current.setLevel(level);
-  }, [center.latitude, center.longitude, level, liveMode, mapReady]);
+  }, [center.latitude, center.longitude, liveMode, mapReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!liveMode || !mapReady || map === null || map.getLevel() === level) return;
+    map.setLevel(level);
+  }, [level, liveMode, mapReady]);
 
   useEffect(() => {
     const maps = window.kakao?.maps;
@@ -269,7 +287,7 @@ const MapCanvas = ({
       (circle) =>
         new maps.Circle({
           map,
-          center: new maps.LatLng(center.latitude, center.longitude),
+          center: new maps.LatLng(radiusCenter.latitude, radiusCenter.longitude),
           radius: circle.radiusMeters,
           strokeWeight: 2,
           strokeColor: '#6ea8fe',
@@ -282,7 +300,7 @@ const MapCanvas = ({
       circlesRef.current.forEach((circle) => circle.setMap(null));
       circlesRef.current = [];
     };
-  }, [center.latitude, center.longitude, circles, liveMode, mapReady]);
+  }, [circles, liveMode, mapReady, radiusCenter.latitude, radiusCenter.longitude]);
 
   return (
     <div
@@ -316,8 +334,10 @@ const MapCanvas = ({
                 <span className={styles.markerIcon} aria-hidden="true">
                   {markerSymbol(marker)}
                 </span>
-                {marker.count !== undefined && <strong className={styles.markerCount}>{marker.count}</strong>}
-                {(marker.tone === 'current' || marker.tone === 'selected' || marker.count !== undefined) && (
+                {marker.count !== undefined && marker.tone !== 'cluster' && (
+                  <strong className={styles.markerCount}>{marker.count}</strong>
+                )}
+                {(marker.tone === 'current' || marker.tone === 'selected') && (
                   <span className={styles.markerCaption}>{marker.label}</span>
                 )}
               </>
