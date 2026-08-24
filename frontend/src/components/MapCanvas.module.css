@@ -77,6 +77,22 @@
   position: absolute;
 }
 
+.placeMarker.demoMarkerPosition {
+  z-index: 5;
+}
+
+.currentMarker.demoMarkerPosition {
+  z-index: 7;
+}
+
+.propertyMarker.demoMarkerPosition {
+  z-index: 8;
+}
+
+.selectedMarker.demoMarkerPosition {
+  z-index: 9;
+}
+
 button.marker {
   cursor: pointer;
 }
