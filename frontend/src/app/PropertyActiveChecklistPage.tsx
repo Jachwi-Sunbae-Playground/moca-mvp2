@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../apis/apiClient';
 import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
-import ChecklistStartOptions from '../components/ChecklistStartOptions';
-import type { ChecklistStartMode } from '../components/ChecklistStartOptions';
 import ChecklistPageLayout from '../components/ChecklistPageLayout';
 import BottomActionArea from '../components/ui/BottomActionArea';
 import { Button } from '../components/ui/Button';
@@ -148,9 +146,8 @@ const ResolvedPropertyActiveChecklist = ({
   const returnPath = `/properties/${propertyId}/active-checklists/${stage}${
     returnSearch.length > 0 ? `?${returnSearch}` : ''
   }`;
-  const createPath = (startMode?: ChecklistStartMode) => {
+  const createPath = () => {
     const query = new URLSearchParams({ stage, returnTo: returnPath });
-    if (startMode !== undefined) query.set('start', startMode);
     return `/checklists/new?${query.toString()}`;
   };
   const selectionChanged = selectedId !== null && selectedId !== current?.checklistId;
@@ -236,13 +233,6 @@ const ResolvedPropertyActiveChecklist = ({
           </label>
         ))}
       </fieldset>
-
-      {items.length === 0 && (
-        <section className={styles.startOptions} aria-label="새 체크리스트 시작 방식">
-          <p>내 체크리스트가 필요하다면 원하는 항목을 골라 만들 수 있어요.</p>
-          <ChecklistStartOptions onSelect={(mode) => navigate(createPath(mode))} />
-        </section>
-      )}
 
       <Link className={styles.createCard} to={createPath()}>
         <span aria-hidden="true">+</span> 새 체크리스트 만들기
