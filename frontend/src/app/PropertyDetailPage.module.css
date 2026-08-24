@@ -123,21 +123,13 @@
 
 .photoGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.35rem;
-}
-
-.photoGrid[data-photo-count='1'] {
-  grid-template-columns: 1fr;
-}
-
-.photoGrid[data-photo-count='2'] {
-  grid-template-columns: 1.6fr 1fr;
 }
 
 .photoThumbnailLink {
   position: relative;
-  height: 4.9rem;
+  aspect-ratio: 1;
   overflow: hidden;
   padding: 0;
   border: 0;
@@ -250,7 +242,7 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.55rem;
   align-items: center;
-  min-height: 3.35rem;
+  min-height: 5.65rem;
   color: var(--color-ink);
   text-decoration: none;
 }
@@ -272,14 +264,28 @@
   min-width: 0;
 }
 
-.stageCopy strong,
+.stageTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.stageTitleRow > span {
+  flex: 0 0 auto;
+  color: var(--color-ink-soft);
+  font-size: 0.61rem;
+  font-weight: 800;
+}
+
+.stageTitleRow strong,
 .stageCopy small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.stageCopy strong {
+.stageTitleRow strong {
   font-size: 0.76rem;
 }
 

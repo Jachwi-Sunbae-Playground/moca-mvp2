@@ -3,9 +3,10 @@ import styles from './ChecklistProgressBar.module.css';
 
 type ChecklistProgressBarProps = {
   progress: Pick<PropertyChecklistProgress, 'goodCount' | 'cautionCount' | 'unconfirmedCount'>;
+  compact?: boolean;
 };
 
-const ChecklistProgressBar = ({ progress }: ChecklistProgressBarProps) => {
+const ChecklistProgressBar = ({ progress, compact = false }: ChecklistProgressBarProps) => {
   const results = [
     {
       label: '괜찮음',
@@ -28,7 +29,7 @@ const ChecklistProgressBar = ({ progress }: ChecklistProgressBarProps) => {
   ];
 
   return (
-    <div className={styles.results}>
+    <div className={styles.results} data-compact={compact || undefined}>
       <div className={styles.bar} aria-hidden="true">
         {results
           .filter((result) => result.count > 0)

@@ -4,6 +4,11 @@
   margin-top: 0.9rem;
 }
 
+.results[data-compact='true'] {
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+}
+
 .bar {
   display: flex;
   width: 100%;
@@ -12,6 +17,10 @@
   overflow: hidden;
   border-radius: 999px;
   background: var(--color-border);
+}
+
+.results[data-compact='true'] .bar {
+  height: 0.3rem;
 }
 
 .bar > span {
@@ -51,6 +60,11 @@
   list-style: none;
 }
 
+.results[data-compact='true'] ul {
+  gap: 0.25rem 0.55rem;
+  font-size: 0.58rem;
+}
+
 .results li {
   display: inline-flex;
   align-items: center;
@@ -65,6 +79,10 @@
   border-radius: 1px;
   background: var(--color-check-unconfirmed);
   content: '';
+}
+
+.results[data-compact='true'] li::before {
+  height: 0.58rem;
 }
 
 .results .goodResult::before {

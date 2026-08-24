@@ -260,9 +260,18 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
     expect(
       within(section as HTMLElement).getByRole('link', { name: /온라인·전화.*전화 문의 기본 목록/ }),
     ).toHaveAttribute('href', '/properties/10/active-checklists/ONLINE_PHONE?from=property-detail&mode=replace');
+    const onlineStage = within(section as HTMLElement).getByRole('link', {
+      name: /온라인·전화.*전화 문의 기본 목록/,
+    });
+    expect(within(onlineStage).getByLabelText(/\uC9C4\uD589 1\/2/)).toBeInTheDocument();
+    expect(within(onlineStage).getByRole('list')).toHaveTextContent(/1.*0.*1/);
     expect(
       within(section as HTMLElement).getByRole('link', { name: /계약 전.*연결된 체크리스트 없음/ }),
     ).toHaveAttribute('href', '/properties/10/active-checklists/PRE_CONTRACT?from=property-detail');
+    const preContractStage = within(section as HTMLElement).getByRole('link', {
+      name: /계약 전.*연결된 체크리스트 없음/,
+    });
+    expect(within(preContractStage).getByLabelText(/\uC9C4\uD589 0\/0/)).toBeInTheDocument();
   });
 
   it('내 체크리스트가 없어도 시작 방식 선택 없이 새 체크리스트 만들기만 제공한다', async () => {
