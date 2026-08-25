@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { checkItemToEditorItem, checklistItemToEditorItem } from '../types/ChecklistEditor';
+import { editorItemsFingerprint, moveEditorItem, toChecklistItemInputs } from './checklistEditor';
 import {
-  editorItemsFingerprint,
-  moveEditorItem,
-  toCreateChecklistItems,
-  toUpdateChecklistItems,
-} from './checklistEditor';
-import { onlineItemFixture, providedChecklistItemFixture, secondOnlineItemFixture } from '../test/checklistFixtures';
+  customChecklistItemFixture,
+  onlineItemFixture,
+  providedChecklistItemFixture,
+  secondOnlineItemFixture,
+} from '../test/checklistFixtures';
 import type { CheckItem, ChecklistItem } from '../types/Checklist';
 
 describe('체크리스트 편집 상태와 DTO 변환', () => {
@@ -14,17 +14,12 @@ describe('체크리스트 편집 상태와 DTO 변환', () => {
   const anotherOptionalItem = checkItemToEditorItem(secondOnlineItemFixture as CheckItem);
   const existingItem = checklistItemToEditorItem(providedChecklistItemFixture as ChecklistItem);
 
-  it('생성 요청에는 선택한 OPTIONAL 시스템 항목 ID만 순서대로 담는다', () => {
-    expect(toCreateChecklistItems([optionalItem, anotherOptionalItem])).toEqual([
-      anotherOptionalItem.sourceCheckItemId,
-    ]);
-  });
-
-  it('수정 요청에는 현재 시스템 항목 ID를 최종 표시 순서대로 담는다', () => {
-    expect(toUpdateChecklistItems([anotherOptionalItem, existingItem, optionalItem])).toEqual([
-      anotherOptionalItem.sourceCheckItemId,
-      existingItem.sourceCheckItemId,
-      optionalItem.sourceCheckItemId,
+  it('저장 요청에는 제공 항목과 직접 질문을 최종 표시 순서대로 담는다', () => {
+    const customItem = checklistItemToEditorItem(customChecklistItemFixture as ChecklistItem);
+    expect(toChecklistItemInputs([anotherOptionalItem, customItem, existingItem])).toEqual([
+      { systemCheckItemId: anotherOptionalItem.sourceCheckItemId },
+      { systemCheckItemId: null, question: customChecklistItemFixture.question },
+      { systemCheckItemId: existingItem.sourceCheckItemId },
     ]);
   });
 

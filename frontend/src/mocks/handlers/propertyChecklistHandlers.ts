@@ -44,7 +44,12 @@ export const propertyChecklistHandlers = [
     if (stage === null || source === undefined) return failure('CHECKLIST_NOT_FOUND', 404);
     if (source.stage !== stage) return failure('CHECKLIST_STAGE_MISMATCH', 400);
     const previous = getMockAppliedByProperty().get(property.id)?.get(stage);
-    const previousBySystemId = new Map(previous?.items.map((item) => [item.systemCheckItemId, item]) ?? []);
+    const previousBySource = new Map(
+      previous?.items.map((item) => [
+        item.systemCheckItemId === null ? `CUSTOM:${item.question}` : `SYSTEM:${item.systemCheckItemId}`,
+        item,
+      ]) ?? [],
+    );
     const applied = {
       id: previous?.id ?? takeNextAppliedChecklistId(),
       propertyId: property.id,
@@ -52,10 +57,12 @@ export const propertyChecklistHandlers = [
       checklistName: source.name,
       stage,
       items: source.items.map((item, index) => {
-        const previousItem = previousBySystemId.get(item.id);
+        const sourceKey =
+          item.systemCheckItemId === null ? `CUSTOM:${item.question}` : `SYSTEM:${item.systemCheckItemId}`;
+        const previousItem = previousBySource.get(sourceKey);
         return {
           id: takeNextAppliedItemId(),
-          systemCheckItemId: item.id,
+          systemCheckItemId: item.systemCheckItemId,
           question: item.question,
           displayOrder: index + 1,
           status: previousItem?.status ?? ('UNCONFIRMED' as const),

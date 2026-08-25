@@ -12,7 +12,7 @@ import { useRemoveChecklist, useUpdateChecklist } from '../hooks/query/useCheckl
 import { useChecklistDetail } from '../hooks/query/useChecklists';
 import { checklistItemToEditorItem } from '../types/ChecklistEditor';
 import type { PublicConfig } from '../types/PublicConfig';
-import { toUpdateChecklistItems } from '../utils/checklistEditor';
+import { toChecklistItemInputs } from '../utils/checklistEditor';
 import { parsePositiveId } from '../utils/propertyFormat';
 import styles from './ChecklistDetailPage.module.css';
 
@@ -131,7 +131,7 @@ const ResolvedChecklistDetail = ({ config, checklistId }: { config: PublicConfig
             setSearchParams(mode === 'ADD_ITEMS' ? { mode: 'add-items' } : {}, { replace: mode === 'EDIT' })
           }
           onSubmit={async ({ name, items }) => {
-            const saved = await update.mutateAsync({ name, systemCheckItemIds: toUpdateChecklistItems(items) });
+            const saved = await update.mutateAsync({ name, items: toChecklistItemInputs(items) });
             navigate(`/checklists/${checklist.stage}`, { replace: true, state: { focusHeading: true } });
             return saved;
           }}

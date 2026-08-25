@@ -34,20 +34,20 @@ describe('최종 API 명세 MSW handlers', () => {
     expect(data.items[0]).toMatchObject({ propertyMemoItemId: 1001, systemMemoItemId: 1 });
   });
 
-  it('CORE 항목을 선택 항목으로 보내면 체크리스트 생성을 거절한다', async () => {
+  it('시스템 ID와 직접 질문을 동시에 보낸 항목은 거절한다', async () => {
     const response = await fetch(apiUrl('/api/checklists'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: '잘못된 체크리스트',
         stage: 'ONLINE_PHONE',
-        optionalSystemCheckItemIds: [101],
+        items: [{ systemCheckItemId: 101, question: '동시에 보낸 질문' }],
       }),
     });
     const body = await readJson(response);
 
     expect(response.status).toBe(400);
-    expect(body).toMatchObject({ code: 'INVALID_SYSTEM_CHECK_ITEM' });
+    expect(body).toMatchObject({ code: 'CHECKLIST_ITEMS_INVALID' });
   });
 
   it('체크리스트를 생성해 매물에 연결하고 상태와 메모를 자동 저장한다', async () => {
@@ -57,19 +57,24 @@ describe('최종 API 명세 MSW handlers', () => {
       body: JSON.stringify({
         name: '현장 확인 목록',
         stage: 'ON_SITE',
-        optionalSystemCheckItemIds: [203],
+        items: [
+          { systemCheckItemId: 201 },
+          { systemCheckItemId: 202 },
+          { systemCheckItemId: 203 },
+          { systemCheckItemId: null, question: '창틀 곰팡이는 괜찮은가?' },
+        ],
       }),
     });
     const createBody = await readJson(createResponse);
     const created = createBody.data as {
       id: number;
       itemCount: number;
-      items: Array<{ systemCheckItemId: number }>;
+      items: Array<{ systemCheckItemId: number | null }>;
     };
 
     expect(createResponse.status).toBe(201);
-    expect(created).toMatchObject({ itemCount: 3 });
-    expect(created.items.map((item) => item.systemCheckItemId)).toEqual([201, 202, 203]);
+    expect(created).toMatchObject({ itemCount: 4 });
+    expect(created.items.map((item) => item.systemCheckItemId)).toEqual([201, 202, 203, null]);
 
     const applyResponse = await fetch(apiUrl('/api/properties/10/checklists/ON_SITE'), {
       method: 'PUT',
@@ -86,7 +91,7 @@ describe('최종 API 명세 MSW handlers', () => {
 
     expect(applyResponse.status).toBe(200);
     expect(applied).toMatchObject({ propertyId: 10, stage: 'ON_SITE' });
-    expect(applied.items).toHaveLength(3);
+    expect(applied.items).toHaveLength(4);
     expect(applied.items[0]).toMatchObject({ status: 'UNCONFIRMED', memo: '' });
 
     const itemId = applied.items[0]?.id;

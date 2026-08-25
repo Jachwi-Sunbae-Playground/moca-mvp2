@@ -278,7 +278,7 @@ export const parsePropertyChecklistDetail = (value: unknown): PropertyChecklistD
         const item = readRecord(value);
         return {
           itemId: readInteger(item, 'id', 1),
-          systemCheckItemId: readInteger(item, 'systemCheckItemId', 1),
+          systemCheckItemId: readNullableInteger(item, 'systemCheckItemId', 1),
           question: readString(item, 'question', { maximumCodePoints: 200 }),
           displayOrder: readInteger(item, 'displayOrder', 1),
           status: parsePropertyChecklistItemStatus(item.status),

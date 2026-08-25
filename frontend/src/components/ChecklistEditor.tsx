@@ -4,7 +4,7 @@ import { useUnsavedChangesGuard } from '../hooks/useUnsavedChangesGuard';
 import type { CheckItem, ChecklistDetail, ChecklistStage } from '../types/Checklist';
 import { checkItemToEditorItem, checklistItemToEditorItem, type ChecklistEditorItem } from '../types/ChecklistEditor';
 import type { PublicConfig } from '../types/PublicConfig';
-import { editorItemsFingerprint, moveEditorItem } from '../utils/checklistEditor';
+import { editorItemsFingerprint, moveEditorItem, validateCustomQuestion } from '../utils/checklistEditor';
 import { validateChecklistName } from '../utils/checklist';
 import CheckItemPicker from './CheckItemPicker';
 import BottomActionArea from './ui/BottomActionArea';
@@ -61,6 +61,7 @@ const ChecklistEditor = ({
     hasMoved: boolean;
   } | null>(null);
   const itemFocusTargets = useRef(new Map<string, HTMLElement>());
+  const customItemSequence = useRef(0);
   const submissionInFlight = useRef(false);
   const activeCatalog = useActiveCheckItems(config, stage);
   const activeSourceIds = useMemo(
@@ -93,7 +94,26 @@ const ChecklistEditor = ({
   }, [items, pendingFocusKey]);
 
   const nameError = validateChecklistName(name);
-  const itemError = items.length === 0 ? '체크 항목을 한 개 이상 추가해 주세요.' : null;
+  const duplicateQuestion = useMemo(() => {
+    const questions = new Set<string>();
+    return items.some((item) => {
+      const question = item.question.trim();
+      if (questions.has(question)) return true;
+      questions.add(question);
+      return false;
+    });
+  }, [items]);
+  const invalidCustomQuestion = items.find(
+    (item) => item.origin === 'CUSTOM' && validateCustomQuestion(item.question) !== null,
+  );
+  const itemError =
+    items.length === 0
+      ? '체크 항목을 한 개 이상 추가해 주세요.'
+      : invalidCustomQuestion !== undefined
+        ? '직접 추가한 질문을 확인해 주세요.'
+        : duplicateQuestion
+          ? '같은 질문을 중복해서 추가할 수 없어요.'
+          : null;
 
   const move = (index: number, direction: -1 | 1, focusContent = true) => {
     const item = items[index];
@@ -124,13 +144,28 @@ const ChecklistEditor = ({
     setAnnouncement(`${removed.question} 항목을 제거했어요. 저장하기 전까지 서버에는 반영되지 않습니다.`);
   };
 
-  const addProvidedItems = (newItems: CheckItem[]) => {
+  const addItems = (newItems: CheckItem[], customQuestion: string | null) => {
     const existingIds = new Set(items.flatMap((item) => (item.origin === 'PROVIDED' ? [item.sourceCheckItemId] : [])));
-    const additions = newItems.filter((item) => !existingIds.has(item.checkItemId)).map(checkItemToEditorItem);
+    const additions: ChecklistEditorItem[] = newItems
+      .filter((item) => !existingIds.has(item.checkItemId))
+      .map(checkItemToEditorItem);
+    if (customQuestion !== null) {
+      customItemSequence.current += 1;
+      additions.push({
+        clientKey: `custom:${customItemSequence.current}`,
+        origin: 'CUSTOM',
+        checklistItemId: null,
+        sourceCheckItemId: null,
+        question: customQuestion,
+        guide: null,
+        itemType: 'OPTIONAL',
+        active: true,
+      });
+    }
     if (additions.length === 0) return;
     setItems((current) => [...current, ...additions]);
     setPendingFocusKey(additions[0].clientKey);
-    setAnnouncement(`${additions.length}개 제공 항목을 목록 끝에 추가했어요.`);
+    setAnnouncement(`${additions.length}개 체크 항목을 목록 끝에 추가했어요.`);
     onViewModeChange?.('EDIT');
   };
 
@@ -141,9 +176,10 @@ const ChecklistEditor = ({
           config={config}
           stage={stage}
           existingSourceIds={items.flatMap((item) => (item.origin === 'PROVIDED' ? [item.sourceCheckItemId] : []))}
+          existingQuestions={items.map((item) => item.question.trim())}
           disabled={isSubmitting}
           onCancel={() => onViewModeChange?.('EDIT')}
-          onAdd={addProvidedItems}
+          onAdd={addItems}
         />
       </div>
     );
@@ -183,9 +219,9 @@ const ChecklistEditor = ({
           fieldClassName={styles.nameField}
           label="체크리스트 이름"
           value={name}
-          maxLength={50}
+          maxLength={30}
           disabled={isSubmitting}
-          helpText={`같은 단계에서 같은 이름을 여러 번 사용할 수 있어요. ${name.length}/50`}
+          helpText={`같은 단계에서 같은 이름을 여러 번 사용할 수 있어요. ${name.length}/30`}
           error={hasSubmitted && nameError !== null ? nameError : undefined}
           onChange={(event) => {
             setName(event.target.value);
@@ -201,7 +237,7 @@ const ChecklistEditor = ({
           </div>
           <span className={styles.selectionCount}>{items.length}개</span>
         </div>
-        <p className="field-help">제공 항목을 원하는 확인 순서로 저장할 수 있어요.</p>
+        <p className="field-help">제공 항목과 직접 만든 질문을 원하는 확인 순서로 저장할 수 있어요.</p>
         {items.length === 0 ? (
           <p className={styles.emptyItems}>체크 항목을 한 개 이상 추가해 주세요.</p>
         ) : (
@@ -281,16 +317,49 @@ const ChecklistEditor = ({
                     <span className={`sr-only item-origin item-origin--${item.origin.toLowerCase()}`}>
                       {item.origin === 'PROVIDED' ? '제공 항목' : '직접 추가'}
                     </span>
-                    <strong
-                      ref={(element) => {
-                        if (element === null) itemFocusTargets.current.delete(item.clientKey);
-                        else itemFocusTargets.current.set(item.clientKey, element);
-                      }}
-                      tabIndex={-1}
-                    >
-                      {item.question}
-                    </strong>
-                    {item.guide !== null && <small>{item.guide}</small>}
+                    {item.origin === 'CUSTOM' ? (
+                      <div className={styles.customItemField}>
+                        <label htmlFor={`custom-question-${index}`}>직접 추가 질문</label>
+                        <textarea
+                          ref={(element) => {
+                            if (element === null) itemFocusTargets.current.delete(item.clientKey);
+                            else itemFocusTargets.current.set(item.clientKey, element);
+                          }}
+                          id={`custom-question-${index}`}
+                          value={item.question}
+                          maxLength={200}
+                          disabled={isSubmitting}
+                          aria-invalid={validateCustomQuestion(item.question) !== null || undefined}
+                          aria-describedby={`custom-question-help-${index}`}
+                          onChange={(event) => {
+                            const question = event.target.value;
+                            setItems((current) =>
+                              current.map((candidate) =>
+                                candidate.clientKey === item.clientKey && candidate.origin === 'CUSTOM'
+                                  ? { ...candidate, question }
+                                  : candidate,
+                              ),
+                            );
+                          }}
+                        />
+                        <small id={`custom-question-help-${index}`}>
+                          {validateCustomQuestion(item.question) ?? `${Array.from(item.question).length}/200`}
+                        </small>
+                      </div>
+                    ) : (
+                      <>
+                        <strong
+                          ref={(element) => {
+                            if (element === null) itemFocusTargets.current.delete(item.clientKey);
+                            else itemFocusTargets.current.set(item.clientKey, element);
+                          }}
+                          tabIndex={-1}
+                        >
+                          {item.question}
+                        </strong>
+                        {item.guide !== null && <small>{item.guide}</small>}
+                      </>
+                    )}
                     {isInactiveProvided && (
                       <small className={styles.inactiveItemNote}>
                         더 이상 제공되지 않음 · 유지, 이동 또는 제거 가능

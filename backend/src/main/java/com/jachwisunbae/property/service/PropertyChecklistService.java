@@ -94,12 +94,12 @@ public class PropertyChecklistService {
     private List<PropertyChecklistItemStateQuery> createDefaultSnapshotItems(
             final List<SystemCheckItem> sourceItems,
             final List<PropertyChecklistItemStateQuery> previousItems) {
-        Map<Long, PropertyChecklistItemStateQuery> previousBySystemItem = previousItems.stream()
-                .collect(Collectors.toMap(PropertyChecklistItemStateQuery::systemCheckItemId, Function.identity()));
+        Map<String, PropertyChecklistItemStateQuery> previousBySource = previousItems.stream()
+                .collect(Collectors.toMap(this::snapshotKey, Function.identity(), (first, ignored) -> first));
         return java.util.stream.IntStream.range(0, sourceItems.size())
                 .mapToObj(index -> {
                     SystemCheckItem item = sourceItems.get(index);
-                    PropertyChecklistItemStateQuery previous = previousBySystemItem.get(item.getId());
+                    PropertyChecklistItemStateQuery previous = previousBySource.get(snapshotKey(item.getId(), item.getQuestion()));
                     return new PropertyChecklistItemStateQuery(item.getId(), item.getQuestion(), index + 1,
                             previous == null ? CheckStatus.UNCONFIRMED : previous.status(),
                             previous == null ? "" : previous.memo());
@@ -108,10 +108,11 @@ public class PropertyChecklistService {
 
     private List<PropertyChecklistItemStateQuery> createSnapshotItems(final List<UserChecklistItem> sourceItems,
                                                                        final List<PropertyChecklistItemStateQuery> previousItems) {
-        Map<Long, PropertyChecklistItemStateQuery> previousBySystemItem = previousItems.stream()
-                .collect(Collectors.toMap(PropertyChecklistItemStateQuery::systemCheckItemId, Function.identity()));
+        Map<String, PropertyChecklistItemStateQuery> previousBySource = previousItems.stream()
+                .collect(Collectors.toMap(this::snapshotKey, Function.identity(), (first, ignored) -> first));
         return sourceItems.stream()
-                .map(item -> inheritState(item, previousBySystemItem.get(item.getSystemCheckItemId())))
+                .map(item -> inheritState(item, previousBySource.get(
+                        snapshotKey(item.getSystemCheckItemId(), item.getQuestion()))))
                 .toList();
     }
 
@@ -123,6 +124,14 @@ public class PropertyChecklistService {
         }
         return new PropertyChecklistItemStateQuery(item.getSystemCheckItemId(), item.getQuestion(),
                 item.getDisplayOrder(), previous.status(), previous.memo());
+    }
+
+    private String snapshotKey(final PropertyChecklistItemStateQuery item) {
+        return snapshotKey(item.systemCheckItemId(), item.question());
+    }
+
+    private String snapshotKey(final Long systemCheckItemId, final String question) {
+        return systemCheckItemId == null ? "CUSTOM:" + question : "SYSTEM:" + systemCheckItemId;
     }
 
     public List<PropertyChecklistProgressQuery> findOverview(final Long memberId, final Long propertyId) {

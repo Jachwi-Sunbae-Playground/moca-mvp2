@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS user_checklist_items
 (
     id                   BIGINT UNSIGNED   NOT NULL AUTO_INCREMENT,
     user_checklist_id    BIGINT UNSIGNED   NOT NULL,
-    system_check_item_id BIGINT UNSIGNED   NOT NULL,
+    system_check_item_id BIGINT UNSIGNED   NULL,
     stage                VARCHAR(30)       NOT NULL,
     item_type            VARCHAR(20)       NOT NULL,
     question             VARCHAR(200)      NOT NULL,
@@ -203,7 +203,7 @@ CREATE TABLE IF NOT EXISTS property_checklist_items
 (
     id                    BIGINT UNSIGNED   NOT NULL AUTO_INCREMENT,
     property_checklist_id BIGINT UNSIGNED   NOT NULL,
-    system_check_item_id  BIGINT UNSIGNED   NOT NULL,
+    system_check_item_id  BIGINT UNSIGNED   NULL,
     display_order         SMALLINT UNSIGNED NOT NULL,
     status                VARCHAR(20)       NOT NULL DEFAULT 'UNCONFIRMED',
     memo                  VARCHAR(500)      NOT NULL DEFAULT '',

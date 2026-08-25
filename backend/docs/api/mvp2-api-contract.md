@@ -98,6 +98,21 @@
 | `PUT` | `/api/checklists/{checklistId}` | 이름·전체 항목 교체 |
 | `DELETE` | `/api/checklists/{checklistId}` | 삭제 |
 
+생성과 수정은 저장할 전체 항목을 표시 순서대로 보낸다. 제공 항목은 `systemCheckItemId`, 직접 질문은 nullable ID와 `question`을 사용하며 두 값 중 하나만 지정한다. 생성 화면은 현재 단계의 활성 `CORE`를 먼저 구성해 같은 요청 형태로 보낸다.
+
+```json
+{
+  "name": "나의 현장 체크리스트",
+  "stage": "ON_SITE",
+  "items": [
+    { "systemCheckItemId": 113 },
+    { "systemCheckItemId": null, "question": "창틀 곰팡이는 괜찮은가?" }
+  ]
+}
+```
+
+`PUT`은 `stage`를 제외하고 같은 `name`, `items`를 받는다. 이름은 1~30자, 전체 항목은 1~30개, 직접 질문은 trim 후 1~200자다. 응답 항목은 사용자 체크리스트 항목 `id`, `PROVIDED` 또는 `CUSTOM`인 `origin`, nullable `systemCheckItemId`, `itemType`, 질문, 표시 순서와 활성 여부를 반환한다. 직접 질문은 `OPTIONAL`이며 시스템 항목 비활성 여부와 무관하게 활성이다.
+
 ## 매물 적용 체크리스트
 
 `PUT /api/properties/{propertyId}/checklists/{stage}` 요청은 사용자 또는 가상 기본체크리스트를 구분한다.

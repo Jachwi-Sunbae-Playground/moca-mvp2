@@ -139,17 +139,49 @@ const systemCheckItems = presetFixture.items.map(({ id, stage, itemType, questio
   question,
 }));
 
-const toChecklistResponseItems = (ids: number[]) =>
-  ids
-    .map((id) => systemCheckItems.find((item) => item.id === id))
-    .filter((item): item is (typeof systemCheckItems)[number] => item !== undefined)
-    .map((item, index) => ({
-      systemCheckItemId: item.id,
-      itemType: item.itemType,
-      question: item.question,
-      displayOrder: index + 1,
-      active: true,
-    }));
+type BrowserChecklistItemInput = { systemCheckItemId?: unknown; question?: unknown };
+type BrowserChecklistResponseItem = {
+  id: number;
+  origin: 'PROVIDED' | 'CUSTOM';
+  systemCheckItemId: number | null;
+  itemType: 'CORE' | 'OPTIONAL';
+  question: string;
+  displayOrder: number;
+  active: boolean;
+};
+
+const toChecklistResponseItems = (inputs: BrowserChecklistItemInput[]): BrowserChecklistResponseItem[] => {
+  const result: BrowserChecklistResponseItem[] = [];
+  inputs.forEach((input, index) => {
+    if (typeof input.systemCheckItemId === 'number') {
+      const item = systemCheckItems.find((candidate) => candidate.id === input.systemCheckItemId);
+      if (item !== undefined) {
+        result.push({
+          id: 700 + index,
+          origin: 'PROVIDED',
+          systemCheckItemId: item.id,
+          itemType: item.itemType,
+          question: item.question,
+          displayOrder: index + 1,
+          active: true,
+        });
+      }
+      return;
+    }
+    if (input.systemCheckItemId === null && typeof input.question === 'string' && input.question.trim().length > 0) {
+      result.push({
+        id: 700 + index,
+        origin: 'CUSTOM',
+        systemCheckItemId: null,
+        itemType: 'OPTIONAL',
+        question: input.question.trim(),
+        displayOrder: index + 1,
+        active: true,
+      });
+    }
+  });
+  return result;
+};
 
 type PropertyChecklistWire = {
   id: number;
@@ -329,13 +361,10 @@ const browserTestFetch: typeof fetch = async (input, init) => {
     const body = (await request.json()) as {
       name?: unknown;
       stage?: unknown;
-      optionalSystemCheckItemIds?: unknown;
+      items?: unknown;
     };
-    const optionalIds = Array.isArray(body.optionalSystemCheckItemIds)
-      ? body.optionalSystemCheckItemIds.filter((id): id is number => typeof id === 'number')
-      : [];
-    const coreIds = systemCheckItems.filter((item) => item.itemType === 'CORE').map((item) => item.id);
-    const responseItems = toChecklistResponseItems([...new Set([...coreIds, ...optionalIds])]);
+    const inputs = Array.isArray(body.items) ? (body.items as BrowserChecklistItemInput[]) : [];
+    const responseItems = toChecklistResponseItems(inputs);
     const response = {
       id: 9,
       name: typeof body.name === 'string' ? body.name : '브라우저 생성 체크리스트',
@@ -349,17 +378,31 @@ const browserTestFetch: typeof fetch = async (input, init) => {
       name: response.name,
       stage: response.stage,
       itemCount: response.itemCount,
-      items: responseItems.map((item) => ({
-        checklistItemId: item.systemCheckItemId,
-        origin: 'PROVIDED' as const,
-        sourceCheckItemId: item.systemCheckItemId,
-        checkItemId: item.systemCheckItemId,
-        itemType: item.itemType,
-        question: item.question,
-        guide: null,
-        order: item.displayOrder,
-        active: item.active,
-      })),
+      items: responseItems.map((item) =>
+        item.origin === 'PROVIDED' && item.systemCheckItemId !== null
+          ? {
+              checklistItemId: item.id,
+              origin: 'PROVIDED' as const,
+              sourceCheckItemId: item.systemCheckItemId,
+              checkItemId: item.systemCheckItemId,
+              itemType: item.itemType,
+              question: item.question,
+              guide: null,
+              order: item.displayOrder,
+              active: item.active,
+            }
+          : {
+              checklistItemId: item.id,
+              origin: 'CUSTOM' as const,
+              sourceCheckItemId: null,
+              checkItemId: null,
+              itemType: item.itemType,
+              question: item.question,
+              guide: null,
+              order: item.displayOrder,
+              active: item.active,
+            },
+      ),
     };
     return jsonResponse(successEnvelope(response), 201);
   }
@@ -372,6 +415,8 @@ const browserTestFetch: typeof fetch = async (input, init) => {
         stage: createdChecklist.stage,
         itemCount: createdChecklist.itemCount,
         items: createdChecklist.items.map((item) => ({
+          id: item.checklistItemId,
+          origin: item.origin,
           systemCheckItemId: item.sourceCheckItemId,
           itemType: item.itemType,
           question: item.question,
@@ -385,6 +430,7 @@ const browserTestFetch: typeof fetch = async (input, init) => {
   if (path === '/api/checklists/7' && request.method === 'GET') {
     const inactiveItem = {
       ...providedChecklistItemFixture,
+      id: 799,
       checklistItemId: 799,
       sourceCheckItemId: 999,
       checkItemId: 999,
@@ -393,6 +439,7 @@ const browserTestFetch: typeof fetch = async (input, init) => {
     };
     const manyCustomItems = Array.from({ length: 16 }, (_, index) => ({
       ...customChecklistItemFixture,
+      id: 800 + index,
       checklistItemId: 800 + index,
       question: index === 0 ? `🏠${'가'.repeat(199)}` : `직접 추가한 확인 질문 ${index + 1}`,
       order: index + 2,
@@ -420,12 +467,10 @@ const browserTestFetch: typeof fetch = async (input, init) => {
     }
     const body = (await request.json()) as {
       name?: unknown;
-      systemCheckItemIds?: unknown;
+      items?: unknown;
     };
-    const ids = Array.isArray(body.systemCheckItemIds)
-      ? body.systemCheckItemIds.filter((id): id is number => typeof id === 'number')
-      : [];
-    const items = toChecklistResponseItems(ids);
+    const inputs = Array.isArray(body.items) ? (body.items as BrowserChecklistItemInput[]) : [];
+    const items = toChecklistResponseItems(inputs);
     return jsonResponse(
       successEnvelope({
         id: 7,

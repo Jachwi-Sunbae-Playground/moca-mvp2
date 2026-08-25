@@ -51,6 +51,7 @@ export const checklistPageFixture = (content: unknown[]) => ({
 });
 
 export const providedChecklistItemFixture = {
+  id: 701,
   systemCheckItemId: 101,
   displayOrder: 1,
   checklistItemId: 701,
@@ -65,6 +66,7 @@ export const providedChecklistItemFixture = {
 };
 
 export const secondProvidedChecklistItemFixture = {
+  id: 702,
   systemCheckItemId: 102,
   displayOrder: 2,
   checklistItemId: 702,
@@ -79,6 +81,9 @@ export const secondProvidedChecklistItemFixture = {
 };
 
 export const customChecklistItemFixture = {
+  id: 703,
+  systemCheckItemId: null,
+  displayOrder: 2,
   checklistItemId: 703,
   origin: 'CUSTOM',
   sourceCheckItemId: null,

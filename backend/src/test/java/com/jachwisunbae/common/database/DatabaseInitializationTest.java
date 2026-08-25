@@ -42,16 +42,54 @@ class DatabaseInitializationTest extends IntegrationTest {
         );
 
         assertThat(tables).containsExactlyInAnyOrderElementsOf(APPLICATION_TABLES);
-        assertThat(count("system_check_items")).isEqualTo(18);
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM system_check_items WHERE deleted_at IS NULL", Long.class)).isEqualTo(53);
+        assertThat(jdbcTemplate.queryForList("""
+                SELECT stage, item_type, COUNT(*) AS item_count
+                FROM system_check_items
+                WHERE deleted_at IS NULL
+                GROUP BY stage, item_type
+                ORDER BY FIELD(stage, 'ONLINE_PHONE', 'ON_SITE', 'PRE_CONTRACT'), item_type
+                """)).containsExactly(
+                java.util.Map.of("stage", "ONLINE_PHONE", "item_type", "CORE", "item_count", 6L),
+                java.util.Map.of("stage", "ONLINE_PHONE", "item_type", "OPTIONAL", "item_count", 6L),
+                java.util.Map.of("stage", "ON_SITE", "item_type", "CORE", "item_count", 8L),
+                java.util.Map.of("stage", "ON_SITE", "item_type", "OPTIONAL", "item_count", 19L),
+                java.util.Map.of("stage", "PRE_CONTRACT", "item_type", "CORE", "item_count", 7L),
+                java.util.Map.of("stage", "PRE_CONTRACT", "item_type", "OPTIONAL", "item_count", 7L));
         assertThat(count("system_memo_items")).isEqualTo(4);
         assertThat(jdbcTemplate.queryForList(
                 "SELECT label FROM system_memo_items ORDER BY display_order",
                 String.class
         )).containsExactly("입주 가능일", "방 옵션", "관리비 및 공과금", "방문 일정");
         assertThat(jdbcTemplate.queryForObject(
-                "SELECT question FROM system_check_items WHERE id = 1",
+                "SELECT question FROM system_check_items WHERE id = 101",
                 String.class
-        )).isEqualTo("매물의 정확한 주소와 동·층·호수를 확인했나요?");
+        )).isEqualTo("보증금과 월세, 관리비는 어떤가요?");
+        assertThat(nullableColumn("user_checklist_items", "system_check_item_id")).isEqualTo("YES");
+        assertThat(nullableColumn("property_checklist_items", "system_check_item_id")).isEqualTo("YES");
+    }
+
+    @Test
+    void 기존_제공_문항은_삭제하지_않고_반복_업그레이드에서_비활성화한다() throws Exception {
+        jdbcTemplate.update("""
+                INSERT INTO system_check_items (id, stage, item_type, question, deleted_at)
+                VALUES (1, 'ONLINE_PHONE', 'CORE', '기존 질문 스냅샷 원본', NULL)
+                ON DUPLICATE KEY UPDATE deleted_at = NULL
+                """);
+
+        databaseUpgradeInitializer.run(new DefaultApplicationArguments());
+        LocalDateTime retiredAt = jdbcTemplate.queryForObject(
+                "SELECT deleted_at FROM system_check_items WHERE id = 1", LocalDateTime.class);
+        databaseUpgradeInitializer.run(new DefaultApplicationArguments());
+
+        assertThat(retiredAt).isNotNull();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT question FROM system_check_items WHERE id = 1", String.class))
+                .isEqualTo("기존 질문 스냅샷 원본");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT deleted_at FROM system_check_items WHERE id = 1", LocalDateTime.class))
+                .isEqualTo(retiredAt);
     }
 
     @Test
@@ -91,6 +129,14 @@ class DatabaseInitializationTest extends IntegrationTest {
 
     private Long count(String tableName) {
         return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + tableName, Long.class);
+    }
+
+    private String nullableColumn(String tableName, String columnName) {
+        return jdbcTemplate.queryForObject("""
+                SELECT is_nullable
+                FROM information_schema.columns
+                WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?
+                """, String.class, tableName, columnName);
     }
 
     private record LegacyCredential(long memberId, String nickname, String nicknameKey, String passwordHash) {

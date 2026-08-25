@@ -123,7 +123,7 @@ class Mvp2LocalFlowIntegrationTest extends IntegrationTest {
                         .content("{\"sourceType\":\"SYSTEM_DEFAULT\",\"checklistId\":null}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.sourceChecklistId").doesNotExist())
-                .andExpect(jsonPath("$.data.items", hasSize(3)))
+                .andExpect(jsonPath("$.data.items", hasSize(6)))
                 .andReturn();
         JsonNode appliedData = data(applied);
         long propertyChecklistId = appliedData.path("id").asLong();
@@ -148,7 +148,7 @@ class Mvp2LocalFlowIntegrationTest extends IntegrationTest {
         mockMvc.perform(get("/api/properties/{propertyId}/checklists", propertyId)
                         .header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.overallProgress.totalCount").value(3))
+                .andExpect(jsonPath("$.data.overallProgress.totalCount").value(6))
                 .andExpect(jsonPath("$.data.overallProgress.completedCount").value(1))
                 .andExpect(jsonPath("$.data.stages[0].progress.completedCount").value(1))
                 .andExpect(jsonPath("$.data.stages[1].applied").value(false));

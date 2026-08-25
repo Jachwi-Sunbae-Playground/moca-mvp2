@@ -1,7 +1,15 @@
--- 로컬 개발과 테스트에서 사용하는 시스템 기본 항목이다.
--- 고정 ID를 사용해 스크립트를 다시 실행해도 중복 생성하지 않는다.
+-- 기존 체크리스트 스냅샷을 유지하면서 사용자 직접 문항을 허용하고 새 제공 문항으로 전환한다.
+-- 이전 제공 문항은 삭제하지 않고 비활성화해 기존 FK와 질문 스냅샷을 보존한다.
 
-SET NAMES utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+ALTER TABLE user_checklist_items
+    MODIFY system_check_item_id BIGINT UNSIGNED NULL;
+
+ALTER TABLE property_checklist_items
+    MODIFY system_check_item_id BIGINT UNSIGNED NULL;
+
+UPDATE system_check_items
+SET deleted_at = COALESCE(deleted_at, CURRENT_TIMESTAMP(6))
+WHERE id BETWEEN 1 AND 18;
 
 INSERT INTO system_check_items (id, stage, item_type, question, deleted_at)
 VALUES
@@ -62,15 +70,4 @@ ON DUPLICATE KEY UPDATE
     stage = new.stage,
     item_type = new.item_type,
     question = new.question,
-    deleted_at = new.deleted_at;
-
-INSERT INTO system_memo_items (id, label, display_order, deleted_at)
-VALUES
-    (1, '입주 가능일', 1, NULL),
-    (2, '방 옵션', 2, NULL),
-    (3, '관리비 및 공과금', 3, NULL),
-    (4, '방문 일정', 4, NULL) AS new
-ON DUPLICATE KEY UPDATE
-    label = new.label,
-    display_order = new.display_order,
-    deleted_at = new.deleted_at;
+    deleted_at = NULL;

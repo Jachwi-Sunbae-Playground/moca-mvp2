@@ -130,7 +130,7 @@ export type PropertyChecklistItemStatus = 'UNCONFIRMED' | 'GOOD' | 'CAUTION';
 
 export type PropertyChecklistItem = {
   itemId: number;
-  systemCheckItemId: number;
+  systemCheckItemId: number | null;
   question: string;
   displayOrder: number;
   status: PropertyChecklistItemStatus;
