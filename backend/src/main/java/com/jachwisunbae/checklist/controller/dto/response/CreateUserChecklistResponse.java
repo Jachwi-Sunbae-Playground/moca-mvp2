@@ -1,14 +1,10 @@
 package com.jachwisunbae.checklist.controller.dto.response;
 
-import com.jachwisunbae.checklist.entity.SystemCheckItem;
 import com.jachwisunbae.checklist.entity.UserChecklist;
-import com.jachwisunbae.checklist.entity.UserChecklistItem;
 import com.jachwisunbae.checklist.repository.query.UserChecklistItemDetail;
 import com.jachwisunbae.checklist.type.CheckStage;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public record CreateUserChecklistResponse(
         Long id,

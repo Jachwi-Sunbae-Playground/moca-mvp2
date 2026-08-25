@@ -1,5 +1,7 @@
 package com.jachwisunbae.checklist.controller.dto.request;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.ArrayList;
@@ -8,10 +10,10 @@ import java.util.List;
 
 public record UpdateUserChecklistRequest(
         String name,
-        @Size(max = 30) List<Long> systemCheckItemIds) {
+        @NotNull @Size(min = 1, max = 30) List<@NotNull @Valid UserChecklistItemRequest> items) {
 
     public UpdateUserChecklistRequest {
-        systemCheckItemIds = systemCheckItemIds == null ? Collections.emptyList()
-                : Collections.unmodifiableList(new ArrayList<>(systemCheckItemIds));
+        items = items == null ? Collections.emptyList()
+                : Collections.unmodifiableList(new ArrayList<>(items));
     }
 }

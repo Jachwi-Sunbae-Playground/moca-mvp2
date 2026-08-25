@@ -26,12 +26,12 @@ public class JdbcUserChecklistRepository implements UserChecklistRepository {
             CheckStage.valueOf(rs.getString("stage")));
     private final RowMapper<UserChecklistItem> itemRowMapper = (rs, row) -> UserChecklistItem.reconstruct(
             rs.getLong("id"), rs.getLong("user_checklist_id"),
-            rs.getLong("system_check_item_id"), CheckStage.valueOf(rs.getString("stage")),
+            rs.getObject("system_check_item_id", Long.class), CheckStage.valueOf(rs.getString("stage")),
             CheckItemType.valueOf(rs.getString("item_type")), rs.getString("question"),
             rs.getInt("display_order"));
     private final RowMapper<UserChecklistItemDetail> itemDetailRowMapper = (rs, row) ->
             new UserChecklistItemDetail(UserChecklistItem.reconstruct(rs.getLong("id"),
-                    rs.getLong("user_checklist_id"), rs.getLong("system_check_item_id"),
+                    rs.getLong("user_checklist_id"), rs.getObject("system_check_item_id", Long.class),
                     CheckStage.valueOf(rs.getString("stage")), CheckItemType.valueOf(rs.getString("item_type")),
                     rs.getString("question"), rs.getInt("display_order")));
 

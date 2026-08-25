@@ -41,7 +41,16 @@ export const checkItems: MockCheckItem[] = [
   { id: 302, stage: 'PRE_CONTRACT', itemType: 'OPTIONAL', question: '특약 사항이 계약서에 반영됐나요?' },
 ];
 
-export type MockChecklistItem = MockCheckItem & { displayOrder: number; active: boolean };
+export type MockChecklistItem = {
+  id: number;
+  systemCheckItemId: number | null;
+  origin: 'PROVIDED' | 'CUSTOM';
+  stage: ChecklistStage;
+  itemType: 'CORE' | 'OPTIONAL';
+  question: string;
+  displayOrder: number;
+  active: boolean;
+};
 export type MockChecklist = {
   id: number;
   name: string;
@@ -52,7 +61,17 @@ export type MockChecklist = {
 export const checklistItemsFor = (stage: ChecklistStage, ids: number[]) =>
   ids.flatMap((id, index) => {
     const item = checkItems.find((candidate) => candidate.id === id && candidate.stage === stage);
-    return item === undefined ? [] : [{ ...item, systemCheckItemId: item.id, displayOrder: index + 1, active: true }];
+    return item === undefined
+      ? []
+      : [
+          {
+            ...item,
+            systemCheckItemId: item.id,
+            origin: 'PROVIDED' as const,
+            displayOrder: index + 1,
+            active: true,
+          },
+        ];
   });
 
 let checklists: MockChecklist[] = [
@@ -81,7 +100,7 @@ export const checklistDetail = (checklist: MockChecklist) => ({
   name: checklist.name,
   stage: checklist.stage,
   itemCount: checklist.items.length,
-  items: checklist.items.map(({ id, stage: _stage, ...item }) => ({ systemCheckItemId: id, ...item })),
+  items: checklist.items.map(({ stage: _stage, ...item }) => item),
 });
 
 export type MockPhoto = {
@@ -157,7 +176,7 @@ export const emptyProgress = {
 
 export type MockAppliedItem = {
   id: number;
-  systemCheckItemId: number;
+  systemCheckItemId: number | null;
   question: string;
   displayOrder: number;
   status: 'UNCONFIRMED' | 'GOOD' | 'CAUTION';

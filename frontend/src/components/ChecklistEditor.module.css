@@ -243,6 +243,38 @@
   margin-top: 0.45rem;
 }
 
+.customQuestionComposer {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.customQuestionComposer label,
+.customQuestionComposer small {
+  display: block;
+}
+
+.customQuestionComposer label {
+  margin-bottom: 0.4rem;
+  color: var(--color-ink);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.customQuestionComposer small {
+  margin-top: 0.35rem;
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.customQuestionComposer .customQuestionError {
+  color: var(--color-error);
+  font-weight: 750;
+}
+
 .checkItemSearch > form {
   min-height: 2.75rem;
   border: 0;

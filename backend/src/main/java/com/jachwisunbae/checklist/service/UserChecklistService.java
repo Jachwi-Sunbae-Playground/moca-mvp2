@@ -2,6 +2,7 @@ package com.jachwisunbae.checklist.service;
 
 import com.jachwisunbae.checklist.controller.dto.request.CreateUserChecklistRequest;
 import com.jachwisunbae.checklist.controller.dto.request.UpdateUserChecklistRequest;
+import com.jachwisunbae.checklist.controller.dto.request.UserChecklistItemRequest;
 import com.jachwisunbae.checklist.entity.SystemCheckItem;
 import com.jachwisunbae.checklist.entity.UserChecklist;
 import com.jachwisunbae.checklist.entity.UserChecklistItem;
@@ -15,10 +16,11 @@ import com.jachwisunbae.member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -43,20 +45,13 @@ public class UserChecklistService {
 
     @Transactional
     public UserChecklist create(final Long memberId, final CreateUserChecklistRequest request) {
-
-        List<Long> optionalIds = request.optionalSystemCheckItemIds();
-        validator.validateOptionalItemIds(optionalIds);
-
-        List<SystemCheckItem> coreItems = findActiveCore(request.stage());
-        List<SystemCheckItem> optionalItems = systemCheckItemRepository
-                .findActiveOptionalByIds(request.stage(), optionalIds);
-        validator.validateItemsExist(optionalIds, optionalItems);
-        validator.validateItemIds(orderedIds(coreItems, optionalIds));
-
-        List<SystemCheckItem> orderedSystemItems = orderItems(coreItems, optionalItems, optionalIds);
+        validator.validateItems(request.items());
+        Map<Long, SystemCheckItem> systemItems = findSystemItems(request.stage(), request.items());
+        requireActive(systemItems.values().stream().toList());
         UserChecklist persistedChecklist = userChecklistRepository.save(
                 UserChecklist.create(memberId, request.name(), request.stage()));
-        saveChecklistItems(persistedChecklist, orderedSystemItems);
+        saveChecklistItems(persistedChecklist,
+                createItems(persistedChecklist.getId(), request.stage(), request.items(), systemItems));
         return persistedChecklist;
     }
 
@@ -86,15 +81,15 @@ public class UserChecklistService {
         UserChecklist checklist = userChecklistRepository
                 .findByIdAndMemberIdForUpdate(checklistId, memberId)
                 .orElseThrow(() -> new BusinessException(DomainErrorCode.CHECKLIST_NOT_FOUND, "체크리스트를 찾을 수 없습니다."));
-        validator.validateItemIds(request.systemCheckItemIds());
-
-        List<SystemCheckItem> systemItems = systemCheckItemRepository
-                .findByIdsAndStageInOrder(checklist.getStage(), request.systemCheckItemIds());
-        validator.validateItemsExist(request.systemCheckItemIds(), systemItems);
+        validator.validateItems(request.items());
+        Map<Long, SystemCheckItem> systemItems = findSystemItems(checklist.getStage(), request.items());
+        requireInactiveItemsAlreadyIncluded(checklistId, systemItems.values().stream().toList());
+        List<UserChecklistItem> updatedItems = createItems(
+                checklistId, checklist.getStage(), request.items(), systemItems);
         checklist.rename(request.name());
         userChecklistRepository.updateName(checklistId, checklist.getName());
         userChecklistRepository.deleteItems(checklistId);
-        userChecklistRepository.saveItems(checklistId, createItems(checklistId, systemItems));
+        userChecklistRepository.saveItems(checklistId, updatedItems);
         return checklist;
     }
 
@@ -105,12 +100,8 @@ public class UserChecklistService {
         userChecklistRepository.delete(checklistId);
     }
 
-    private List<SystemCheckItem> findActiveCore(final CheckStage stage) {
-        return systemCheckItemRepository.findActiveCoreByStage(stage);
-    }
-
-    private void saveChecklistItems(final UserChecklist checklist, final List<SystemCheckItem> systemItems) {
-        userChecklistRepository.saveItems(checklist.getId(), createItems(checklist.getId(), systemItems));
+    private void saveChecklistItems(final UserChecklist checklist, final List<UserChecklistItem> items) {
+        userChecklistRepository.saveItems(checklist.getId(), items);
     }
 
     private UserChecklist findOwnedChecklist(final Long memberId, final long checklistId) {
@@ -125,28 +116,51 @@ public class UserChecklistService {
         }
     }
 
-    private List<SystemCheckItem> orderItems(final List<SystemCheckItem> coreItems,
-                                             final List<SystemCheckItem> optionalItems,
-                                             final List<Long> optionalIds) {
-        Map<Long, SystemCheckItem> optionalById = optionalItems.stream()
-                .collect(Collectors.toMap(SystemCheckItem::getId, Function.identity()));
-        List<SystemCheckItem> ordered = new ArrayList<>(coreItems);
-        optionalIds.forEach(id -> ordered.add(optionalById.get(id)));
-        return ordered;
+    private Map<Long, SystemCheckItem> findSystemItems(final CheckStage stage,
+                                                       final List<UserChecklistItemRequest> requests) {
+        List<Long> ids = requests.stream()
+                .map(UserChecklistItemRequest::systemCheckItemId)
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        List<SystemCheckItem> items = systemCheckItemRepository.findByIdsAndStageInOrder(stage, ids);
+        validator.validateItemsExist(ids, items);
+        return items.stream().collect(Collectors.toMap(SystemCheckItem::getId, Function.identity()));
     }
 
-    private List<Long> orderedIds(final List<SystemCheckItem> coreItems, final List<Long> optionalIds) {
-        List<Long> ids = new ArrayList<>(coreItems.stream().map(SystemCheckItem::getId).toList());
-        ids.addAll(optionalIds);
-        return ids;
-    }
-
-    private List<UserChecklistItem> createItems(final long checklistId,
-                                                final List<SystemCheckItem> systemItems) {
-        List<UserChecklistItem> items = new ArrayList<>();
-        for (int index = 0; index < systemItems.size(); index++) {
-            items.add(UserChecklistItem.create(checklistId, systemItems.get(index), index + 1));
+    private void requireActive(final List<SystemCheckItem> items) {
+        if (items.stream().anyMatch(item -> item.getDeletedAt() != null)) {
+            throw new BusinessException(DomainErrorCode.CHECKLIST_INACTIVE_ITEM_NOT_ALLOWED,
+                    "비활성 시스템 항목은 새 체크리스트에 추가할 수 없습니다.");
         }
+    }
+
+    private void requireInactiveItemsAlreadyIncluded(final long checklistId, final List<SystemCheckItem> items) {
+        Set<Long> existingSystemIds = userChecklistRepository.findItems(checklistId).stream()
+                .map(UserChecklistItem::getSystemCheckItemId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toCollection(HashSet::new));
+        if (items.stream().anyMatch(item -> item.getDeletedAt() != null && !existingSystemIds.contains(item.getId()))) {
+            throw new BusinessException(DomainErrorCode.CHECKLIST_INACTIVE_ITEM_NOT_ALLOWED,
+                    "기존 체크리스트에 없던 비활성 시스템 항목은 추가할 수 없습니다.");
+        }
+    }
+
+    private List<UserChecklistItem> createItems(final long checklistId, final CheckStage stage,
+                                                final List<UserChecklistItemRequest> requests,
+                                                final Map<Long, SystemCheckItem> systemItems) {
+        List<UserChecklistItem> items = java.util.stream.IntStream.range(0, requests.size())
+                .mapToObj(index -> createItem(checklistId, stage, requests.get(index), index + 1, systemItems))
+                .toList();
+        validator.validateUniqueQuestions(items);
         return items;
+    }
+
+    private UserChecklistItem createItem(final long checklistId, final CheckStage stage,
+                                         final UserChecklistItemRequest request, final int displayOrder,
+                                         final Map<Long, SystemCheckItem> systemItems) {
+        if (request.systemCheckItemId() != null) {
+            return UserChecklistItem.create(checklistId, systemItems.get(request.systemCheckItemId()), displayOrder);
+        }
+        return UserChecklistItem.createCustom(checklistId, stage, request.question().trim(), displayOrder);
     }
 }

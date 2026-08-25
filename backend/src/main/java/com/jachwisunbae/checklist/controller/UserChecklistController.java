@@ -43,7 +43,7 @@ public class UserChecklistController {
 
     @PostMapping
     @Operation(summary = "사용자 체크리스트 생성",
-            description = "선택한 단계의 기본 항목과 요청 항목으로 사용자 체크리스트를 생성합니다.")
+            description = "제공 시스템 항목과 직접 질문을 요청 순서대로 저장합니다.")
     public ResponseEntity<ApiResponse<CreateUserChecklistResponse>> create(
             @AuthenticatedMemberId final Long memberId,
             @Valid @RequestBody final CreateUserChecklistRequest request) {
@@ -76,7 +76,8 @@ public class UserChecklistController {
     }
 
     @PutMapping("/{checklistId}")
-    @Operation(summary = "사용자 체크리스트 전체 수정", description = "이름과 전체 항목 및 표시 순서를 교체합니다.")
+    @Operation(summary = "사용자 체크리스트 전체 수정",
+            description = "이름과 제공 시스템 항목·직접 질문 및 표시 순서를 교체합니다.")
     public ApiResponse<CreateUserChecklistResponse> update(
             @AuthenticatedMemberId final Long memberId,
             @PathVariable final long checklistId,

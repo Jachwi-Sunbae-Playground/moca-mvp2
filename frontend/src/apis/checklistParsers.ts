@@ -4,6 +4,7 @@ import type {
   CheckItem,
   CheckItemPage,
   ChecklistDetail,
+  ChecklistItem,
   ChecklistPage,
   ChecklistPreset,
   ChecklistStage,
@@ -87,20 +88,36 @@ export const parseChecklistPage = (value: unknown): ChecklistPage => {
   };
 };
 
-const parseChecklistItem = (value: unknown) => {
+const parseChecklistItem = (value: unknown): ChecklistItem => {
   const item = readRecord(value);
-  const systemCheckItemId = readInteger(item, 'systemCheckItemId', 1);
-  return {
-    checklistItemId: systemCheckItemId,
-    origin: 'PROVIDED' as const,
-    sourceCheckItemId: systemCheckItemId,
-    checkItemId: systemCheckItemId,
+  const checklistItemId = readInteger(item, 'id', 1);
+  const origin = readString(item, 'origin');
+  const systemCheckItemId = readNullableInteger(item, 'systemCheckItemId', 1);
+  const common = {
+    checklistItemId,
     itemType: parseItemType(item.itemType),
     question: readString(item, 'question', { maximumCodePoints: 200 }),
     guide: null,
     order: readInteger(item, 'displayOrder', 1),
     active: 'active' in item ? readBoolean(item, 'active') : true,
   };
+  if (origin === 'PROVIDED' && systemCheckItemId !== null) {
+    return {
+      ...common,
+      origin: 'PROVIDED',
+      sourceCheckItemId: systemCheckItemId,
+      checkItemId: systemCheckItemId,
+    };
+  }
+  if (origin === 'CUSTOM' && systemCheckItemId === null) {
+    return {
+      ...common,
+      origin: 'CUSTOM',
+      sourceCheckItemId: null,
+      checkItemId: null,
+    };
+  }
+  throw new Error('체크리스트 항목 출처 응답이 올바르지 않습니다.');
 };
 
 export const parseChecklistDetail = (value: unknown): ChecklistDetail => {

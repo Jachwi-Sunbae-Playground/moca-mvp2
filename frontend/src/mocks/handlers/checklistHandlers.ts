@@ -2,16 +2,63 @@ import { http, HttpResponse } from 'msw';
 import { isChecklistStage } from '../../constants/checklist';
 import {
   checklistDetail,
-  checklistItemsFor,
   checkItems,
   failure,
   getMockChecklists,
-  hasDuplicates,
   obsoleteEndpoint,
   readPositiveInteger,
   setMockChecklists,
   success,
 } from '../mockStore';
+import type { MockChecklistItem } from '../mockStore';
+import type { ChecklistStage } from '../../types/Checklist';
+
+type ChecklistItemBody = { systemCheckItemId?: unknown; question?: unknown };
+
+const checklistItemsFromBody = (stage: ChecklistStage, value: unknown): MockChecklistItem[] | null => {
+  if (!Array.isArray(value) || value.length < 1 || value.length > 30) return null;
+  const seen = new Set<string>();
+  const result: MockChecklistItem[] = [];
+  for (const [index, raw] of value.entries()) {
+    if (typeof raw !== 'object' || raw === null) return null;
+    const item = raw as ChecklistItemBody;
+    if (Number.isInteger(item.systemCheckItemId) && item.question === undefined) {
+      const system = checkItems.find(
+        (candidate) => candidate.id === item.systemCheckItemId && candidate.stage === stage,
+      );
+      const key = `SYSTEM:${String(item.systemCheckItemId)}`;
+      if (system === undefined || seen.has(key)) return null;
+      seen.add(key);
+      result.push({
+        ...system,
+        systemCheckItemId: system.id,
+        origin: 'PROVIDED' as const,
+        displayOrder: index + 1,
+        active: true,
+      });
+      continue;
+    }
+    if (item.systemCheckItemId === null && typeof item.question === 'string') {
+      const question = item.question.trim();
+      const key = `CUSTOM:${question}`;
+      if (question.length < 1 || question.length > 200 || seen.has(key)) return null;
+      seen.add(key);
+      result.push({
+        id: 9_000 + index,
+        systemCheckItemId: null,
+        origin: 'CUSTOM' as const,
+        stage,
+        itemType: 'OPTIONAL' as const,
+        question,
+        displayOrder: index + 1,
+        active: true,
+      });
+      continue;
+    }
+    return null;
+  }
+  return result;
+};
 
 export const checklistHandlers = [
   http.get('*/api/check-items', ({ request }) => {
@@ -41,33 +88,24 @@ export const checklistHandlers = [
     const body = (await request.json()) as {
       name?: unknown;
       stage?: unknown;
-      optionalSystemCheckItemIds?: unknown;
+      items?: unknown;
     };
     if (
       typeof body.name !== 'string' ||
       body.name.trim().length < 1 ||
       body.name.trim().length > 30 ||
       !isChecklistStage(body.stage) ||
-      !Array.isArray(body.optionalSystemCheckItemIds) ||
-      !body.optionalSystemCheckItemIds.every((id) => Number.isInteger(id))
+      !Array.isArray(body.items)
     ) {
       return failure('INVALID_REQUEST', 400);
     }
-    const optionalIds = body.optionalSystemCheckItemIds as number[];
-    if (hasDuplicates(optionalIds)) return failure('DUPLICATE_CHECK_ITEM', 400);
-    const optionalItems = optionalIds.map((id) => checkItems.find((item) => item.id === id));
-    if (optionalItems.some((item) => item === undefined || item.stage !== body.stage || item.itemType !== 'OPTIONAL')) {
-      return failure('INVALID_SYSTEM_CHECK_ITEM', 400);
-    }
-    const coreIds = checkItems
-      .filter((item) => item.stage === body.stage && item.itemType === 'CORE')
-      .map((item) => item.id);
-    if (coreIds.length + optionalIds.length > 30) return failure('CHECKLIST_ITEM_COUNT_OUT_OF_RANGE', 400);
+    const items = checklistItemsFromBody(body.stage, body.items);
+    if (items === null) return failure('CHECKLIST_ITEMS_INVALID', 400);
     const checklist = {
       id: Math.max(0, ...getMockChecklists().map((candidate) => candidate.id)) + 1,
       name: body.name.trim(),
       stage: body.stage,
-      items: checklistItemsFor(body.stage, [...coreIds, ...optionalIds]),
+      items,
     };
     setMockChecklists([...getMockChecklists(), checklist]);
     return success(checklistDetail(checklist), 201);
@@ -81,25 +119,18 @@ export const checklistHandlers = [
     const checklistId = readPositiveInteger(params.checklistId);
     const current = getMockChecklists().find((candidate) => candidate.id === checklistId);
     if (current === undefined) return failure('CHECKLIST_NOT_FOUND', 404);
-    const body = (await request.json()) as { name?: unknown; systemCheckItemIds?: unknown };
+    const body = (await request.json()) as { name?: unknown; items?: unknown };
     if (
       typeof body.name !== 'string' ||
       body.name.trim().length < 1 ||
       body.name.trim().length > 30 ||
-      !Array.isArray(body.systemCheckItemIds) ||
-      !body.systemCheckItemIds.every((id) => Number.isInteger(id))
+      !Array.isArray(body.items)
     ) {
       return failure('INVALID_REQUEST', 400);
     }
-    const ids = body.systemCheckItemIds as number[];
-    if (hasDuplicates(ids)) return failure('DUPLICATE_CHECK_ITEM', 400);
-    if (ids.length < 1 || ids.length > 30) return failure('CHECKLIST_ITEM_COUNT_OUT_OF_RANGE', 400);
-    const requestedItems = ids.map((id) => checkItems.find((item) => item.id === id));
-    if (requestedItems.some((item) => item === undefined)) return failure('INVALID_SYSTEM_CHECK_ITEM', 400);
-    if (requestedItems.some((item) => item?.stage !== current.stage)) {
-      return failure('CHECKLIST_STAGE_MISMATCH', 400);
-    }
-    const updated = { ...current, name: body.name.trim(), items: checklistItemsFor(current.stage, ids) };
+    const items = checklistItemsFromBody(current.stage, body.items);
+    if (items === null) return failure('CHECKLIST_ITEMS_INVALID', 400);
+    const updated = { ...current, name: body.name.trim(), items };
     setMockChecklists(getMockChecklists().map((checklist) => (checklist.id === current.id ? updated : checklist)));
     return success(checklistDetail(updated));
   }),

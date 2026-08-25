@@ -24,12 +24,12 @@ erDiagram
     PROPERTIES ||--o| PROPERTY_MEMOS : has
     PROPERTY_MEMOS ||--o{ PROPERTY_MEMO_ITEMS : contains
     SYSTEM_MEMO_ITEMS ||--o{ PROPERTY_MEMO_ITEMS : snapshots
-    SYSTEM_CHECK_ITEMS ||--o{ USER_CHECKLIST_ITEMS : snapshots
+    SYSTEM_CHECK_ITEMS o|--o{ USER_CHECKLIST_ITEMS : snapshots
     USER_CHECKLISTS ||--o{ USER_CHECKLIST_ITEMS : contains
     PROPERTIES ||--o{ PROPERTY_CHECKLISTS : applies
     USER_CHECKLISTS o|--o{ PROPERTY_CHECKLISTS : source
     PROPERTY_CHECKLISTS ||--o{ PROPERTY_CHECKLIST_ITEMS : contains
-    SYSTEM_CHECK_ITEMS ||--o{ PROPERTY_CHECKLIST_ITEMS : source
+    SYSTEM_CHECK_ITEMS o|--o{ PROPERTY_CHECKLIST_ITEMS : source
 ```
 
 ## 회원과 닉네임 자격정보
@@ -106,14 +106,17 @@ erDiagram
 
 ## 유지하는 스냅샷
 
-- `user_checklist_items`는 단계·유형·질문·순서를 복사한다.
-- `property_checklist_items`는 시스템 ID·질문·순서·상태·메모를 복사한다.
+- `user_checklist_items`는 단계·유형·질문·순서를 복사한다. 제공 항목은 `system_check_item_id`, 직접 질문은 NULL로 출처를 구분한다.
+- `property_checklist_items`는 nullable 시스템 ID·질문·순서·상태·메모를 복사한다. 직접 질문도 제공 항목과 같은 진행 집계와 PDF 입력으로 사용한다.
 - `property_memo_items`는 시스템 ID·라벨·순서를 복사한다.
 - 원본의 변경·비활성화는 기존 스냅샷을 자동 변경하지 않는다.
+
+`user_checklist_items.system_check_item_id`와 `property_checklist_items.system_check_item_id`는 직접 질문을 위해 NULL을 허용한다. 체크리스트 교체 시 제공 항목은 시스템 ID로 상태·메모를 승계하고, 직접 질문은 같은 질문 문구로 승계한다. 사용자 체크리스트 안에서는 시스템 ID와 질문 문구 중복을 모두 금지한다.
 
 ## 초기화와 시드
 
 - `001-schema.sql`: 새 DB용 전체 스키마 한 벌
 - `002-seed.sql`: 시스템 메모 항목, 세 단계의 시스템 체크 항목, 데모에 필요한 최소 기준 데이터
 - `db/upgrade/*.sql`: 기존 데이터가 있는 DB에 번호순으로 반복 적용 가능한 순방향 보강 SQL
+- `db/upgrade/002-custom-checklist-items.sql`: 체크 항목의 nullable 출처를 허용하고 이전 18개 제공 문항을 보존한 채 비활성화한 뒤 현재 53개 문항을 등록
 - 데모 회원·매물·진행 결과는 `DEMO_SEED_ENABLED=true`일 때만 만들며 운영 시드에 섞지 않는다.

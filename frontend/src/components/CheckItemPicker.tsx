@@ -3,6 +3,7 @@ import { getChecklistErrorMessage } from '../apis/checklistErrorMessages';
 import { useCheckItemSearch } from '../hooks/query/useChecklists';
 import type { CheckItem, ChecklistStage } from '../types/Checklist';
 import type { PublicConfig } from '../types/PublicConfig';
+import { validateCustomQuestion } from '../utils/checklistEditor';
 import BottomActionArea from './ui/BottomActionArea';
 import { Button } from './ui/Button';
 import SearchField from './ui/SearchField';
@@ -12,18 +13,41 @@ type CheckItemPickerProps = {
   config: PublicConfig;
   stage: ChecklistStage;
   existingSourceIds: number[];
+  existingQuestions: string[];
   disabled: boolean;
   onCancel: () => void;
-  onAdd: (items: CheckItem[]) => void;
+  onAdd: (items: CheckItem[], customQuestion: string | null) => void;
 };
 
-const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel, onAdd }: CheckItemPickerProps) => {
+const CheckItemPicker = ({
+  config,
+  stage,
+  existingSourceIds,
+  existingQuestions,
+  disabled,
+  onCancel,
+  onAdd,
+}: CheckItemPickerProps) => {
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
+  const [customQuestion, setCustomQuestion] = useState('');
+  const [customTouched, setCustomTouched] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set());
   const result = useCheckItemSearch(config, stage, query);
   const items = useMemo(() => result.data?.pages.flatMap((page) => page.content) ?? [], [result.data]);
   const existingIds = useMemo(() => new Set(existingSourceIds), [existingSourceIds]);
+  const existingQuestionSet = useMemo(() => new Set(existingQuestions), [existingQuestions]);
+  const trimmedCustomQuestion = customQuestion.trim();
+  const duplicatesSelectedProvided = items.some(
+    (item) => selectedIds.has(item.checkItemId) && item.question.trim() === trimmedCustomQuestion,
+  );
+  const customQuestionError =
+    trimmedCustomQuestion.length === 0
+      ? validateCustomQuestion(customQuestion)
+      : existingQuestionSet.has(trimmedCustomQuestion) || duplicatesSelectedProvided
+        ? '이미 목록에 있는 질문이에요.'
+        : validateCustomQuestion(customQuestion);
+  const additionCount = selectedIds.size + (trimmedCustomQuestion.length > 0 ? 1 : 0);
 
   const search = (nextQuery: string) => {
     setQuery(nextQuery.trim());
@@ -32,9 +56,15 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
 
   const addSelected = () => {
     const selected = items.filter((item) => selectedIds.has(item.checkItemId) && !existingIds.has(item.checkItemId));
-    if (selected.length === 0) return;
-    onAdd(selected);
+    if (trimmedCustomQuestion.length > 0 && customQuestionError !== null) {
+      setCustomTouched(true);
+      return;
+    }
+    if (selected.length === 0 && trimmedCustomQuestion.length === 0) return;
+    onAdd(selected, trimmedCustomQuestion.length > 0 ? trimmedCustomQuestion : null);
     setSelectedIds(new Set());
+    setCustomQuestion('');
+    setCustomTouched(false);
   };
 
   return (
@@ -44,7 +74,7 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
           <h2 id="item-picker-heading">체크 항목 검색</h2>
         </div>
         <span className={styles.selectionCount} aria-live="polite">
-          {selectedIds.size}개 선택
+          {additionCount}개 선택
         </span>
       </div>
       <div className={styles.checkItemSearch}>
@@ -62,6 +92,31 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
             setSelectedIds(new Set());
           }}
         />
+      </div>
+
+      <div className={styles.customQuestionComposer}>
+        <label htmlFor="custom-check-question">내 질문 직접 추가</label>
+        <textarea
+          id="custom-check-question"
+          value={customQuestion}
+          maxLength={200}
+          placeholder="예: 창틀에 곰팡이 흔적이 있는가?"
+          disabled={disabled}
+          aria-invalid={(customTouched && customQuestionError !== null) || undefined}
+          aria-describedby="custom-check-question-help"
+          onBlur={() => {
+            if (customQuestion.length > 0) setCustomTouched(true);
+          }}
+          onChange={(event) => setCustomQuestion(event.target.value)}
+        />
+        <small
+          id="custom-check-question-help"
+          className={customTouched && customQuestionError ? styles.customQuestionError : undefined}
+        >
+          {customTouched && customQuestionError !== null
+            ? customQuestionError
+            : `내가 확인하고 싶은 문장을 직접 적을 수 있어요. ${Array.from(customQuestion).length}/200`}
+        </small>
       </div>
 
       {result.isPending ? (
@@ -142,10 +197,10 @@ const CheckItemPicker = ({ config, stage, existingSourceIds, disabled, onCancel,
             fullWidth
             className={styles.pickerAdd}
             type="button"
-            disabled={disabled || selectedIds.size === 0}
+            disabled={disabled || additionCount === 0}
             onClick={addSelected}
           >
-            선택한 {selectedIds.size}개 항목 추가
+            선택한 {additionCount}개 항목 추가
           </Button>
         </BottomActionArea>
       </div>

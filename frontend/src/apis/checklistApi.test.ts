@@ -34,6 +34,8 @@ const checklistDetailResponse = {
   itemCount: 2,
   items: [
     {
+      id: 701,
+      origin: 'PROVIDED',
       systemCheckItemId: 101,
       itemType: 'CORE',
       question: '관리비를 확인했나요?',
@@ -41,6 +43,8 @@ const checklistDetailResponse = {
       active: true,
     },
     {
+      id: 702,
+      origin: 'PROVIDED',
       systemCheckItemId: 102,
       itemType: 'OPTIONAL',
       question: '입주일을 확인했나요?',
@@ -98,7 +102,7 @@ describe('최종 체크리스트 API 계약', () => {
     });
   });
 
-  it('생성 시 OPTIONAL 시스템 항목 ID만 전송한다', async () => {
+  it('생성 시 제공 항목과 직접 질문을 최종 순서대로 전송한다', async () => {
     authenticate();
     let body: unknown;
     server.use(
@@ -111,12 +115,12 @@ describe('최종 체크리스트 API 계약', () => {
     await createChecklistV11(config, {
       name: '전화 문의 기본 목록',
       stage: 'ONLINE_PHONE',
-      optionalSystemCheckItemIds: [102],
+      items: [{ systemCheckItemId: 101 }, { systemCheckItemId: null, question: '창틀 곰팡이는 괜찮은가?' }],
     });
     expect(body).toEqual({
       name: '전화 문의 기본 목록',
       stage: 'ONLINE_PHONE',
-      optionalSystemCheckItemIds: [102],
+      items: [{ systemCheckItemId: 101 }, { systemCheckItemId: null, question: '창틀 곰팡이는 괜찮은가?' }],
     });
   });
 
@@ -139,8 +143,14 @@ describe('최종 체크리스트 API 계약', () => {
         { sourceCheckItemId: 102, itemType: 'OPTIONAL', active: true, order: 2 },
       ],
     });
-    await updateChecklistV11(config, 7, { name: '전화 문의 기본 목록', systemCheckItemIds: [101, 102] });
-    expect(body).toEqual({ name: '전화 문의 기본 목록', systemCheckItemIds: [101, 102] });
+    await updateChecklistV11(config, 7, {
+      name: '전화 문의 기본 목록',
+      items: [{ systemCheckItemId: 101 }, { systemCheckItemId: 102 }],
+    });
+    expect(body).toEqual({
+      name: '전화 문의 기본 목록',
+      items: [{ systemCheckItemId: 101 }, { systemCheckItemId: 102 }],
+    });
   });
 
   it('체크리스트 삭제는 200 빈 본문을 읽지 않는다', async () => {
