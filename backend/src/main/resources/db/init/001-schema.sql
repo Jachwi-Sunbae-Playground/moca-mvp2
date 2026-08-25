@@ -14,6 +14,22 @@ CREATE TABLE IF NOT EXISTS members
   DEFAULT CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
 
+CREATE TABLE IF NOT EXISTS nickname_credentials
+(
+    member_id     BIGINT       NOT NULL,
+    nickname      VARCHAR(100) NOT NULL,
+    nickname_key  VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+    password_hash VARCHAR(100) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    created_at    DATETIME(6)  NOT NULL,
+    updated_at    DATETIME(6)  NOT NULL,
+    PRIMARY KEY (member_id),
+    CONSTRAINT uk_nickname_credentials_key UNIQUE (nickname_key),
+    CONSTRAINT fk_nickname_credentials_member
+        FOREIGN KEY (member_id) REFERENCES members (id) ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARACTER SET = utf8mb4
+  COLLATE = utf8mb4_0900_ai_ci;
+
 CREATE TABLE IF NOT EXISTS properties
 (
     id                  BIGINT AUTO_INCREMENT PRIMARY KEY,

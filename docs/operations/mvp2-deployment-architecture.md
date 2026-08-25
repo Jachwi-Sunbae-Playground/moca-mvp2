@@ -5,7 +5,7 @@
 - 문서 성격: 파생
 - 대조 대상: `deploy/`, `.github/workflows/deploy-production.yml`, 실제 개인 AWS 구성
 
-MVP2 기능은 로컬 검증을 마쳤다. 외부 사용자가 확인할 수 있는 `jachwisunbae.shop`을 위해 도메인, EC2, 비공개 S3, GitHub OIDC와 SSM을 구성했고 Google 로그인과 사진 업로드를 포함한 최초 배포를 검증했다. 중심 결정은 [ADR-0010](../../backend/docs/adr/0010-prepare-single-ec2-deployment.md)에 기록한다.
+MVP2 기능은 로컬 검증을 마쳤다. 외부 사용자가 확인할 수 있는 `jachwisunbae.shop`을 위해 도메인, EC2, 비공개 S3, GitHub OIDC와 SSM을 구성했고 최초 배포와 사진 업로드를 검증했다. 인증은 외부 계정 없이 닉네임과 선택 비밀번호를 사용한다. 중심 배포 결정은 [ADR-0010](../../backend/docs/adr/0010-prepare-single-ec2-deployment.md), 기존 DB 보강은 [ADR-0011](../../backend/docs/adr/0011-apply-idempotent-database-upgrades.md)에 기록한다.
 
 ## 전체 구성
 
@@ -61,10 +61,9 @@ EC2에서는 소스 빌드를 실행하지 않는다. 빌드는 GitHub Actions�
 | `EC2_INSTANCE_ID` | 배포 대상 단일 인스턴스 |
 | `RELEASE_BUCKET` | 비공개 릴리스 아카이브 버킷 |
 | `MOCA_DOMAIN` | 공개 서비스 도메인 |
-| `GOOGLE_CLIENT_ID` | 브라우저 번들에 들어가는 공개 OAuth Client ID |
 | `KAKAO_MAP_JAVASCRIPT_KEY` | 등록 도메인에서 사용하는 공개 Kakao JavaScript 키 |
 
-애플리케이션의 JWT, Google Client Secret, Kakao REST 키, 공공데이터포털 키, DB 비밀번호는 GitHub 변수에 두지 않는다. EC2 instance role에는 사진 버킷의 `GetObject`, `PutObject`, `DeleteObject`와 필요한 버킷 조회 권한만 추가한다.
+애플리케이션의 JWT, 닉네임 비밀번호, Kakao REST 키, 공공데이터포털 키, DB 비밀번호는 GitHub 변수에 두지 않는다. 닉네임 원문 비밀번호는 서버 환경변수에도 저장하지 않고 요청 시 BCrypt로 검증한다. EC2 instance role에는 사진 버킷의 `GetObject`, `PutObject`, `DeleteObject`와 필요한 버킷 조회 권한만 추가한다.
 
 ## 최초 배포 전 준비
 
@@ -81,7 +80,7 @@ EC2에서는 소스 빌드를 실행하지 않는다. 빌드는 GitHub Actions�
 9. 사진·릴리스 S3 버킷, EC2 role, GitHub OIDC role과 SSM 최소 권한을 만든다.
 10. GitHub `production` Environment 변수를 등록한다.
 
-첫 릴리스 압축에는 MySQL 초기화 SQL도 포함된다. 배포 스크립트가 이를 안정된 `/opt/moca/shared/db-init`에 복사한 뒤 `deploy/compose.yaml`의 MySQL을 시작하고 healthy 상태를 기다린다. 빈 DB를 처음 시작할 때만 스키마가 적용되며 실제 데이터가 생긴 뒤에는 볼륨을 초기화하지 않는다.
+첫 릴리스 압축에는 MySQL 초기화 SQL도 포함된다. 배포 스크립트가 이를 안정된 `/opt/moca/shared/db-init`에 복사한 뒤 `deploy/compose.yaml`의 MySQL을 시작하고 healthy 상태를 기다린다. 빈 DB를 처음 시작할 때만 init 스키마가 적용되며 실제 데이터가 생긴 뒤에는 볼륨을 초기화하지 않는다. 기존 DB의 additive 변경은 JAR에 포함된 번호순 멱등 upgrade SQL이 애플리케이션 요청 수신 전에 적용한다.
 
 ## 첫 배포 검증
 
@@ -90,7 +89,7 @@ EC2에서는 소스 빌드를 실행하지 않는다. 빌드는 GitHub Actions�
 - 공개 `/api` 요청이 Spring Boot로 전달된다.
 - EC2 내부 health가 `UP`이고 systemd 재시작 뒤에도 기동한다.
 - 외부에서 3306·8080과 SSH에 접근할 수 없다.
-- Google OAuth callback과 CORS가 같은 공개 Origin에서 동작한다.
+- 신규 공유·보호 닉네임과 기존 회원에서 변환된 닉네임으로 시작할 수 있고 CORS가 공개 Origin에서 동작한다.
 - 인증 없는 S3 객체 직접 조회가 차단된다.
 - 실패 릴리스로 애플리케이션 롤백을 한 번 리허설한다.
 - MySQL 백업을 별도 볼륨 또는 S3에서 복원하는 절차를 검증한다.

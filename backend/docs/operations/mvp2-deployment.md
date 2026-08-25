@@ -38,9 +38,9 @@ DB 초기화 기준은 [데이터베이스 초기화](../guides/database-initial
 | `DB_PORT` | `3306` |
 | `DB_SSL_MODE` | MySQL 서버 TLS 구성에 맞추되 기본 `REQUIRED` |
 | `CORS_ALLOWED_ORIGINS` | 공개 프론트 Origin 하나 |
-| `AUTH_MODE` | `google` |
 | `JWT_SECRET` | 32바이트 이상의 운영 전용 무작위 값 |
-| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | 운영 Google Web OAuth 값 |
+| `NICKNAME_AUTH_MAX_FAILURES` | 기본 `5` |
+| `NICKNAME_AUTH_FAILURE_WINDOW_SECONDS` | 기본 `600` |
 | `MAP_PROVIDER_MODE` | `kakao` |
 | `KAKAO_REST_API_KEY` | 서버 전용 Kakao Local REST 키 |
 | `BUS_STOP_PROVIDER` | 실제 정류소를 쓰면 `tago`, 아니면 `none` |
@@ -49,6 +49,8 @@ DB 초기화 기준은 [데이터베이스 초기화](../guides/database-initial
 | `PHOTO_STORAGE_REGION` | 사진 버킷 리전 |
 | `PHOTO_STORAGE_BUCKET` | 비공개 사진 버킷 |
 | `PHOTO_STORAGE_ACCESS_KEY`, `PHOTO_STORAGE_SECRET_KEY` | AWS에서는 설정하지 않음 |
+
+인증에는 외부 provider key가 필요 없다. 기존 `/etc/moca/app.env`에 남아 있는 `AUTH_MODE`와 Google 값은 새 애플리케이션이 읽지 않으므로 확인 후 제거한다. 기존 운영 회원과 소유 데이터는 애플리케이션 시작 시 [멱등 upgrade SQL](../guides/database-initialization.md#기존-db-업그레이드)이 닉네임 자격정보로 보강한다. 적용 전 DB 백업을 확인한다.
 
 ## 배포 결과 확인
 

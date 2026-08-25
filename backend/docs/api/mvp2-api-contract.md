@@ -16,11 +16,19 @@
 
 | 메서드 | 경로 | 인증 | 설명 |
 | --- | --- | --- | --- |
-| `POST` | `/api/auth/google` | 공개 | Google authorization code 로그인 |
-| `POST` | `/api/auth/demo` | 공개·local 전용 | 고정 데모 회원 로그인 |
+| `POST` | `/api/auth/nickname` | 공개 | 닉네임과 선택 비밀번호로 시작 |
 | `GET` | `/api/members/me` | 필요 | 현재 회원 조회 |
 
-데모 로그인은 운영 프로필에서 404로 응답한다. 로그인 응답은 `accessToken`, `tokenType`, `expiresIn`, `member`를 유지한다.
+로그인 요청은 `nickname`과 생략 가능한 `password`를 받는다. 처음 보는 닉네임이면 비밀번호 유무에 따라 공유 또는 보호 회원을 만들고, 기존 닉네임이면 같은 회원으로 연결한다.
+
+```json
+{
+  "nickname": "이자취",
+  "password": "선택 입력"
+}
+```
+
+로그인 응답은 `accessToken`, `tokenType`, `expiresIn`과 `member.memberId`, `member.name`, `member.passwordProtected`를 제공한다. `/api/members/me`도 `memberId`, `displayName`, `passwordProtected`만 반환하며 내부 식별용 이메일은 노출하지 않는다.
 
 ## 매물
 
@@ -152,7 +160,11 @@
 
 | 코드 | 상태 | 의미 |
 | --- | --- | --- |
-| `DEMO_AUTH_DISABLED` | 404 | 운영에서 데모 로그인을 호출함 |
+| `NICKNAME_INVALID` | 400 | 닉네임 길이·제어 문자·정규화 오류 |
+| `NICKNAME_PASSWORD_INVALID` | 400 | 선택 비밀번호 길이 또는 바이트 제한 위반 |
+| `NICKNAME_PASSWORD_UNEXPECTED` | 409 | 공유 닉네임을 비밀번호로 선점하려 함 |
+| `NICKNAME_AUTHENTICATION_FAILED` | 401 | 보호 닉네임 비밀번호 불일치 |
+| `NICKNAME_AUTH_RATE_LIMITED` | 429 | 닉네임별 반복 실패 제한 초과 |
 | `PROPERTY_LOCATION_INVALID` | 400 | 주소·좌표 조합 또는 범위 오류 |
 | `PHOTO_LIMIT_EXCEEDED` | 400 | 사진 30장 초과 |
 | `PHOTO_CONTENT_TYPE_UNSUPPORTED` | 400 | 미지원 형식 |
@@ -163,5 +175,5 @@
 ## 정합성 확인
 
 - Swagger UI와 `/v3/api-docs`는 실행 중인 컨트롤러에서 생성된다.
-- 통합 테스트가 데모 로그인부터 주소·매물·메모·체크·사진·PDF·지도·삭제까지 실제 HTTP 계약을 검증한다.
+- 통합 테스트가 닉네임 로그인부터 주소·매물·메모·체크·사진·PDF·지도·삭제까지 실제 HTTP 계약을 검증한다.
 - 프론트 DTO parser와 MSW handler는 같은 응답 계약을 사용한다.

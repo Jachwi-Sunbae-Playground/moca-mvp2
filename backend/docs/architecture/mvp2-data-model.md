@@ -8,13 +8,14 @@
 
 - 제품 정책의 정본은 기능 명세와 [결정 대장](../../../docs/product/decisions/README.md)이다.
 - 이 문서는 `001-schema.sql`에서 파생되는 설명 문서다.
-- Flyway를 사용하지 않으므로 스키마 변경 뒤 로컬 MySQL volume을 초기화한다.
+- Flyway는 사용하지 않는다. 새 DB는 현재 스키마로 초기화하고 기존 데이터가 있는 DB는 멱등 upgrade SQL로 보강한다.
 - 주변 시설 응답은 저장하지 않고 Kakao Local API 또는 데모 adapter에서 그때 조회한다.
 
 ## ERD
 
 ```mermaid
 erDiagram
+    MEMBERS ||--|| NICKNAME_CREDENTIALS : authenticates
     MEMBERS ||--o{ PROPERTIES : owns
     MEMBERS ||--o{ USER_CHECKLISTS : owns
     PROPERTIES ||--o{ PROPERTY_PHOTOS : has
@@ -30,6 +31,20 @@ erDiagram
     PROPERTY_CHECKLISTS ||--o{ PROPERTY_CHECKLIST_ITEMS : contains
     SYSTEM_CHECK_ITEMS ||--o{ PROPERTY_CHECKLIST_ITEMS : source
 ```
+
+## 회원과 닉네임 자격정보
+
+`members`는 기존 소유자 FK를 유지하는 내부 회원이며 `email`은 이전 Google 회원과 신규 내부 식별자를 함께 담는다. API에는 이메일을 노출하지 않는다. 신규 회원은 충돌하지 않는 `nickname-<UUID>@moca.local` 값을 사용한다.
+
+| 컬럼 | 타입 | 제약 | 설명 |
+| --- | --- | --- | --- |
+| `member_id` | BIGINT | PK, FK, CASCADE | 내부 회원과 1:1 연결 |
+| `nickname` | VARCHAR(100) | NOT NULL | 화면에 표시할 정규화 닉네임 |
+| `nickname_key` | VARCHAR(100) | UNIQUE, binary collation | 대소문자를 구분하지 않도록 애플리케이션에서 만든 식별 key |
+| `password_hash` | VARCHAR(100) | NULL, ASCII binary | NULL이면 공유 닉네임, 값이 있으면 BCrypt hash |
+| `created_at`, `updated_at` | DATETIME(6) | NOT NULL | 자격정보 생성·수정 시각 |
+
+`db/upgrade/001-nickname-credentials.sql`이 자격정보 테이블을 만들고 `DatabaseUpgradeInitializer`가 자격정보 없는 기존 회원의 표시 이름을 NFKC 정규화해 보강한다. 같은 정규화 이름이 여러 회원에게 있으면 ` #<member_id>`를 붙이고 모두 비밀번호 없는 닉네임으로 전환해 소유 데이터를 합치지 않는다.
 
 ## MVP2의 `properties`
 
@@ -70,6 +85,7 @@ erDiagram
 
 | 부모 | 자식 | 정책 |
 | --- | --- | --- |
+| `members` | 닉네임 자격정보 | `ON DELETE CASCADE` |
 | `properties` | 사진·대표 사진·메모·매물 체크리스트 | `ON DELETE CASCADE` |
 | `property_memos` | 메모 항목 | `ON DELETE CASCADE` |
 | `user_checklists` | 사용자 항목 | `ON DELETE CASCADE` |
@@ -97,6 +113,7 @@ erDiagram
 
 ## 초기화와 시드
 
-- `001-schema.sql`: 전체 스키마 한 벌
+- `001-schema.sql`: 새 DB용 전체 스키마 한 벌
 - `002-seed.sql`: 시스템 메모 항목, 세 단계의 시스템 체크 항목, 데모에 필요한 최소 기준 데이터
-- 데모 회원·매물·진행 결과는 `demo` 프로필 전용 초기화로 분리해 운영 시드에 섞지 않는다.
+- `db/upgrade/*.sql`: 기존 데이터가 있는 DB에 번호순으로 반복 적용 가능한 순방향 보강 SQL
+- 데모 회원·매물·진행 결과는 `DEMO_SEED_ENABLED=true`일 때만 만들며 운영 시드에 섞지 않는다.

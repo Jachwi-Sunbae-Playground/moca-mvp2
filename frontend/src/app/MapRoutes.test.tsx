@@ -14,9 +14,6 @@ import { queryClient } from './queryClient';
 
 const config: PublicConfig = {
   apiBaseUrl: 'http://localhost:8080',
-  googleClientId: '',
-  googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
-  authMode: 'demo',
   mapProviderMode: 'demo',
 };
 
@@ -79,7 +76,7 @@ const renderAuthenticated = (path: string) => {
   setAuthentication({ accessToken: 'demo-token', tokenType: 'Bearer', expiresIn: 60 });
   server.use(
     http.get(`${config.apiBaseUrl}/api/members/me`, () =>
-      HttpResponse.json(successEnvelope({ id: 1, name: '이자취', email: 'demo@moca.local' })),
+      HttpResponse.json(successEnvelope({ id: 1, name: '이자취', passwordProtected: false })),
     ),
   );
 
@@ -87,7 +84,7 @@ const renderAuthenticated = (path: string) => {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[path]}>
-          <AppRoutes config={config} storage={window.sessionStorage} />
+          <AppRoutes config={config} />
         </MemoryRouter>
       </QueryClientProvider>
     </StrictMode>,

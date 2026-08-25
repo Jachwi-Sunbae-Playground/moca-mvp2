@@ -53,9 +53,6 @@ jobs:
         working-directory: frontend
         env:
           API_BASE_URL: https://${{ vars.MOCA_DOMAIN }}
-          AUTH_MODE: google
-          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
-          GOOGLE_REDIRECT_URI: https://${{ vars.MOCA_DOMAIN }}/oauth/google/callback
           MAP_PROVIDER_MODE: kakao
           KAKAO_MAP_JAVASCRIPT_KEY: ${{ vars.KAKAO_MAP_JAVASCRIPT_KEY }}
         run: |

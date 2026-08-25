@@ -27,7 +27,7 @@ class GlobalExceptionHandlerTest extends IntegrationTest {
 
     @Test
     void 읽을_수_없는_JSON은_공통_오류로_응답한다() throws Exception {
-        mockMvc.perform(post("/api/auth/google")
+        mockMvc.perform(post("/api/auth/nickname")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{broken"))
                 .andExpect(status().isBadRequest())

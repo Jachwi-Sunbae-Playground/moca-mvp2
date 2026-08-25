@@ -23,13 +23,11 @@ Spring Boot 애플리케이션은 CORS 허용 Origin과 인증·저장소 설정
 | `DB_PASSWORD` | `local_password` | 애플리케이션 계정 비밀번호 |
 | `DB_ROOT_PASSWORD` | `local_root_password` | 로컬 MySQL root 비밀번호 |
 | `DB_SSL_MODE` | `DISABLED` | 운영 JDBC TLS 모드. 로컬 프로필은 별도 설정을 사용한다 |
-| `AUTH_MODE` | `demo` | `demo` 또는 `google` 인증 adapter 선택 |
 | `JWT_SECRET` | 로컬 데모용 32바이트 이상 값 | HS256 서명 비밀값. 운영에서는 새 무작위 값을 사용한다 |
-| `DEMO_MEMBER_EMAIL` | `demo@moca.local` | 데모 회원 이메일 |
 | `DEMO_MEMBER_NAME` | `이자취` | 데모 회원 표시 이름 |
 | `DEMO_SEED_ENABLED` | `true` | 데모 매물·메모·체크 상태 초기화 여부 |
-| `GOOGLE_OAUTH_CLIENT_ID` | 비움 | `google` 모드의 Google Web OAuth Client ID |
-| `GOOGLE_OAUTH_CLIENT_SECRET` | 비움 | `google` 모드의 Google Web OAuth Client Secret |
+| `NICKNAME_AUTH_MAX_FAILURES` | `5` | 보호 닉네임의 제한 시간 내 최대 인증 실패 횟수 |
+| `NICKNAME_AUTH_FAILURE_WINDOW_SECONDS` | `600` | 닉네임별 인증 실패 제한 시간(초) |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:3000` | 쉼표로 구분한 프론트엔드 Origin 허용 목록 |
 | `PHOTO_STORAGE_ENDPOINT` | `http://localhost:9000` | S3 호환 객체 저장소 API endpoint. 정적 자격증명으로 접속하는 환경에서만 쓴다 |
 | `PHOTO_STORAGE_REGION` | `us-east-1` | S3 서명에 사용하는 region |
@@ -63,6 +61,6 @@ Docker Compose는 같은 디렉터리의 `.env`를 자동으로 읽는다. Sprin
 
 AWS S3에서는 EC2 instance role을 사용하므로 `PHOTO_STORAGE_ENDPOINT`, `PHOTO_STORAGE_ACCESS_KEY`, `PHOTO_STORAGE_SECRET_KEY`를 설정하지 않는다. 이 세 값은 로컬 MinIO에만 사용한다.
 
-`AUTH_MODE=google`이면 Google client ID·secret이 필요하고, `MAP_PROVIDER_MODE=kakao`이면 `KAKAO_REST_API_KEY`가 필요하다. 실제 버스정류소까지 표시하려면 `BUS_STOP_PROVIDER=tago`와 `DATA_GO_KR_SERVICE_KEY`를 추가한다. 프론트엔드에는 별도로 공개 Google client ID와 Kakao JavaScript 키를 넣는다. 두 기본 모드를 `demo`로 두면 외부 키 없이 전체 로컬 흐름을 실행할 수 있다.
+닉네임 인증은 외부 키가 필요 없다. `MAP_PROVIDER_MODE=kakao`이면 `KAKAO_REST_API_KEY`가 필요하고, 실제 버스정류소까지 표시하려면 `BUS_STOP_PROVIDER=tago`와 `DATA_GO_KR_SERVICE_KEY`를 추가한다. 프론트엔드에는 공개 Kakao JavaScript 키만 넣는다. 지도 기본 모드를 `demo`로 두면 외부 키 없이 전체 로컬 흐름을 실행할 수 있다.
 
 실제 비밀값은 `.env.example`, 애플리케이션 설정, 문서와 Git에 커밋하지 않는다.

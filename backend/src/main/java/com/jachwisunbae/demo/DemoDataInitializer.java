@@ -3,6 +3,7 @@ package com.jachwisunbae.demo;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -17,15 +18,12 @@ public class DemoDataInitializer implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
     private final Clock clock;
-    private final String demoEmail;
     private final String demoName;
 
     public DemoDataInitializer(JdbcTemplate jdbcTemplate, Clock clock,
-                               @Value("${auth.demo.email:demo@moca.local}") String demoEmail,
-                               @Value("${auth.demo.name:이자취}") String demoName) {
+                               @Value("${demo.seed.nickname:이자취}") String demoName) {
         this.jdbcTemplate = jdbcTemplate;
         this.clock = clock;
-        this.demoEmail = demoEmail;
         this.demoName = demoName;
     }
 
@@ -35,8 +33,13 @@ public class DemoDataInitializer implements ApplicationRunner {
         LocalDateTime now = LocalDateTime.now(clock);
         jdbcTemplate.update("INSERT INTO members (email, name, last_login_at, created_at, updated_at) "
                         + "VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name)",
-                demoEmail, demoName, now, now, now);
-        Long memberId = jdbcTemplate.queryForObject("SELECT id FROM members WHERE email = ?", Long.class, demoEmail);
+                "demo@moca.local", demoName, now, now, now);
+        Long memberId = jdbcTemplate.queryForObject(
+                "SELECT id FROM members WHERE email = ?", Long.class, "demo@moca.local");
+        jdbcTemplate.update("INSERT INTO nickname_credentials "
+                        + "(member_id, nickname, nickname_key, password_hash, created_at, updated_at) "
+                        + "VALUES (?, ?, ?, NULL, ?, ?) ON DUPLICATE KEY UPDATE nickname = VALUES(nickname)",
+                memberId, demoName, demoName.trim().toLowerCase(Locale.ROOT), now, now);
         if (memberId == null || count("properties", "member_id", memberId) > 0) {
             return;
         }

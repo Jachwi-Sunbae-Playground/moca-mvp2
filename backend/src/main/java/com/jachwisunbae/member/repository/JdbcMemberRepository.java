@@ -45,19 +45,6 @@ public class JdbcMemberRepository implements MemberRepository {
     }
 
     @Override
-    public Optional<Member> findByEmail(final String email) {
-        String sql = """
-                SELECT id, email, name, last_login_at, created_at, updated_at
-                FROM members
-                WHERE email = ?
-                """;
-
-        return jdbcTemplate.query(sql, memberRowMapper(), email)
-                .stream()
-                .findFirst();
-    }
-
-    @Override
     public Member save(final Member member) {
         String sql = """
                 INSERT INTO members (

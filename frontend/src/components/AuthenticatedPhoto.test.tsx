@@ -10,8 +10,6 @@ import AuthenticatedPhoto from './AuthenticatedPhoto';
 
 const config: PublicConfig = {
   apiBaseUrl: 'http://localhost:8080',
-  googleClientId: 'test-client',
-  googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
 };
 
 describe('인증 사진 표시', () => {

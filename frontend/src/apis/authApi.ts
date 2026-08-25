@@ -1,29 +1,19 @@
 import type { PublicConfig } from '../types/PublicConfig';
 import { apiRequest } from './apiClient';
-import { parseGoogleLoginResponseDto } from './dtoParsers';
-import type { GoogleLoginRequestDto, GoogleLoginResponseDto } from './dtos/AuthDto';
+import { parseLoginResponseDto } from './dtoParsers';
+import type { LoginResponseDto, NicknameLoginRequestDto } from './dtos/AuthDto';
 
-export const submitGoogleLogin = (
+export const submitNicknameLogin = (
   config: PublicConfig,
-  request: GoogleLoginRequestDto,
+  request: NicknameLoginRequestDto,
   signal?: AbortSignal,
-): Promise<GoogleLoginResponseDto> =>
+): Promise<LoginResponseDto> =>
   apiRequest({
     config,
-    path: '/api/auth/google',
+    path: '/api/auth/nickname',
     method: 'POST',
     body: request,
     signal,
     requiresAuthentication: false,
-    parseData: parseGoogleLoginResponseDto,
-  });
-
-export const submitDemoLogin = (config: PublicConfig, signal?: AbortSignal): Promise<GoogleLoginResponseDto> =>
-  apiRequest({
-    config,
-    path: '/api/auth/demo',
-    method: 'POST',
-    signal,
-    requiresAuthentication: false,
-    parseData: parseGoogleLoginResponseDto,
+    parseData: parseLoginResponseDto,
   });

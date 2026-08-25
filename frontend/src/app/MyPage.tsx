@@ -21,10 +21,10 @@ const MyPage = ({ config }: { config: PublicConfig }) => {
           </span>
           <div className={styles.memberInfo}>
             <h2 id="member-heading">{member.displayName}</h2>
-            <p>{member.email}</p>
-            <small>
-              {config.authMode === 'demo' ? '데모 계정 · 브라우저 종료 시 로그인 해제' : 'Google 계정 연결됨'}
-            </small>
+            <p>
+              {member.passwordProtected ? '비밀번호로 기록을 보호하고 있어요.' : '비밀번호 없는 공유 닉네임이에요.'}
+            </p>
+            <small>브라우저를 닫으면 다시 닉네임으로 시작합니다.</small>
           </div>
         </section>
         <nav className={styles.menu} aria-label="내 기록">

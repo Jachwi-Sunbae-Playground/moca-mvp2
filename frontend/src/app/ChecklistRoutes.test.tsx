@@ -22,8 +22,6 @@ import { queryClient } from './queryClient';
 
 const config: PublicConfig = {
   apiBaseUrl: 'http://localhost:8080',
-  googleClientId: 'test-client',
-  googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
 };
 
 type TestEntry = string | { pathname: string; state?: unknown };
@@ -34,7 +32,7 @@ const renderAuthenticated = (entry: TestEntry) => {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[entry]}>
-          <AppRoutes config={config} storage={window.sessionStorage} />
+          <AppRoutes config={config} />
         </MemoryRouter>
       </QueryClientProvider>
     </StrictMode>,

@@ -273,13 +273,5 @@ export const getSafeApiErrorMessage = (error: unknown): string => {
     return '인증이 만료되었습니다. 다시 로그인해 주세요.';
   }
 
-  if (error.code === 'GOOGLE_AUTHORIZATION_CODE_INVALID') {
-    return 'Google 인증을 확인하지 못했습니다. 로그인을 다시 시작해 주세요.';
-  }
-
-  if (error.code === 'GOOGLE_AUTHENTICATION_FAILED') {
-    return 'Google 로그인 연결이 원활하지 않습니다. 잠시 후 다시 시도해 주세요.';
-  }
-
   return '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 };

@@ -19,13 +19,10 @@
 | 환경변수                   | 운영 값                                       |
 | -------------------------- | --------------------------------------------- |
 | `API_BASE_URL`             | `https://<공개 도메인>`, 같은 Origin 사용     |
-| `AUTH_MODE`                | `google`                                      |
-| `GOOGLE_CLIENT_ID`         | GitHub Environment의 공개 OAuth Client ID     |
-| `GOOGLE_REDIRECT_URI`      | `https://<공개 도메인>/oauth/google/callback` |
 | `MAP_PROVIDER_MODE`        | `kakao`                                       |
 | `KAKAO_MAP_JAVASCRIPT_KEY` | GitHub Environment의 공개 Kakao JavaScript 키 |
 
-이 값은 브라우저 번들에서 보이므로 비밀값을 넣지 않는다. Google Client Secret과 Kakao REST API 키는 백엔드 EC2 환경변수에서만 관리한다.
+이 값은 브라우저 번들에서 보이므로 비밀값을 넣지 않는다. 닉네임 비밀번호는 로그인 요청에만 포함하고 저장하지 않으며, JWT secret과 Kakao REST API 키는 백엔드 EC2 환경변수에서만 관리한다.
 
 ## 확인
 
@@ -36,4 +33,4 @@ curl --fail --head https://<공개 도메인>/
 curl --fail --head https://<공개 도메인>/properties
 ```
 
-두 경로가 정적 HTML로 응답하고 브라우저에서 최신 번들이 로드되어야 한다. `/properties`가 404면 Caddy의 `try_files` SPA fallback을 확인한다. OAuth callback 직접 진입과 `/api` 요청도 함께 점검한다.
+두 경로가 정적 HTML로 응답하고 브라우저에서 최신 번들이 로드되어야 한다. `/properties`가 404면 Caddy의 `try_files` SPA fallback을 확인한다. 닉네임 시작과 `/api` 요청도 함께 점검한다.

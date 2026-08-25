@@ -198,6 +198,22 @@ const browserTestFetch: typeof fetch = async (input, init) => {
   const url = new URL(request.url);
   const path = url.pathname;
 
+  if (path === '/api/auth/nickname' && request.method === 'POST') {
+    const body = (await request.json()) as { nickname?: string; password?: string };
+    return jsonResponse(
+      successEnvelope({
+        accessToken: 'browser-test-nickname-token',
+        tokenType: 'Bearer',
+        expiresIn: 3_600,
+        member: {
+          memberId: 1,
+          name: body.nickname ?? '브라우저테스터',
+          passwordProtected: typeof body.password === 'string',
+        },
+      }),
+    );
+  }
+
   if (path === '/api/members/me' && request.method === 'GET') {
     if (scenario === 'unauthorized') return jsonResponse(errorEnvelope('ACCESS_TOKEN_EXPIRED'), 401);
     return jsonResponse(successEnvelope(memberFixture));
@@ -565,8 +581,6 @@ createRoot(rootElement).render(
       <App
         config={{
           apiBaseUrl: 'http://localhost:8080',
-          googleClientId: 'browser-test-client',
-          googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
         }}
       />
     )}

@@ -1,13 +1,11 @@
 import type { MemberDto } from './MemberDto';
 
-export type GoogleLoginRequestDto = {
-  authorizationCode: string;
-  codeVerifier: string;
-  nonce: string;
-  redirectUri: string;
+export type NicknameLoginRequestDto = {
+  nickname: string;
+  password?: string;
 };
 
-export type GoogleLoginResponseDto = {
+export type LoginResponseDto = {
   accessToken: string;
   tokenType: string;
   expiresIn: number;

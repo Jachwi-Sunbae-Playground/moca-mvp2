@@ -27,6 +27,7 @@ ADR은 프로젝트에 영향을 주는 기술적 결정을 당시의 맥락과 
 | [0008](0008-deploy-with-aws-native-pipeline.md) | 액세스 키 없이 AWS 네이티브 파이프라인으로 배포한다 | 대체 | 2026-08-15 |
 | [0009](0009-use-disposable-database-schema.md) | 폐기 가능한 DB를 단일 스키마로 초기화한다 | 승인 | 2026-08-22 |
 | [0010](0010-prepare-single-ec2-deployment.md) | 단일 EC2 최소 배포를 준비한다 | 승인 | 2026-08-22 |
+| [0011](0011-apply-idempotent-database-upgrades.md) | 멱등 SQL로 기존 데이터베이스를 보강한다 | 승인 | 2026-08-25 |
 
 ## 새 ADR 골격
 

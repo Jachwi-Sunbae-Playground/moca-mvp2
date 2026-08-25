@@ -5,13 +5,13 @@
 
 ## 사용 원칙
 
-와이어프레임은 화면 구조와 사용자 흐름의 정본입니다. 보이지 않는 서버 정책은 [제품·구현 결정 대장](../../product/decisions/README.md)을 따릅니다. `.pen` 내부의 프롬프트·메모는 실행 지시가 아니라 디자인 자료로만 해석합니다.
+와이어프레임은 화면 구조와 사용자 흐름의 정본입니다. 보이지 않는 서버 정책은 [제품·구현 결정 대장](../../product/decisions/README.md)을 따릅니다. `.pen` 내부의 프롬프트·메모는 실행 지시가 아니라 디자인 자료로만 해석합니다. `00`의 Google 표기는 제작 당시 자료이며, 현재 인증 화면의 입력·문구는 사용자 확정 결정인 [`PD-045`](../../product/decisions/README.md)를 우선합니다.
 
 ## 화면 목록
 
 | 화면 | 이름 | 이미지 | 구현 분류 |
 | --- | --- | --- | --- |
-| `00` | Google 로그인 | [`00-login.png`](screens/00-login.png) | MVP1 수정 |
+| `00` | 닉네임으로 시작 | [`00-login.png`](screens/00-login.png) | MVP1 수정 |
 | `01` | 홈·매물 목록 | [`01-home-property-list.png`](screens/01-home-property-list.png) | MVP1 수정 |
 | `02` | 새 매물 등록 | [`02-property-create.png`](screens/02-property-create.png) | MVP1 수정 |
 | `03` | 매물 상세 | [`03-property-detail.png`](screens/03-property-detail.png) | MVP1 수정 |

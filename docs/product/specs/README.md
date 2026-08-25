@@ -6,7 +6,7 @@
 
 | 명세 | 책임 |
 | --- | --- |
-| [인증](authentication.md) | Google·데모 로그인, 세션과 권한 |
+| [인증](authentication.md) | 닉네임·선택 비밀번호, 세션과 권한 |
 | [매물](property.md) | 매물 CRUD, 주소, 정렬과 비교표 |
 | [사진](photo.md) | 업로드, 대표 사진과 객체 정합성 |
 | [메모](memo.md) | 기본 메모 양식과 자유 메모 |

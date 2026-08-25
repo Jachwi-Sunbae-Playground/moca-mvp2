@@ -12,18 +12,14 @@ spring:
       max-request-size: 6MB
 
 auth:
-  mode: ${AUTH_MODE:demo}
   jwt:
     secret: ${JWT_SECRET:local-demo-jwt-secret-at-least-32-bytes}
     issuer: jachwi-sunbae
     audience: jachwi-sunbae-api
     access-token-seconds: 43200
-  google:
-    client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
-    client-secret: ${GOOGLE_OAUTH_CLIENT_SECRET:}
-  demo:
-    email: ${DEMO_MEMBER_EMAIL:demo@moca.local}
-    name: ${DEMO_MEMBER_NAME:이자취}
+  nickname:
+    max-failures: ${NICKNAME_AUTH_MAX_FAILURES:5}
+    failure-window-seconds: ${NICKNAME_AUTH_FAILURE_WINDOW_SECONDS:600}
 
 app:
   cors:
@@ -51,6 +47,7 @@ map:
 demo:
   seed:
     enabled: ${DEMO_SEED_ENABLED:true}
+    nickname: ${DEMO_MEMBER_NAME:이자취}
 
 management:
   endpoints:

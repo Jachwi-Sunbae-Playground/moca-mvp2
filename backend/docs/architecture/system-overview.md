@@ -12,7 +12,7 @@
 React SPA
   ↓ JSON + Bearer Access Token
 Spring Boot
-  ├─ demo 또는 Google OAuth 인증 adapter
+  ├─ 닉네임·선택 비밀번호 인증 + 자체 JWT
   ├─ 회원·매물·사진·메모·체크리스트 API
   ├─ demo 또는 Kakao Local 지도 adapter + 선택적 TAGO 버스정류소 adapter
   ├─ Spring JDBC → MySQL 8.4
@@ -21,9 +21,9 @@ Spring Boot
   └─ Swagger/OpenAPI
 ```
 
-로컬 기본은 외부 키가 없는 `demo` 인증·지도와 MinIO다. `live`에서는 프론트가 Google Authorization Code + PKCE 로그인을 시작하고 백엔드가 Google 토큰 교환과 ID token 검증을 수행한 뒤 자체 JWT Access Token을 발급한다. 지도는 프론트 Kakao Maps JavaScript SDK와 백엔드 Kakao Local REST API를 사용하고, 설정하면 TAGO 실제 버스정류소를 교통 결과에 합친다.
+인증은 로컬과 운영 모두 외부 키 없이 닉네임과 선택 비밀번호를 사용하며 성공하면 자체 JWT Access Token을 발급한다. 비밀번호 없는 닉네임은 같은 닉네임 사용자와 기록을 공유하고, 보호 닉네임은 BCrypt hash로 확인한다. 지도 로컬 기본은 `demo`, 운영은 프론트 Kakao Maps JavaScript SDK와 백엔드 Kakao Local REST API를 사용하고, 설정하면 TAGO 실제 버스정류소를 교통 결과에 합친다.
 
-회원 ID를 기준으로 주소·좌표를 포함한 매물, 구조화 메모와 단계별 체크리스트 스냅샷을 MySQL에 저장한다. 사진 메타데이터는 DB, 바이트는 비공개 객체 저장소에 두고 소유자 검증 백엔드 endpoint로만 조회한다. DB 스키마 정본은 [데이터베이스 초기화](../guides/database-initialization.md)의 단일 SQL이다.
+회원 ID를 기준으로 주소·좌표를 포함한 매물, 구조화 메모와 단계별 체크리스트 스냅샷을 MySQL에 저장한다. 사진 메타데이터는 DB, 바이트는 비공개 객체 저장소에 두고 소유자 검증 백엔드 endpoint로만 조회한다. 새 DB 스키마 정본과 기존 DB의 순방향 보강 절차는 [데이터베이스 초기화](../guides/database-initialization.md)를 따른다.
 
 API의 실행 계약은 구현에서 생성되는 Swagger/OpenAPI를 우선 확인한다. 제품 요구사항은 [MVP2 기능 명세](../../../docs/product/specs/README.md), 스키마 설명은 [MVP2 데이터 모델](mvp2-data-model.md), 외부 지도 전환은 [지도 연동](../guides/map-integration.md)을 따른다.
 
