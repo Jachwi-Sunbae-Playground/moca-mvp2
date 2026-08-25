@@ -102,12 +102,19 @@
   place-items: center;
 }
 
+.explorePage .mapControls {
+  bottom: 12.8rem;
+}
+
+.explorePage .addPropertyButton {
+  bottom: 8.6rem;
+}
+
 .selectMapControls {
   bottom: 13.8rem;
 }
 
-.addressSheet,
-.nearbySheet {
+.addressSheet {
   position: absolute;
   z-index: 18;
   right: 0;
@@ -219,166 +226,6 @@ button.addressNotice {
   top: 4.3rem;
 }
 
-.nearbySheet {
-  max-height: 53%;
-  gap: 0.75rem;
-  padding-bottom: 0.85rem;
-  transition: max-height 180ms ease-out;
-}
-
-.nearbySheet[data-expanded='true'] {
-  max-height: 72%;
-}
-
-.sheetHeader {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.sheetHeader span {
-  display: block;
-  max-width: 12rem;
-  overflow: hidden;
-  color: var(--color-primary-dark);
-  font-size: 0.58rem;
-  font-weight: 850;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sheetHeader h1 {
-  margin: 0.15rem 0 0;
-  font-size: 1rem;
-  line-height: 1.3;
-}
-
-.sheetHeader > button {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.35rem 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-primary-dark);
-  font-size: 0.62rem;
-  font-weight: 850;
-  cursor: pointer;
-}
-
-.summaryChips {
-  display: flex;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0 0 0.1rem;
-  overflow-x: auto;
-  list-style: none;
-  scrollbar-width: none;
-}
-
-.summaryChips::-webkit-scrollbar {
-  display: none;
-}
-
-.summaryChips li {
-  display: inline-flex;
-  min-height: 2.2rem;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.7rem;
-  border-radius: 999px;
-  background: #f7f7f6;
-  color: #444842;
-  font-size: 0.65rem;
-  font-weight: 800;
-}
-
-.summaryChips li > span {
-  width: 0.48rem;
-  height: 0.48rem;
-  border-radius: 50%;
-  background: #64748b;
-}
-
-.summaryChips li[data-category='HOSPITAL'] > span {
-  background: #f06b57;
-}
-
-.summaryChips li[data-category='TRANSPORT'] > span {
-  background: #7963e8;
-}
-
-.summaryChips li[data-category='SCHOOL'] > span {
-  background: #f59e0b;
-}
-
-.summaryChips li[data-category='CONVENIENCE'] > span {
-  background: #08a982;
-}
-
-.expandedPlaces {
-  min-height: 0;
-  overflow: auto;
-}
-
-.expandedPlaces > p {
-  margin: 0.5rem 0;
-  color: var(--color-muted);
-  font-size: 0.68rem;
-  text-align: center;
-}
-
-.expandedPlaces > ul {
-  display: grid;
-  gap: 0.45rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.expandedPlaces li {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.08rem 0.5rem;
-  padding: 0.55rem 0;
-  border-top: 1px solid var(--color-border);
-  font-size: 0.68rem;
-}
-
-.expandedPlaces li > span {
-  grid-row: 1 / span 2;
-  align-self: center;
-  padding: 0.25rem 0.4rem;
-  border-radius: 999px;
-  background: var(--color-primary-soft);
-  color: var(--color-primary-dark);
-  font-size: 0.52rem;
-  font-weight: 850;
-}
-
-.expandedPlaces strong,
-.expandedPlaces small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.expandedPlaces small {
-  color: var(--color-muted);
-  font-size: 0.58rem;
-}
-
-.expandedPlaces > a {
-  display: block;
-  margin-top: 0.6rem;
-  color: var(--color-muted);
-  font-size: 0.58rem;
-  text-align: center;
-}
-
 .fullState {
   display: grid;
   min-height: 0;
@@ -413,8 +260,7 @@ button.addressNotice {
     top: 3.75rem;
   }
 
-  .addressSheet,
-  .nearbySheet {
+  .addressSheet {
     padding-inline: 0.8rem;
   }
 }

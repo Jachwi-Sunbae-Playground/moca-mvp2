@@ -41,9 +41,11 @@ Spring Boot 애플리케이션은 CORS 허용 Origin과 인증·저장소 설정
 | `PHOTO_STORAGE_CONSOLE_PORT` | `9001` | 로컬 MinIO 관리 화면 포트 |
 | `MAP_PROVIDER_MODE` | `demo` | `demo` 또는 `kakao` 지도·주소 adapter 선택 |
 | `KAKAO_REST_API_KEY` | 비움 | `kakao` 모드의 서버 전용 Local REST API 키 |
+| `BUS_STOP_PROVIDER` | `none` | `none` 또는 `tago` 버스정류소 adapter 선택 |
+| `DATA_GO_KR_SERVICE_KEY` | 비움 | `tago` 모드의 공공데이터포털 일반 인증키(Decoding) |
 | `MAP_CACHE_TTL_SECONDS` | `600` | 주변 시설 응답 cache TTL(초) |
-| `MAP_CONNECT_TIMEOUT_MILLIS` | `2000` | Kakao 연결 제한 시간 |
-| `MAP_READ_TIMEOUT_MILLIS` | `5000` | Kakao 응답 제한 시간 |
+| `MAP_CONNECT_TIMEOUT_MILLIS` | `2000` | 지도 외부 공급자 연결 제한 시간 |
+| `MAP_READ_TIMEOUT_MILLIS` | `5000` | 지도 외부 공급자 응답 제한 시간 |
 
 ## 사용 방법
 
@@ -61,6 +63,6 @@ Docker Compose는 같은 디렉터리의 `.env`를 자동으로 읽는다. Sprin
 
 AWS S3에서는 EC2 instance role을 사용하므로 `PHOTO_STORAGE_ENDPOINT`, `PHOTO_STORAGE_ACCESS_KEY`, `PHOTO_STORAGE_SECRET_KEY`를 설정하지 않는다. 이 세 값은 로컬 MinIO에만 사용한다.
 
-`AUTH_MODE=google`이면 Google client ID·secret이 필요하고, `MAP_PROVIDER_MODE=kakao`이면 `KAKAO_REST_API_KEY`가 필요하다. 프론트엔드에는 별도로 공개 Google client ID와 Kakao JavaScript 키를 넣는다. 두 모드를 `demo`로 두면 외부 키 없이 전체 로컬 흐름을 실행할 수 있다.
+`AUTH_MODE=google`이면 Google client ID·secret이 필요하고, `MAP_PROVIDER_MODE=kakao`이면 `KAKAO_REST_API_KEY`가 필요하다. 실제 버스정류소까지 표시하려면 `BUS_STOP_PROVIDER=tago`와 `DATA_GO_KR_SERVICE_KEY`를 추가한다. 프론트엔드에는 별도로 공개 Google client ID와 Kakao JavaScript 키를 넣는다. 두 기본 모드를 `demo`로 두면 외부 키 없이 전체 로컬 흐름을 실행할 수 있다.
 
 실제 비밀값은 `.env.example`, 애플리케이션 설정, 문서와 Git에 커밋하지 않는다.

@@ -43,6 +43,8 @@ DB 초기화 기준은 [데이터베이스 초기화](../guides/database-initial
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | 운영 Google Web OAuth 값 |
 | `MAP_PROVIDER_MODE` | `kakao` |
 | `KAKAO_REST_API_KEY` | 서버 전용 Kakao Local REST 키 |
+| `BUS_STOP_PROVIDER` | 실제 정류소를 쓰면 `tago`, 아니면 `none` |
+| `DATA_GO_KR_SERVICE_KEY` | `tago` 사용 시 공공데이터포털 일반 인증키(Decoding) |
 | `PHOTO_STORAGE_ENDPOINT` | AWS S3에서는 설정하지 않음 |
 | `PHOTO_STORAGE_REGION` | 사진 버킷 리전 |
 | `PHOTO_STORAGE_BUCKET` | 비공개 사진 버킷 |

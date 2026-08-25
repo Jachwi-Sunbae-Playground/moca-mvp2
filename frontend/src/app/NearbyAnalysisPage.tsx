@@ -1,15 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { fetchNearby } from '../apis/mapApi';
 import MapCanvas from '../components/MapCanvas';
 import type { MapMarker, MapRadiusCircle } from '../components/MapCanvas';
 import MapCategoryRail from '../components/MapCategoryRail';
+import MapNearbySheet from '../components/MapNearbySheet';
 import { clusterNearbyPlaces } from '../components/mapClustering';
-import { ALL_MAP_CATEGORIES, getMapCategoryLabel } from '../components/mapPresentation';
+import { ALL_MAP_CATEGORIES } from '../components/mapPresentation';
 import { ButtonLink } from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
-import Icon from '../components/ui/Icon';
 import InlineNotice from '../components/ui/InlineNotice';
 import TopNavigation from '../components/ui/TopNavigation';
 import { usePropertyDetail } from '../hooks/query/useProperties';
@@ -40,7 +40,7 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
   const [viewportCenter, setViewportCenter] = useState(center);
   const [radius, setRadius] = useState<500 | 1000 | 2000>(2000);
   const [mapLevel, setMapLevel] = useState(6);
-  const [selectedCategories, setSelectedCategories] = useState<MapCategory[]>(ALL_MAP_CATEGORIES);
+  const [selectedCategories, setSelectedCategories] = useState<MapCategory[]>([]);
   const [listExpanded, setListExpanded] = useState(false);
   const [allMode, setAllMode] = useState(false);
   const nearby = useQuery({
@@ -176,55 +176,20 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
             </div>
           )}
 
-          {!property.isPending && !nearby.isPending && !nearby.isError && (
-            <section className={styles.nearbySheet} data-expanded={listExpanded || undefined}>
-              <div className={styles.sheetHeader}>
-                <div>
-                  <span>{property.data?.name}</span>
-                  <h1>선택한 매물 주변 {radiusLabel(radius)}</h1>
-                </div>
-                <button
-                  type="button"
-                  aria-expanded={listExpanded}
-                  aria-controls="nearby-place-list"
-                  onClick={() => setListExpanded((current) => !current)}
-                >
-                  {listExpanded ? '목록 접기' : '시설 목록 보기'}
-                  <Icon name={listExpanded ? 'chevron-down' : 'chevron-up'} size={17} />
-                </button>
-              </div>
-
-              <ul className={styles.summaryChips} aria-label="선택한 주변 시설 집계">
-                {selectedCategories.map((category) => (
-                  <li key={category} data-category={category}>
-                    <span aria-hidden="true" />
-                    {getMapCategoryLabel(category)} {nearby.data?.counts[category] ?? 0}개
-                  </li>
-                ))}
-                {selectedCategories.length === 0 && <li>시설 카테고리를 선택해 주세요.</li>}
-              </ul>
-
-              {listExpanded && (
-                <div className={styles.expandedPlaces} id="nearby-place-list">
-                  {filteredPlaces.length === 0 ? (
-                    <p>이 반경에는 선택한 시설이 없어요.</p>
-                  ) : (
-                    <ul aria-label="주변 시설 목록">
-                      {filteredPlaces.map((place) => (
-                        <li key={place.providerPlaceId}>
-                          <span data-category={place.category}>{getMapCategoryLabel(place.category)}</span>
-                          <strong>{place.name}</strong>
-                          <small>
-                            {place.distanceMeters}m · {place.address}
-                          </small>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <Link to="/me">지도 데이터 모드와 이용 안내</Link>
-                </div>
-              )}
-            </section>
+          {!property.isPending && !nearby.isPending && !nearby.isError && nearby.data !== undefined && (
+            <MapNearbySheet
+              eyebrow={property.data?.name ?? '선택한 매물'}
+              heading={`선택한 매물 주변 ${radiusLabel(radius)}`}
+              counts={nearby.data.counts}
+              selectedCategories={selectedCategories}
+              places={filteredPlaces}
+              expanded={listExpanded}
+              onToggleExpanded={() => setListExpanded((current) => !current)}
+              onToggleCategory={(category) => {
+                setSelectedCategories((current) => toggleCategory(current, category));
+                setAllMode(false);
+              }}
+            />
           )}
         </section>
       )}

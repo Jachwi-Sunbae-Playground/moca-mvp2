@@ -57,7 +57,7 @@ MVP2의 로컬 실행과 배포 설정 경계까지 구현했다. AWS 리소스 
 | HTTPS | Caddy가 인증서를 발급할 수 있는 80·443 inbound |
 | DB | 운영 MySQL 사용자·비밀번호, 백업 경로와 복구 확인 |
 | 인증 | Google client ID·secret·redirect URI |
-| 지도 | Kakao JavaScript key·REST key·운영 SDK 도메인 |
+| 지도 | Kakao JavaScript key·REST key·운영 SDK 도메인, 실제 버스정류소용 공공데이터포털 TAGO 일반 인증키(Decoding) |
 | 사진 | S3 region·bucket·key prefix·EC2 role |
 | 애플리케이션 | JWT secret, CORS origin, 운영 profile |
 | GitHub | 배포 대상·SSH 또는 SSM 접근과 필요한 Actions secret |
@@ -67,6 +67,7 @@ MVP2의 로컬 실행과 배포 설정 경계까지 구현했다. AWS 리소스 
 - 백엔드 Google: `AUTH_MODE=google`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`
 - 프론트 Google: `AUTH_MODE=google`, `GOOGLE_CLIENT_ID`, `GOOGLE_REDIRECT_URI`
 - 백엔드 Kakao: `MAP_PROVIDER_MODE=kakao`, `KAKAO_REST_API_KEY`
+- 백엔드 버스정류소: `BUS_STOP_PROVIDER=tago`, `DATA_GO_KR_SERVICE_KEY`
 - 프론트 Kakao: `MAP_PROVIDER_MODE=kakao`, `KAKAO_MAP_JAVASCRIPT_KEY`
 - 운영 S3: `PHOTO_STORAGE_REGION`, `PHOTO_STORAGE_BUCKET`, `PHOTO_STORAGE_KEY_PREFIX`; endpoint와 정적 access key는 비우고 EC2 role을 사용한다.
 - 공통: `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`, DB 접속값
@@ -82,6 +83,7 @@ MVP2의 로컬 실행과 배포 설정 경계까지 구현했다. AWS 리소스 
 - [ ] 운영 DB 백업과 한 번의 복구 연습을 완료한다.
 - [ ] Google redirect URI와 Kakao JavaScript SDK 도메인에 실제 HTTPS 도메인을 등록한다.
 - [ ] Kakao 무료 쿼터와 과금 비활성 상태를 확인한다.
+- [ ] 국토교통부 TAGO 버스정류소정보를 활용 신청하고 중심 500m 실제 정류소를 확인한다.
 - [ ] Caddy health check와 백엔드 `/actuator/health`를 확인한다.
 - [ ] GitHub Actions 수동 배포가 CI 전체 검사를 반복하지 않고 빌드 산출물을 전달하도록 확인한다.
 - [ ] 롤백할 이전 release와 DB 백업 위치를 확인한다.

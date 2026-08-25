@@ -6,6 +6,7 @@ import MapAddressSearchPanel from '../components/MapAddressSearchPanel';
 import MapCanvas from '../components/MapCanvas';
 import type { MapMarker, MapRadiusCircle } from '../components/MapCanvas';
 import MapCategoryRail from '../components/MapCategoryRail';
+import MapNearbySheet from '../components/MapNearbySheet';
 import { clusterNearbyPlaces } from '../components/mapClustering';
 import { ALL_MAP_CATEGORIES } from '../components/mapPresentation';
 import Icon from '../components/ui/Icon';
@@ -41,8 +42,10 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [radius, setRadius] = useState<MapRadius>(2000);
   const [mapLevel, setMapLevel] = useState(6);
-  const [allMode, setAllMode] = useState(true);
-  const [selectedCategories, setSelectedCategories] = useState<MapCategory[]>(ALL_MAP_CATEGORIES);
+  const [allMode, setAllMode] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<MapCategory[]>([]);
+  const [listExpanded, setListExpanded] = useState(false);
+  const [locationLabel, setLocationLabel] = useState('현재 위치');
 
   const nearby = useQuery({
     queryKey: ['map-explore-nearby', currentPosition.latitude.toFixed(4), currentPosition.longitude.toFixed(4), radius],
@@ -58,12 +61,14 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
       setViewportCenter(coordinate);
       setCurrentPosition(coordinate);
       writeLastMapCenter(coordinate);
+      setLocationLabel('현재 위치');
       setLocationStatus('ready');
     } catch {
       const fallback = readLastMapCenter() ?? SEOUL_MAP_CENTER;
       setViewportCenter(fallback);
       setCurrentPosition(fallback);
       setLocationStatus('fallback');
+      setLocationLabel('서울 중심');
       setSearchOpen(true);
     }
   }, []);
@@ -121,6 +126,7 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
     setCurrentPosition(coordinate);
     setMapLevel(levelForRadius(radius));
     writeLastMapCenter(coordinate);
+    setLocationLabel(address.roadAddress ?? address.jibunAddress ?? address.address ?? '선택한 위치');
     setLocationStatus('ready');
   };
 
@@ -212,12 +218,6 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
             </button>
           </div>
         )}
-        {selectedCategories.length === 0 && (
-          <p className={styles.mapNotice} role="status">
-            매물만 표시 중이에요. 시설 카테고리를 선택할 수 있어요.
-          </p>
-        )}
-
         <div className={styles.mapControls}>
           <button type="button" aria-label="주소 검색 열기" onClick={() => setSearchOpen(true)}>
             <Icon name="search" size={20} />
@@ -235,6 +235,22 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
         <Link className={styles.addPropertyButton} to="/map/select-location" aria-label="지도에서 매물 추가">
           <Icon name="plus" size={28} />
         </Link>
+
+        {locationStatus !== 'locating' && !nearby.isPending && !nearby.isError && nearby.data !== undefined && (
+          <MapNearbySheet
+            eyebrow={locationLabel}
+            heading={`${locationLabel === '현재 위치' ? '현재 위치' : '선택한 위치'} 주변 ${radiusLabel(radius)}`}
+            counts={nearby.data.counts}
+            selectedCategories={selectedCategories}
+            places={filteredPlaces}
+            expanded={listExpanded}
+            onToggleExpanded={() => setListExpanded((current) => !current)}
+            onToggleCategory={(category) => {
+              setSelectedCategories((current) => toggleCategory(current, category));
+              setAllMode(false);
+            }}
+          />
+        )}
       </section>
     </main>
   );

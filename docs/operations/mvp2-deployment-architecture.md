@@ -64,7 +64,7 @@ EC2에서는 소스 빌드를 실행하지 않는다. 빌드는 GitHub Actions�
 | `GOOGLE_CLIENT_ID` | 브라우저 번들에 들어가는 공개 OAuth Client ID |
 | `KAKAO_MAP_JAVASCRIPT_KEY` | 등록 도메인에서 사용하는 공개 Kakao JavaScript 키 |
 
-애플리케이션의 JWT, Google Client Secret, Kakao REST 키, DB 비밀번호는 GitHub 변수에 두지 않는다. EC2 instance role에는 사진 버킷의 `GetObject`, `PutObject`, `DeleteObject`와 필요한 버킷 조회 권한만 추가한다.
+애플리케이션의 JWT, Google Client Secret, Kakao REST 키, 공공데이터포털 키, DB 비밀번호는 GitHub 변수에 두지 않는다. EC2 instance role에는 사진 버킷의 `GetObject`, `PutObject`, `DeleteObject`와 필요한 버킷 조회 권한만 추가한다.
 
 ## 최초 배포 전 준비
 

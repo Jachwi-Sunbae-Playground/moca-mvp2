@@ -108,7 +108,7 @@
 
 `categories`는 `HOSPITAL,TRANSPORT,SCHOOL,CONVENIENCE,AGENCY`의 쉼표 목록이며 생략하면 전체다. `radius`는 500·1000·2000만 허용한다.
 
-`places`는 Kakao 카테고리 또는 키워드 검색별로 페이지당 15개, 최대 세 페이지를 정규화한 결과다. `TRANSPORT`는 지하철과 버스정류장 검색을 합쳐 장소 ID로 중복을 제거한다. `counts`는 공급자의 전체 검색 건수가 아니라 응답 `places`의 카테고리별 개수다.
+`places`는 Kakao 카테고리 검색별로 페이지당 15개, 최대 세 페이지를 정규화한 결과다. `TRANSPORT`는 Kakao 지하철을 기본으로 반환하고, TAGO를 설정했으면 조회 중심 500m 안의 실제 버스정류소를 합친 뒤 공급자 ID로 중복을 제거한다. `counts`는 공급자의 전체 검색 건수가 아니라 응답 `places`의 카테고리별 개수다. TAGO 장애 시 버스정류소만 제외하고 Kakao 결과는 계속 반환한다.
 
 주변 조회 응답의 형태는 다음과 같다.
 
