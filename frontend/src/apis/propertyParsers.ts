@@ -3,6 +3,7 @@ import type {
   PropertyBasicInfo,
   PropertyChecklistOverview,
   PropertyChecklistProgress,
+  PropertyChecklistStageSummary,
   PropertyChecklistDetail,
   PropertyChecklistItemStatus,
   PropertyDetail,
@@ -126,6 +127,7 @@ const parsePropertySummary = (value: unknown): PropertySummary => {
     location: parsePropertyLocation(record),
     representativePhoto: parsedRepresentativePhoto,
     progress: parsePropertyChecklistProgress(record.overallProgress),
+    stages: Array.isArray(record.stages) ? record.stages.map(parsePropertyChecklistStageSummary) : [],
     photoCount: typeof record.photoCount === 'number' ? readInteger(record, 'photoCount') : 0,
     lastActivityAt: readOptionalUtcDateTime(record, 'lastActivityAt'),
   };
@@ -227,26 +229,28 @@ const parsePropertyChecklistProgress = (value: unknown): PropertyChecklistProgre
   };
 };
 
+const parsePropertyChecklistStageSummary = (value: unknown): PropertyChecklistStageSummary => {
+  const stageRecord = readRecord(value);
+  const stage = readString(stageRecord, 'stage');
+  if (stage !== 'ONLINE_PHONE' && stage !== 'ON_SITE' && stage !== 'PRE_CONTRACT') {
+    throw new Error('체크리스트 단계가 올바르지 않습니다.');
+  }
+  return {
+    stage,
+    applied: readBoolean(stageRecord, 'applied'),
+    propertyChecklistId: readNullableInteger(stageRecord, 'propertyChecklistId', 1),
+    checklistName: readNullableString(stageRecord, 'checklistName'),
+    sourceChecklistId: readNullableInteger(stageRecord, 'sourceChecklistId', 1),
+    progress: parsePropertyChecklistProgress(stageRecord.progress),
+  };
+};
+
 export const parsePropertyChecklistOverview = (value: unknown): PropertyChecklistOverview => {
   const record = readRecord(value);
   return {
     propertyId: readInteger(record, 'propertyId', 1),
     overallProgress: parsePropertyChecklistProgress(record.overallProgress),
-    stages: readArray(record, 'stages').map((stageValue) => {
-      const stageRecord = readRecord(stageValue);
-      const stage = readString(stageRecord, 'stage');
-      if (stage !== 'ONLINE_PHONE' && stage !== 'ON_SITE' && stage !== 'PRE_CONTRACT') {
-        throw new Error('체크리스트 단계가 올바르지 않습니다.');
-      }
-      return {
-        stage,
-        applied: readBoolean(stageRecord, 'applied'),
-        propertyChecklistId: readNullableInteger(stageRecord, 'propertyChecklistId', 1),
-        checklistName: readNullableString(stageRecord, 'checklistName'),
-        sourceChecklistId: readNullableInteger(stageRecord, 'sourceChecklistId', 1),
-        progress: parsePropertyChecklistProgress(stageRecord.progress),
-      };
-    }),
+    stages: readArray(record, 'stages').map(parsePropertyChecklistStageSummary),
   };
 };
 

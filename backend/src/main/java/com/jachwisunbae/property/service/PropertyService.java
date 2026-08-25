@@ -5,6 +5,8 @@ import com.jachwisunbae.property.controller.dto.response.PropertyListResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyDetailResponse;
 import com.jachwisunbae.property.controller.dto.response.PropertyProgress;
 import com.jachwisunbae.property.controller.dto.response.PropertyListItemResponse;
+import com.jachwisunbae.property.controller.dto.response.PropertyChecklistOverviewResponse;
+import com.jachwisunbae.property.controller.dto.response.PropertyRepresentativePhoto;
 import com.jachwisunbae.property.controller.dto.request.CreatePropertyRequest;
 import com.jachwisunbae.property.entity.Property;
 import com.jachwisunbae.property.repository.PropertyRepository;
@@ -45,7 +47,15 @@ public class PropertyService {
 
     public PropertyListResponse findList(final Long memberId) {
         List<PropertyListItemResponse> items = propertyRepository.findListByMemberId(memberId).stream()
-                .map(PropertyListItemResponse::from)
+                .map(row -> {
+                    PropertyRepresentativePhoto photo = row.photoId() == null ? null
+                            : new PropertyRepresentativePhoto(row.photoId(),
+                            "/api/properties/" + row.propertyId() + "/photos/" + row.photoId(),
+                            row.photoContentType());
+                    PropertyChecklistOverviewResponse overview = PropertyChecklistOverviewResponse.from(
+                            row.propertyId(), propertyProgressRepository.findByPropertyIdAndStage(row.propertyId()));
+                    return PropertyListItemResponse.from(row, photo, overview.overallProgress(), overview.stages());
+                })
                 .toList();
         return new PropertyListResponse(items.size(), items);
     }

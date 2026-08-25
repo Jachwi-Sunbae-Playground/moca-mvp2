@@ -5,6 +5,7 @@ import com.jachwisunbae.checklist.type.CheckStage;
 import com.jachwisunbae.common.web.ApiResponse;
 import com.jachwisunbae.property.controller.dto.request.ApplyPropertyChecklistRequest;
 import com.jachwisunbae.property.controller.dto.request.CreatePropertyRequest;
+import com.jachwisunbae.property.controller.dto.request.ExportPropertyComparisonRequest;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyChecklistMemoRequest;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyChecklistStatusRequest;
 import com.jachwisunbae.property.controller.dto.request.UpdatePropertyMemoRequest;
@@ -26,6 +27,7 @@ import com.jachwisunbae.property.entity.Property;
 import com.jachwisunbae.property.repository.query.PropertyPhotosQuery;
 import com.jachwisunbae.property.service.PropertyChecklistService;
 import com.jachwisunbae.property.service.PropertyCsvService;
+import com.jachwisunbae.property.service.PropertyComparisonPdfService;
 import com.jachwisunbae.property.service.PropertyDeletionService;
 import com.jachwisunbae.property.service.PropertyMemoService;
 import com.jachwisunbae.property.service.PropertyPhotoService;
@@ -64,19 +66,22 @@ public class PropertyController {
     private final PropertyPhotoService propertyPhotoService;
     private final PropertyDeletionService propertyDeletionService;
     private final PropertyCsvService propertyCsvService;
+    private final PropertyComparisonPdfService propertyComparisonPdfService;
 
     public PropertyController(final PropertyService propertyService,
                               final PropertyMemoService propertyMemoService,
                               final PropertyChecklistService propertyChecklistService,
                               final PropertyPhotoService propertyPhotoService,
                               final PropertyDeletionService propertyDeletionService,
-                              final PropertyCsvService propertyCsvService) {
+                              final PropertyCsvService propertyCsvService,
+                              final PropertyComparisonPdfService propertyComparisonPdfService) {
         this.propertyService = propertyService;
         this.propertyMemoService = propertyMemoService;
         this.propertyChecklistService = propertyChecklistService;
         this.propertyPhotoService = propertyPhotoService;
         this.propertyDeletionService = propertyDeletionService;
         this.propertyCsvService = propertyCsvService;
+        this.propertyComparisonPdfService = propertyComparisonPdfService;
     }
 
     @GetMapping
@@ -92,6 +97,20 @@ public class PropertyController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"moca-properties.csv\"")
                 .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
                 .body(propertyCsvService.export(memberId));
+    }
+
+    @PostMapping(value = "/export.pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(summary = "선택 매물 기록 비교 PDF",
+            description = "소유한 매물 2~5개를 선택해 기본 정보, 사진, 메모와 세 단계 체크 기록을 PDF로 내려받습니다."
+                    + " 점수나 추천은 생성하지 않습니다.")
+    public ResponseEntity<byte[]> exportPdf(
+            @AuthenticatedMemberId final Long memberId,
+            @Valid @RequestBody final ExportPropertyComparisonRequest request) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"moca-property-comparison.pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(propertyComparisonPdfService.export(memberId, request.propertyIds()));
     }
 
     @PostMapping

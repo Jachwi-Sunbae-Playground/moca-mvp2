@@ -49,6 +49,7 @@ public class DomainErrorHttpMapper {
             case REFRESH_TOKEN_REUSED,
                     PROPERTY_LIMIT_EXCEEDED -> HttpStatus.CONFLICT;
             case PHOTO_STORAGE_FAILURE,
+                    PROPERTY_COMPARISON_EXPORT_FAILED,
                     MAP_PROVIDER_UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE;
             case GOOGLE_AUTHENTICATION_FAILED,
                     GOOGLE_IDENTITY_INVALID,

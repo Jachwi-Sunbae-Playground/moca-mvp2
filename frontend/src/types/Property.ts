@@ -26,6 +26,7 @@ export type PropertySummary = {
     contentType: 'image/jpeg' | 'image/png' | 'image/webp';
   } | null;
   progress: PropertyChecklistProgress;
+  stages: PropertyChecklistStageSummary[];
   photoCount: number;
   lastActivityAt: string;
 };

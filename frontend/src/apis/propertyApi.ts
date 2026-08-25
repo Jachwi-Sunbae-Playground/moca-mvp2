@@ -51,7 +51,21 @@ export const fetchProperties = (
 };
 
 export const fetchPropertyCsv = (config: PublicConfig, signal?: AbortSignal): Promise<Blob> =>
-  apiBlobRequest({ config, path: '/api/properties/export.csv', signal });
+  apiBlobRequest({ config, path: '/api/properties/export.csv', acceptedContentTypes: ['text/csv'], signal });
+
+export const fetchPropertyComparisonPdf = (
+  config: PublicConfig,
+  propertyIds: number[],
+  signal?: AbortSignal,
+): Promise<Blob> =>
+  apiBlobRequest({
+    config,
+    path: '/api/properties/export.pdf',
+    method: 'POST',
+    body: { propertyIds },
+    acceptedContentTypes: ['application/pdf'],
+    signal,
+  });
 
 export const createProperty = (config: PublicConfig, request: PropertyInputDto): Promise<PropertyBasicInfo> =>
   apiRequest({

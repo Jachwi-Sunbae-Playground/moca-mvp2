@@ -45,6 +45,7 @@ dependencies {
 	implementation platform('software.amazon.awssdk:bom:2.41.24')
 	implementation 'software.amazon.awssdk:s3'
 	implementation 'com.twelvemonkeys.imageio:imageio-webp:3.13.1'
+	implementation 'org.apache.pdfbox:pdfbox:3.0.8'
 	implementation 'com.google.api-client:google-api-client:2.8.1'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'

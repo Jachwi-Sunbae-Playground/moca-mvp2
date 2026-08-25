@@ -1,5 +1,6 @@
 import { HttpResponse } from 'msw';
 import { isChecklistStage } from '../constants/checklist';
+import { CHECKLIST_STAGES } from '../types/Checklist';
 import type { ChecklistStage } from '../types/Checklist';
 
 export const now = '2026-08-20T05:00:00.000Z';
@@ -237,6 +238,7 @@ export const propertyProgress = (propertyId: number) => {
 
 export const propertyResponse = (property: MockProperty) => {
   const photos = photosByProperty.get(property.id) ?? [];
+  const applied = appliedByProperty.get(property.id) ?? new Map();
   return {
     ...property,
     address: property.roadAddress ?? property.jibunAddress,
@@ -247,6 +249,17 @@ export const propertyResponse = (property: MockProperty) => {
     photos,
     representativePhoto: photos.find((photo) => photo.representative) ?? null,
     overallProgress: propertyProgress(property.id),
+    stages: CHECKLIST_STAGES.map((stage) => {
+      const checklist = applied.get(stage);
+      return {
+        stage,
+        applied: checklist !== undefined,
+        propertyChecklistId: checklist?.id ?? null,
+        checklistName: checklist?.checklistName ?? null,
+        sourceChecklistId: checklist?.sourceChecklistId ?? null,
+        progress: checklist === undefined ? emptyProgress : progressFromItems(checklist.items),
+      };
+    }),
   };
 };
 

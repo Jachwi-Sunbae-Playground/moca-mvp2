@@ -2,14 +2,9 @@ import PageHeading from '../components/PageHeading';
 import { ButtonLink } from '../components/ui/Button';
 import './UpcomingFeaturePage.css';
 
-type UpcomingFeature = 'compare' | 'export' | 'tips';
+type UpcomingFeature = 'export' | 'tips';
 
 const featureContent: Record<UpcomingFeature, { eyebrow: string; title: string; description: string }> = {
-  compare: {
-    eyebrow: '비교표',
-    title: '매물 비교는 준비 중이에요',
-    description: '여러 매물의 조건과 체크 결과를 한눈에 비교하는 기능을 다음 범위에서 제공할 예정이에요.',
-  },
   export: {
     eyebrow: '내보내기',
     title: '기록 내보내기는 준비 중이에요',
