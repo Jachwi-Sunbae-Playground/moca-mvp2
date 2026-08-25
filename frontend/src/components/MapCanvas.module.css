@@ -97,6 +97,13 @@ button.marker {
   cursor: pointer;
 }
 
+button.placeMarker::before,
+button.clusterMarker::before {
+  position: absolute;
+  inset: -0.55rem;
+  content: '';
+}
+
 .propertyMarker,
 .currentMarker {
   width: 2.7rem;
@@ -122,7 +129,9 @@ button.marker {
 }
 
 .activeMarker {
-  filter: saturate(1.1);
+  outline: 2px solid white;
+  outline-offset: 2px;
+  filter: saturate(1.15);
   scale: 1.08;
 }
 
@@ -176,14 +185,18 @@ button.marker {
   background: rgb(100 116 139 / 92%);
 }
 
-.clusterMarker .markerIcon {
-  font-size: 0.68rem;
-}
-
 .markerIcon {
   font-size: 0.78rem;
   font-weight: 900;
   line-height: 1;
+}
+
+.categoryIcon {
+  font-size: 0.78rem;
+}
+
+.clusterMarker .categoryIcon {
+  font-size: 0.72rem;
 }
 
 .markerCount {
@@ -191,14 +204,14 @@ button.marker {
   right: -0.28rem;
   bottom: -0.28rem;
   display: grid;
-  min-width: 1.1rem;
-  height: 1.1rem;
+  min-width: 0.92rem;
+  height: 0.92rem;
   padding: 0 0.2rem;
   border: 2px solid white;
   border-radius: 999px;
   background: #252a23;
   color: white;
-  font-size: 0.52rem;
+  font-size: 0.46rem;
   place-items: center;
 }
 

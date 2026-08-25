@@ -7,6 +7,7 @@ import MapCanvas from '../components/MapCanvas';
 import type { MapMarker, MapRadiusCircle } from '../components/MapCanvas';
 import MapCategoryRail from '../components/MapCategoryRail';
 import MapNearbySheet from '../components/MapNearbySheet';
+import MapPlaceDetailCard from '../components/MapPlaceDetailCard';
 import { clusterNearbyPlaces } from '../components/mapClustering';
 import { ALL_MAP_CATEGORIES } from '../components/mapPresentation';
 import Icon from '../components/ui/Icon';
@@ -46,6 +47,7 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
   const [selectedCategories, setSelectedCategories] = useState<MapCategory[]>([]);
   const [listExpanded, setListExpanded] = useState(false);
   const [locationLabel, setLocationLabel] = useState('현재 위치');
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
 
   const nearby = useQuery({
     queryKey: ['map-explore-nearby', currentPosition.latitude.toFixed(4), currentPosition.longitude.toFixed(4), radius],
@@ -82,6 +84,14 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
     [nearby.data?.places, selectedCategories],
   );
   const facilityMarkers = useMemo(() => clusterNearbyPlaces(filteredPlaces, mapLevel), [filteredPlaces, mapLevel]);
+  const selectedPlace = useMemo(
+    () => filteredPlaces.find((place) => place.providerPlaceId === selectedPlaceId) ?? null,
+    [filteredPlaces, selectedPlaceId],
+  );
+
+  useEffect(() => {
+    if (selectedPlaceId !== null && selectedPlace === null) setSelectedPlaceId(null);
+  }, [selectedPlace, selectedPlaceId]);
 
   const markers = useMemo<MapMarker[]>(() => {
     const propertyMarkers: MapMarker[] = mapped.map((item) => ({
@@ -113,6 +123,7 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
   );
 
   const selectRadius = (nextRadius: MapRadius, nextAllMode = false) => {
+    setSelectedPlaceId(null);
     setRadius(nextRadius);
     setMapLevel(levelForRadius(nextRadius));
     setViewportCenter(currentPosition);
@@ -127,6 +138,7 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
     setMapLevel(levelForRadius(radius));
     writeLastMapCenter(coordinate);
     setLocationLabel(address.roadAddress ?? address.jibunAddress ?? address.address ?? '선택한 위치');
+    setSelectedPlaceId(null);
     setLocationStatus('ready');
   };
 
@@ -148,9 +160,22 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
           radiusCenter={currentPosition}
           level={mapLevel}
           showRadiusLabels
-          selectedMarkerId="current-location"
-          onSelectMarker={(id) => {
-            if (id.startsWith('property-')) navigate(`/properties/${id.slice('property-'.length)}/nearby`);
+          selectedMarkerId={selectedPlace === null ? 'current-location' : `place-${selectedPlace.providerPlaceId}`}
+          onSelectMarker={(marker) => {
+            if (marker.id.startsWith('property-')) {
+              navigate(`/properties/${marker.id.slice('property-'.length)}/nearby`);
+              return;
+            }
+            if (marker.tone === 'cluster') {
+              setViewportCenter({ latitude: marker.latitude, longitude: marker.longitude });
+              setMapLevel((current) => Math.max(3, current - 1));
+              setSelectedPlaceId(null);
+              return;
+            }
+            if (marker.placeId !== undefined) {
+              setSelectedPlaceId(marker.placeId);
+              setListExpanded(false);
+            }
           }}
           onCenterChange={(latitude, longitude) => {
             const coordinate = { latitude, longitude };
@@ -236,6 +261,10 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
           <Icon name="plus" size={28} />
         </Link>
 
+        {selectedPlace !== null && (
+          <MapPlaceDetailCard place={selectedPlace} avoidControls onClose={() => setSelectedPlaceId(null)} />
+        )}
+
         {locationStatus !== 'locating' && !nearby.isPending && !nearby.isError && nearby.data !== undefined && (
           <MapNearbySheet
             eyebrow={locationLabel}
@@ -244,7 +273,10 @@ const MapPage = ({ config }: { config: PublicConfig }) => {
             selectedCategories={selectedCategories}
             places={filteredPlaces}
             expanded={listExpanded}
-            onToggleExpanded={() => setListExpanded((current) => !current)}
+            onToggleExpanded={() => {
+              setListExpanded((current) => !current);
+              if (!listExpanded) setSelectedPlaceId(null);
+            }}
             onToggleCategory={(category) => {
               setSelectedCategories((current) => toggleCategory(current, category));
               setAllMode(false);

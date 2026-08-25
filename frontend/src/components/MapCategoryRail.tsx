@@ -1,4 +1,5 @@
 import type { MapCategory } from '../types/Map';
+import MapCategoryIcon from './MapCategoryIcon';
 import { MAP_CATEGORY_OPTIONS } from './mapPresentation';
 import styles from './MapCategoryRail.module.css';
 
@@ -23,7 +24,7 @@ const MapCategoryRail = ({ selectedCategories, counts, onToggle }: MapCategoryRa
           aria-label={`${option.label} ${selected ? '숨기기' : '표시하기'}${count === undefined ? '' : `, ${count}개`}`}
           onClick={() => onToggle(option.value)}
         >
-          <span className={styles.icon} aria-hidden="true" />
+          <MapCategoryIcon category={option.value} className={styles.icon} />
           <span>{option.shortLabel}</span>
         </button>
       );
