@@ -9,8 +9,6 @@ import { apiRequest } from './apiClient';
 
 const config: PublicConfig = {
   apiBaseUrl: 'http://localhost:8080',
-  googleClientId: 'test-client.apps.googleusercontent.com',
-  googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
 };
 
 describe('API 클라이언트', () => {

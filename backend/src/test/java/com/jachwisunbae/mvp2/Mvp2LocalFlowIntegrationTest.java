@@ -55,15 +55,16 @@ class Mvp2LocalFlowIntegrationTest extends IntegrationTest {
     private PhotoStorage photoStorage;
 
     @Test
-    void 데모_로그인부터_매물_메모_체크_사진_지도_삭제까지_동작한다() throws Exception {
+    void 닉네임_로그인부터_매물_메모_체크_사진_지도_삭제까지_동작한다() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths", hasKey("/api/maps/nearby")))
                 .andExpect(jsonPath("$.paths", hasKey("/api/properties/export.csv")))
                 .andExpect(jsonPath("$.paths", hasKey("/api/properties/export.pdf")))
+                .andExpect(jsonPath("$.paths", hasKey("/api/auth/nickname")))
                 .andExpect(jsonPath("$.paths", hasKey("/api/properties/{propertyId}/photos/{photoId}")));
 
-        String token = demoLoginToken();
+        String token = nicknameLoginToken("통합테스터", null);
 
         mockMvc.perform(get("/api/maps/geocode")
                         .header("Authorization", bearer(token))
@@ -73,6 +74,11 @@ class Mvp2LocalFlowIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.data[0].roadAddress").value("서울 관악구 신림로 12길 3"));
 
         long propertyId = createProperty(token);
+
+        String otherMemberToken = nicknameLoginToken("다른테스터", "other-safe-password");
+        mockMvc.perform(get("/api/properties/{propertyId}", propertyId)
+                        .header("Authorization", bearer(otherMemberToken)))
+                .andExpect(status().isNotFound());
 
         mockMvc.perform(get("/api/properties/{propertyId}", propertyId)
                         .header("Authorization", bearer(jwtTokenProvider.createAccessToken(999_999L))))
@@ -218,10 +224,16 @@ class Mvp2LocalFlowIntegrationTest extends IntegrationTest {
         verify(photoStorage, atLeastOnce()).delete(anyString());
     }
 
-    private String demoLoginToken() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/auth/demo"))
+    private String nicknameLoginToken(String nickname, String password) throws Exception {
+        String body = password == null
+                ? "{\"nickname\":\"" + nickname + "\"}"
+                : "{\"nickname\":\"" + nickname + "\",\"password\":\"" + password + "\"}";
+        MvcResult result = mockMvc.perform(post("/api/auth/nickname")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.member.email").value("demo@moca.local"))
+                .andExpect(jsonPath("$.data.member.name").value(nickname))
+                .andExpect(jsonPath("$.data.member.passwordProtected").value(password != null))
                 .andReturn();
         return data(result).path("accessToken").asText();
     }

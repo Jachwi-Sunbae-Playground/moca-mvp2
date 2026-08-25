@@ -1,7 +1,7 @@
 export const memberFixture = {
   id: 1,
   name: '이자취',
-  email: 'jachwi@example.com',
+  passwordProtected: false,
 };
 
 export const propertySummaryFixture = {

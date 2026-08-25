@@ -25,8 +25,6 @@ import {
 
 const config: PublicConfig = {
   apiBaseUrl: 'http://localhost:8080',
-  googleClientId: 'test-client',
-  googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
 };
 
 const authenticate = () => setAuthentication({ accessToken: 'memory-token', tokenType: 'Bearer', expiresIn: 60 });

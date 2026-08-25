@@ -22,7 +22,7 @@ curl --fail http://127.0.0.1:8080/actuator/health
 
 ## 프론트엔드
 
-프론트 정적 파일도 같은 릴리스 안에 있으므로 애플리케이션 링크 롤백과 함께 돌아간다. 공개 도메인의 `/`, `/properties`와 OAuth callback 경로를 새로고침해 SPA fallback까지 확인한다.
+프론트 정적 파일도 같은 릴리스 안에 있으므로 애플리케이션 링크 롤백과 함께 돌아간다. 공개 도메인의 `/`, `/login`, `/properties`를 새로고침해 SPA fallback까지 확인한다.
 
 ## 데이터베이스
 
@@ -32,4 +32,6 @@ curl --fail http://127.0.0.1:8080/actuator/health
 - 파괴적인 SQL을 배포 스크립트에 넣지 않는다.
 - 복구 전에 장애 시점, 마지막 정상 백업과 백업 이후 데이터 손실 범위를 확인한다.
 - 복원은 별도 DB에서 검증한 뒤 서비스 중단과 사용자 영향을 기록하고 실행한다.
-- 보존 데이터가 생긴 뒤의 스키마 변경은 [ADR-0009](../adr/0009-use-disposable-database-schema.md)의 재검토 조건에 따라 마이그레이션 체계를 먼저 도입한다.
+- additive 보강은 [데이터베이스 초기화와 업그레이드](../guides/database-initialization.md)의 멱등 SQL 절차를 따른다.
+- upgrade SQL은 애플리케이션 롤백 때 되돌리지 않으므로 이전 코드와 하위 호환되는 변경만 허용한다.
+- 테이블 재작성·파괴적 변경은 [ADR-0011](../adr/0011-apply-idempotent-database-upgrades.md)의 재검토 조건에 따라 전용 마이그레이션 체계를 먼저 선택한다.

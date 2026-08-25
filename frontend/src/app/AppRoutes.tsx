@@ -8,7 +8,6 @@ import { isChecklistStage } from '../constants/checklist';
 import type { PublicConfig } from '../types/PublicConfig';
 import LoginPage from './LoginPage';
 import NotFoundPage from './NotFoundPage';
-import OAuthCallbackPage from './OAuthCallbackPage';
 import ProtectedRoute from './ProtectedRoute';
 
 const PropertyListPage = lazy(() => import('./PropertyListPage'));
@@ -39,27 +38,21 @@ const ChecklistResourceRoute = ({ config }: { config: PublicConfig }) => {
 
 type AppRoutesProps = {
   config: PublicConfig;
-  storage?: Storage;
-  navigateExternally?: (url: string) => void;
 };
 
-const LoginRoute = ({ config, storage, navigateExternally }: AppRoutesProps) => {
+const LoginRoute = ({ config }: AppRoutesProps) => {
   const { session } = useAuthentication();
 
   if (session !== null) {
     return <Navigate to="/properties" replace />;
   }
 
-  return <LoginPage config={config} storage={storage} navigateExternally={navigateExternally} />;
+  return <LoginPage config={config} />;
 };
 
-const AppRoutes = ({ config, storage, navigateExternally }: AppRoutesProps) => (
+const AppRoutes = ({ config }: AppRoutesProps) => (
   <Routes>
-    <Route
-      path="/login"
-      element={<LoginRoute config={config} storage={storage} navigateExternally={navigateExternally} />}
-    />
-    <Route path="/oauth/google/callback" element={<OAuthCallbackPage config={config} storage={storage} />} />
+    <Route path="/login" element={<LoginRoute config={config} />} />
     <Route element={<ProtectedRoute config={config} />}>
       <Route element={<PropertyAppLayout />}>
         <Route index element={<Navigate to="/properties" replace />} />

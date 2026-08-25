@@ -5,9 +5,6 @@ import MapCanvas from './MapCanvas';
 
 const config: PublicConfig = {
   apiBaseUrl: 'http://localhost:8080',
-  googleClientId: '',
-  googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
-  authMode: 'demo',
   mapProviderMode: 'kakao',
   kakaoMapJavaScriptKey: 'test-key',
 };

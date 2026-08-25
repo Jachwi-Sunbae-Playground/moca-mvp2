@@ -12,9 +12,10 @@ public class DomainErrorHttpMapper {
             case SYSTEM_CHECK_ITEM_STAGE_REQUIRED,
                     SYSTEM_CHECK_ITEM_TYPE_REQUIRED,
                     SYSTEM_CHECK_ITEM_QUESTION_INVALID,
-                    MEMBER_SUBJECT_INVALID,
                     MEMBER_EMAIL_INVALID,
                     MEMBER_NAME_INVALID,
+                    NICKNAME_INVALID,
+                    NICKNAME_PASSWORD_INVALID,
                     USER_CHECKLIST_MEMBER_REQUIRED,
                     USER_CHECKLIST_NAME_INVALID,
                     USER_CHECKLIST_STAGE_REQUIRED,
@@ -40,20 +41,16 @@ public class DomainErrorHttpMapper {
                     CHECKLIST_ITEM_NOT_FOUND,
                     PROPERTY_NOT_FOUND,
                     PHOTO_NOT_FOUND,
-                    DEMO_AUTH_DISABLED,
                     PROPERTY_CHECKLIST_NOT_FOUND,
                     PROPERTY_CHECKLIST_ITEM_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case ACCESS_TOKEN_INVALID,
-                    REFRESH_TOKEN_INVALID,
-                    REFRESH_TOKEN_EXPIRED -> HttpStatus.UNAUTHORIZED;
-            case REFRESH_TOKEN_REUSED,
-                    PROPERTY_LIMIT_EXCEEDED -> HttpStatus.CONFLICT;
+                    NICKNAME_AUTHENTICATION_FAILED -> HttpStatus.UNAUTHORIZED;
+            case PROPERTY_LIMIT_EXCEEDED,
+                    NICKNAME_PASSWORD_UNEXPECTED -> HttpStatus.CONFLICT;
+            case NICKNAME_AUTH_RATE_LIMITED -> HttpStatus.TOO_MANY_REQUESTS;
             case PHOTO_STORAGE_FAILURE,
                     PROPERTY_COMPARISON_EXPORT_FAILED,
                     MAP_PROVIDER_UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE;
-            case GOOGLE_AUTHENTICATION_FAILED,
-                    GOOGLE_IDENTITY_INVALID,
-                    OAUTH_PROVIDER_UNSUPPORTED -> HttpStatus.BAD_REQUEST;
         };
     }
 }

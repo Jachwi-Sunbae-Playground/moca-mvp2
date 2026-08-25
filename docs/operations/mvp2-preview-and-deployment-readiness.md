@@ -1,6 +1,6 @@
 # MVP2 로컬 확인과 배포 준비
 
-- 상태: 로컬 구현 완료·실연동 미검증
+- 상태: 닉네임 인증 로컬 검증 완료·운영 배포 전
 - 문서 성격: 파생
 - 대조 대상: [MVP2 구현 인계서](../product/mvp2-implementation-brief.md), `backend/.env.example`, `frontend/.env.example`, `deploy/`
 
@@ -10,15 +10,15 @@ MVP2의 로컬 실행과 배포 설정 경계까지 구현했다. AWS 리소스 
 
 ## 키 없이 확인 가능한 범위
 
-- 데모 로그인
-- 데모 회원의 매물·사진·메모·체크리스트 CRUD와 상태·메모 자동 저장
+- 닉네임과 선택 비밀번호로 시작
+- 닉네임 회원의 매물·사진·메모·체크리스트 CRUD와 상태·메모 자동 저장
 - 17개 기준 화면과 빈·로딩·오류 상태
 - 데모 지도, 주소 선택과 다섯 주변 카테고리
 - 2~5개 매물 선택과 저장 기록 전체 PDF 비교표
 - MySQL 영속화와 MinIO 사진 저장
 - Swagger UI
 
-실행 명령과 포트는 [로컬 개발](../../backend/docs/guides/local-development.md), 변수의 정본은 [환경변수](../../backend/docs/guides/environment-variables.md)를 따른다. 데모 로그인은 암호 없이 `demo@moca.local` 회원을 사용한다.
+실행 명령과 포트는 [로컬 개발](../../backend/docs/guides/local-development.md), 변수의 정본은 [환경변수](../../backend/docs/guides/environment-variables.md)를 따른다. `이자취` 닉네임은 비밀번호 없는 데모 데이터와 연결된다.
 
 ## 2026-08-24 로컬 검증 결과
 
@@ -26,21 +26,23 @@ MVP2의 로컬 실행과 배포 설정 경계까지 구현했다. AWS 리소스 
 - 백엔드 전체 테스트, 프론트엔드 22개 파일·132개 테스트, typecheck·lint·format·production build와 문서 정합성 검사를 실행했다.
 - `390x844` 브라우저 viewport에서 `00`부터 `10`, `13-1`, `13-2`까지 16개 화면과 데모 로그인·매물 생성·조회·사진·메모·체크리스트·지도 위치 선택을 확인했다.
 - 브라우저 제어 보안 검토가 이후 localhost 접근을 차단해 `13-3`의 실제 브라우저 진입과 두 번째 모바일 폭 확인은 수행하지 못했다. `13-3`의 기본 2km·반경 변경·카테고리 빈 상태는 독립 화면 테스트로 검증했다.
-- Google OAuth, Kakao 실제 SDK·Local API와 AWS S3는 키·외부 자원을 만들지 않았으므로 미검증이다.
+- 이 시점에는 Google OAuth, Kakao 실제 SDK·Local API와 AWS S3를 키·외부 자원 없이 미검증 상태로 남겼다. 이후 Google OAuth는 제품에서 제거했고 Kakao·S3는 별도 운영 배포에서 검증했다.
 
 ## 2026-08-25 비교 PDF 검증 결과
 
 - 매물 목록의 1·2·3단계별 집계와 발견 경로, 2~5개 선택 화면을 프론트엔드 테스트로 확인했다.
 - 한글 글꼴을 임베딩한 샘플 PDF를 생성해 모든 5페이지를 이미지로 렌더링했고, 가로형 요약표·사진·메모·세 단계 질문과 항목 메모가 잘림 없이 보이는지 확인했다.
 
+## 2026-08-25 닉네임 인증 검증 결과
+
+- 백엔드 전체 테스트에서 신규·공유·보호 닉네임, 비밀번호 hash, 잘못된 비밀번호, 공유 닉네임 선점 방지, 5회 실패 제한과 소유자 격리를 확인했다.
+- 레거시 회원이 있는 DB에 닉네임 upgrade 초기화를 두 번 적용해 기존 회원과 데이터가 유지되고 NFKC 중복이 분리되며 자격정보가 중복되지 않는지 확인했다.
+- 프론트엔드 22개 파일·131개 테스트와 typecheck·lint·format·production build를 통과했다.
+- 실제 MySQL·MinIO와 백엔드를 연결한 `390x844` 브라우저에서 공유 닉네임 최초 시작·재진입, 보호 닉네임의 실패·성공과 마이페이지 보호 표시를 확인했다.
+- `390x844`와 `360x800`에서 로그인 폼의 label·submit 상태, 가로 overflow 없음과 콘솔 오류 없음을 확인했다.
+- 운영 `jachwisunbae.shop`에는 아직 이 인증 릴리스를 배포하지 않았다. 병합 뒤 `Deploy production` 수동 워크플로와 아래 배포 후 순서를 별도로 실행한다.
+
 ## 실제 외부 연동에 필요한 사용자 작업
-
-### Google 로그인
-
-- Google Cloud에서 Web OAuth client를 만든다.
-- 로컬 redirect URI `http://localhost:3000/oauth/google/callback`을 등록한다.
-- 운영 redirect URI `https://<서비스 도메인>/oauth/google/callback`을 등록한다.
-- 프론트엔드 client ID와 백엔드 client ID·secret을 환경변수에 넣는다.
 
 ### Kakao 지도
 
@@ -61,7 +63,7 @@ MVP2의 로컬 실행과 배포 설정 경계까지 구현했다. AWS 리소스 
 | 네트워크 | EC2 public IP, 서비스 도메인, DNS A/AAAA |
 | HTTPS | Caddy가 인증서를 발급할 수 있는 80·443 inbound |
 | DB | 운영 MySQL 사용자·비밀번호, 백업 경로와 복구 확인 |
-| 인증 | Google client ID·secret·redirect URI |
+| 인증 | 운영 전용 `JWT_SECRET`; 닉네임 인증 외부 key는 없음 |
 | 지도 | Kakao JavaScript key·REST key·운영 SDK 도메인, 실제 버스정류소용 공공데이터포털 TAGO 일반 인증키(Decoding) |
 | 사진 | S3 region·bucket·key prefix·EC2 role |
 | 애플리케이션 | JWT secret, CORS origin, 운영 profile |
@@ -69,8 +71,6 @@ MVP2의 로컬 실행과 배포 설정 경계까지 구현했다. AWS 리소스 
 
 ### 구현과 맞춘 값 이름
 
-- 백엔드 Google: `AUTH_MODE=google`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`
-- 프론트 Google: `AUTH_MODE=google`, `GOOGLE_CLIENT_ID`, `GOOGLE_REDIRECT_URI`
 - 백엔드 Kakao: `MAP_PROVIDER_MODE=kakao`, `KAKAO_REST_API_KEY`
 - 백엔드 버스정류소: `BUS_STOP_PROVIDER=tago`, `DATA_GO_KR_SERVICE_KEY`
 - 프론트 Kakao: `MAP_PROVIDER_MODE=kakao`, `KAKAO_MAP_JAVASCRIPT_KEY`
@@ -81,12 +81,13 @@ MVP2의 로컬 실행과 배포 설정 경계까지 구현했다. AWS 리소스 
 
 ## 배포 직전 체크리스트
 
-- [ ] 병합된 `main`에서 로컬 `demo` 전체 흐름을 다시 확인한다.
-- [ ] 로컬 `live`에서 Google·Kakao를 확인한다.
+- [ ] 병합된 `main`에서 닉네임 인증과 `demo` 지도 전체 흐름을 다시 확인한다.
+- [ ] 공유 닉네임, 보호 닉네임, 잘못된 비밀번호와 반복 실패 제한을 확인한다.
+- [ ] 로컬 `kakao` 지도 연동을 확인한다.
 - [ ] S3 테스트 객체 업로드·조회·삭제가 성공한다.
 - [ ] 운영 schema 초기화와 seed 범위를 검토한다.
 - [ ] 운영 DB 백업과 한 번의 복구 연습을 완료한다.
-- [ ] Google redirect URI와 Kakao JavaScript SDK 도메인에 실제 HTTPS 도메인을 등록한다.
+- [ ] Kakao JavaScript SDK 도메인에 실제 HTTPS 도메인을 등록한다.
 - [ ] Kakao 무료 쿼터와 과금 비활성 상태를 확인한다.
 - [ ] 국토교통부 TAGO 버스정류소정보를 활용 신청하고 중심 500m 실제 정류소를 확인한다.
 - [ ] Caddy health check와 백엔드 `/actuator/health`를 확인한다.
@@ -96,7 +97,7 @@ MVP2의 로컬 실행과 배포 설정 경계까지 구현했다. AWS 리소스 
 ## 배포 후 확인 순서
 
 1. HTTPS와 health endpoint
-2. Google 로그인과 마이페이지
+2. 공유·보호 닉네임 시작과 마이페이지 보호 표시
 3. 매물 생성·수정·삭제
 4. 사진 S3 업로드·대표 변경·삭제
 5. 메모와 체크 상태 자동 저장

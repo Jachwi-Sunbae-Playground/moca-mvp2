@@ -8,7 +8,7 @@
 
 이 저장소는 [자취선배 원본 저장소](https://github.com/woowacourse-teams/2026-jachwi-sunbae)의 MVP1 `develop`을 전체 Git 이력과 함께 옮긴 개인 MVP2 실험 공간입니다. 기준 커밋은 `021a1b8b2565323a8963f6e8fe6dc72bb33eff0b`, 태그는 `mvp1-baseline`입니다.
 
-로컬에서는 외부 키 없는 데모 모드로 실행할 수 있고, 운영 환경은 개인 AWS의 단일 EC2·비공개 S3와 `jachwisunbae.shop`에서 실행합니다. 운영 배포는 GitHub Actions의 수동 워크플로만 사용합니다.
+로컬에서는 외부 계정 없이 닉네임과 선택 비밀번호로 시작하고 데모 지도로 실행할 수 있습니다. 운영 환경은 개인 AWS의 단일 EC2·비공개 S3와 `jachwisunbae.shop`에서 실행합니다. 운영 배포는 GitHub Actions의 수동 워크플로만 사용합니다.
 
 ## 문서
 

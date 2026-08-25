@@ -25,8 +25,6 @@ import type { PublicConfig } from '../types/PublicConfig';
 
 const config: PublicConfig = {
   apiBaseUrl: 'http://localhost:8080',
-  googleClientId: 'test-client',
-  googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
 };
 
 const detailWithoutPhotosFixture = {
@@ -44,7 +42,7 @@ const renderAuthenticated = (path: string) => {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[path]}>
-          <AppRoutes config={config} storage={window.sessionStorage} />
+          <AppRoutes config={config} />
         </MemoryRouter>
       </QueryClientProvider>
     </StrictMode>,

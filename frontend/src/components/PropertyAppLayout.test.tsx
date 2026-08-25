@@ -8,7 +8,7 @@ describe('모바일 앱 셸', () => {
     render(
       <MemoryRouter initialEntries={['/properties']}>
         <Routes>
-          <Route element={<Outlet context={{ memberId: 1, displayName: '이자취', email: 'jachwi@example.com' }} />}>
+          <Route element={<Outlet context={{ memberId: 1, displayName: '이자취', passwordProtected: false }} />}>
             <Route element={<PropertyAppLayout />}>
               <Route path="/properties" element={<h1>매물 목록</h1>} />
             </Route>

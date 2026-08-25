@@ -6,15 +6,14 @@ spring:
       data-locations: classpath:db/init/002-seed.sql
 
 auth:
-  mode: demo
   jwt:
     secret: test-jwt-secret-must-be-at-least-32-bytes
     issuer: jachwi-sunbae
     audience: jachwi-sunbae-api
     access-token-seconds: 43200
-  google:
-    client-id: test-google-client-id
-    client-secret: test-google-client-secret
+  nickname:
+    max-failures: 5
+    failure-window-seconds: 600
 
 app:
   cors:

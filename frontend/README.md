@@ -20,28 +20,25 @@ set +a
 npm run dev
 ```
 
-기본 `.env.example`은 외부 키가 필요 없는 데모 인증·지도 모드입니다. `http://localhost:3000`에서 `데모로 시작하기`를 누르면 됩니다. Webpack은 `.env.local`을 자동으로 읽지 않으므로 실행 전에 셸로 내보냅니다.
+기본 `.env.example`은 외부 키가 필요 없는 닉네임 인증·데모 지도 모드입니다. `http://localhost:3000`에서 닉네임과 선택 비밀번호로 바로 시작합니다. Webpack은 `.env.local`을 자동으로 읽지 않으므로 실행 전에 셸로 내보냅니다.
 
 백엔드 없이 UI fixture만 확인하려면 `npm run dev:mock`을 사용합니다. MSW는 개발 빌드에서만 켜지며 운영 번들에는 포함되지 않습니다.
 
 ## 공개 빌드 설정
 
-| 환경변수                   | 데모 기본                                     | 설명                                     |
-| -------------------------- | --------------------------------------------- | ---------------------------------------- |
-| `API_BASE_URL`             | `http://localhost:8080`                       | 백엔드 기준 URL                          |
-| `AUTH_MODE`                | `demo`                                        | `demo` 또는 `google`                     |
-| `GOOGLE_CLIENT_ID`         | 비움                                          | `google` 모드의 공개 Web OAuth Client ID |
-| `GOOGLE_REDIRECT_URI`      | `http://localhost:3000/oauth/google/callback` | Google callback                          |
-| `MAP_PROVIDER_MODE`        | `demo`                                        | `demo` 또는 `kakao`                      |
-| `KAKAO_MAP_JAVASCRIPT_KEY` | 비움                                          | `kakao` 모드의 공개 JavaScript SDK 키    |
+| 환경변수                   | 데모 기본               | 설명                                  |
+| -------------------------- | ----------------------- | ------------------------------------- |
+| `API_BASE_URL`             | `http://localhost:8080` | 백엔드 기준 URL                       |
+| `MAP_PROVIDER_MODE`        | `demo`                  | `demo` 또는 `kakao`                   |
+| `KAKAO_MAP_JAVASCRIPT_KEY` | 비움                    | `kakao` 모드의 공개 JavaScript SDK 키 |
 
-Client Secret, JWT secret, Kakao REST key, S3 자격증명은 프론트에 넣지 않습니다. 실제 Google·Kakao 설정은 [환경변수](../backend/docs/guides/environment-variables.md)와 [지도 외부 연동](../backend/docs/guides/map-integration.md)을 따릅니다.
+JWT secret, Kakao REST key, S3 자격증명은 프론트에 넣지 않습니다. 실제 Kakao 설정은 [환경변수](../backend/docs/guides/environment-variables.md)와 [지도 외부 연동](../backend/docs/guides/map-integration.md)을 따릅니다.
 
 ## 화면과 경로
 
 | 화면      | 경로                                                      | 기능                                              |
 | --------- | --------------------------------------------------------- | ------------------------------------------------- |
-| `00`      | `/login`                                                  | 데모 또는 Google 로그인                           |
+| `00`      | `/login`                                                  | 닉네임과 선택 비밀번호로 시작                     |
 | `01`      | `/properties`                                             | 최근 활동순 매물, 단계별 진행 현황, PDF 비교 진입 |
 | 매물 비교 | `/compare`                                                | 2~5개 매물 선택과 전체 기록 PDF 다운로드          |
 | `02`      | `/properties/new`                                         | 주소·좌표를 포함한 매물 등록                      |

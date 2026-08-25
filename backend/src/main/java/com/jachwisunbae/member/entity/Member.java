@@ -36,8 +36,7 @@ public class Member extends BaseTimeEntity {
         return new Member(id, validateEmail(email), validateName(name), lastLoginAt, createdAt, updatedAt);
     }
 
-    public void updateLoginProfile(final String email, final String name, final LocalDateTime loginAt) {
-        this.email = validateEmail(email);
+    public void recordNicknameLogin(final String name, final LocalDateTime loginAt) {
         this.name = validateName(name);
         this.lastLoginAt = DomainPreconditions.requireNonNull(loginAt, DomainErrorCode.MEMBER_NAME_INVALID,
                 "최근 로그인 시각은 필수입니다.");

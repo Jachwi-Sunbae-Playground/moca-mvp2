@@ -8,9 +8,6 @@ import { fetchNearby, reverseGeocode, searchAddress } from './mapApi';
 
 const config: PublicConfig = {
   apiBaseUrl: 'http://localhost:8080',
-  googleClientId: '',
-  googleRedirectUri: 'http://localhost:3000/oauth/google/callback',
-  authMode: 'demo',
   mapProviderMode: 'demo',
 };
 
