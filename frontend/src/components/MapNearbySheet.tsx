@@ -5,7 +5,7 @@ import { ALL_MAP_CATEGORIES, getMapCategoryLabel } from './mapPresentation';
 import styles from './MapNearbySheet.module.css';
 
 type MapNearbySheetProps = {
-  eyebrow: string;
+  eyebrow?: string;
   heading: string;
   counts: NearbyResult['counts'];
   selectedCategories: MapCategory[];
@@ -29,7 +29,7 @@ const MapNearbySheet = ({
     <span className={styles.dragHandle} aria-hidden="true" />
     <div className={styles.header}>
       <div>
-        <span>{eyebrow}</span>
+        {eyebrow !== undefined && <span>{eyebrow}</span>}
         <h1>{heading}</h1>
       </div>
       <button type="button" aria-expanded={expanded} aria-controls="nearby-place-list" onClick={onToggleExpanded}>
