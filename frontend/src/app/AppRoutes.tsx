@@ -6,6 +6,7 @@ import PropertyAppLayout from '../components/PropertyAppLayout';
 import { useAuthentication } from '../hooks/useAuthentication';
 import { isChecklistStage } from '../constants/checklist';
 import type { PublicConfig } from '../types/PublicConfig';
+import IntroPage from './IntroPage';
 import LoginPage from './LoginPage';
 import NotFoundPage from './NotFoundPage';
 import ProtectedRoute from './ProtectedRoute';
@@ -52,6 +53,7 @@ const LoginRoute = ({ config }: AppRoutesProps) => {
 
 const AppRoutes = ({ config }: AppRoutesProps) => (
   <Routes>
+    <Route path="/intro" element={<IntroPage />} />
     <Route path="/login" element={<LoginRoute config={config} />} />
     <Route element={<ProtectedRoute config={config} />}>
       <Route element={<PropertyAppLayout />}>
