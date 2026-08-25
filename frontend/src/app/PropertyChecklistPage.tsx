@@ -88,15 +88,6 @@ const ResolvedPropertyChecklistPage = ({
       backLabel="매물 상세로 돌아가기"
       stage={detail.stage}
       getStageTo={getStagePath}
-      endSlot={
-        <Link
-          className={styles.replaceLink}
-          to={`/properties/${propertyId}/active-checklists/${detail.stage}?from=property-detail&mode=replace`}
-          aria-label="체크리스트 변경"
-        >
-          변경
-        </Link>
-      }
     >
       <header className={styles.heading}>
         <div>
