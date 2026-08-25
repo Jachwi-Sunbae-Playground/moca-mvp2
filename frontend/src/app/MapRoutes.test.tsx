@@ -265,7 +265,8 @@ describe('MVP2 지도 화면', () => {
 
     renderAuthenticated('/properties/10/nearby');
 
-    expect(await screen.findByRole('heading', { name: '선택한 매물 주변 2km' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '신림역 원룸 매물 주변 2km' })).toBeInTheDocument();
+    expect(screen.queryByText('신림역 원룸', { selector: 'span' })).not.toBeInTheDocument();
     expect(screen.queryByRole('list', { name: '주변 시설 목록' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '병원 표시하기, 1개' })).toHaveAttribute('aria-pressed', 'false');
     await waitFor(() => expect(requestedRadii).toContain('2000'));

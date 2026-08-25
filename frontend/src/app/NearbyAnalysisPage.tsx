@@ -207,8 +207,7 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
 
           {!property.isPending && !nearby.isPending && !nearby.isError && nearby.data !== undefined && (
             <MapNearbySheet
-              eyebrow={property.data?.name ?? '선택한 매물'}
-              heading={`선택한 매물 주변 ${radiusLabel(radius)}`}
+              heading={`${property.data?.name ?? '선택한'} 매물 주변 ${radiusLabel(radius)}`}
               counts={nearby.data.counts}
               selectedCategories={selectedCategories}
               places={filteredPlaces}
