@@ -58,6 +58,23 @@ const renderRoutes = (path: string) => {
 };
 
 describe('닉네임 인증 흐름', () => {
+  it('공개 소개 화면에서 핵심 가치와 사용 방법을 확인하고 닉네임 시작 화면으로 이동한다', async () => {
+    const user = userEvent.setup();
+    renderRoutes('/intro');
+
+    expect(
+      await screen.findByRole('heading', { name: /집은 짧게 보지만,\s*놓친 문제는\s*매일 반복됩니다\./ }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '방을 등록하고, 확인하고, 마지막에 비교하세요.' })).toBeInTheDocument();
+    expect(screen.getByText('지도나 주소로 매물 등록')).toBeInTheDocument();
+    expect(screen.getByText('사진·메모·체크 기록')).toBeInTheDocument();
+    expect(screen.getByText('후보 매물을 PDF로 비교')).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: '이름 또는 닉네임' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: '닉네임으로 바로 시작' }));
+    expect(await screen.findByRole('heading', { name: '이름만으로 바로 시작해요' })).toBeInTheDocument();
+  });
+
   it('비인증 사용자에게 닉네임과 선택 비밀번호 입력을 표시한다', () => {
     renderRoutes('/login');
 
