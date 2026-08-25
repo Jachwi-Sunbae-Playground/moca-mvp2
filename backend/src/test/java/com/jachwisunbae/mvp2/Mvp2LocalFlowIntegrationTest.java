@@ -23,6 +23,8 @@ import com.jachwisunbae.common.IntegrationTest;
 import com.jachwisunbae.property.storage.PhotoStorage;
 import com.jachwisunbae.auth.token.JwtTokenProvider;
 import java.util.Base64;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -58,6 +60,7 @@ class Mvp2LocalFlowIntegrationTest extends IntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths", hasKey("/api/maps/nearby")))
                 .andExpect(jsonPath("$.paths", hasKey("/api/properties/export.csv")))
+                .andExpect(jsonPath("$.paths", hasKey("/api/properties/export.pdf")))
                 .andExpect(jsonPath("$.paths", hasKey("/api/properties/{propertyId}/photos/{photoId}")));
 
         String token = demoLoginToken();
@@ -140,7 +143,15 @@ class Mvp2LocalFlowIntegrationTest extends IntegrationTest {
                         .header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.overallProgress.totalCount").value(3))
-                .andExpect(jsonPath("$.data.overallProgress.completedCount").value(1));
+                .andExpect(jsonPath("$.data.overallProgress.completedCount").value(1))
+                .andExpect(jsonPath("$.data.stages[0].progress.completedCount").value(1))
+                .andExpect(jsonPath("$.data.stages[1].applied").value(false));
+
+        mockMvc.perform(get("/api/properties")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[0].stages", hasSize(3)))
+                .andExpect(jsonPath("$.data.items[0].stages[0].progress.completedCount").value(1));
 
         when(photoStorage.download(anyString())).thenReturn(PNG);
         MockMultipartFile file = new MockMultipartFile("file", "room.png", "image/png", PNG);
@@ -157,6 +168,33 @@ class Mvp2LocalFlowIntegrationTest extends IntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("image/png"))
                 .andExpect(content().bytes(PNG));
+
+        long secondPropertyId = createProperty(token);
+        mockMvc.perform(post("/api/properties/export.pdf")
+                        .header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"propertyIds\":[" + propertyId + "," + secondPropertyId + "]}"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(result -> {
+                    byte[] pdf = result.getResponse().getContentAsByteArray();
+                    assertThat(pdf).startsWith((byte) '%', (byte) 'P', (byte) 'D', (byte) 'F');
+                    try (var document = Loader.loadPDF(pdf)) {
+                        String text = new PDFTextStripper().getText(document);
+                        assertThat(text)
+                                .contains("매물 비교 기록")
+                                .contains("통합 테스트 원룸")
+                                .contains("창문 방향 재확인")
+                                .contains("전화로 확인함");
+                    }
+                });
+
+        mockMvc.perform(post("/api/properties/export.pdf")
+                        .header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"propertyIds\":[" + propertyId + "," + propertyId + "]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PROPERTY_INPUT_INVALID"));
 
         mockMvc.perform(get("/api/maps/nearby")
                         .header("Authorization", bearer(token))

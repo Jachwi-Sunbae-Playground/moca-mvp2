@@ -49,11 +49,11 @@ const MyPage = ({ config }: { config: PublicConfig }) => {
             <strong>지도와 주변 시설</strong>
             <Icon name="arrow-right" size={15} />
           </Link>
-          <Link to="/export">
+          <Link to="/compare">
             <span className={styles.menuIcon}>
               <Icon name="external-link" size={15} />
             </span>
-            <strong>내보낸 비교표</strong>
+            <strong>매물 비교 PDF</strong>
             <Icon name="arrow-right" size={15} />
           </Link>
         </nav>

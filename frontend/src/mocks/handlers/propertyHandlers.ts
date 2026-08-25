@@ -25,6 +25,15 @@ export const propertyHandlers = [
       items: [...getMockProperties()].sort((a, b) => b.id - a.id).map(propertyResponse),
     }),
   ),
+  http.post('*/api/properties/export.pdf', async ({ request }) => {
+    const body = (await request.json()) as { propertyIds?: number[] };
+    if (!Array.isArray(body.propertyIds) || body.propertyIds.length < 2 || body.propertyIds.length > 5) {
+      return failure('PROPERTY_INPUT_INVALID', 400);
+    }
+    return new HttpResponse(new TextEncoder().encode('%PDF-1.7\n% mock comparison\n%%EOF'), {
+      headers: { 'Content-Type': 'application/pdf' },
+    });
+  }),
   http.post('*/api/properties', async ({ request }) => {
     const body = (await request.json()) as {
       name: string;

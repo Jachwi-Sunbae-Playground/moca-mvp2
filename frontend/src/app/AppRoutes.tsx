@@ -27,6 +27,7 @@ const MyPage = lazy(() => import('./MyPage'));
 const MapPage = lazy(() => import('./MapPage'));
 const MapLocationSelectPage = lazy(() => import('./MapLocationSelectPage'));
 const NearbyAnalysisPage = lazy(() => import('./NearbyAnalysisPage'));
+const PropertyComparePage = lazy(() => import('./PropertyComparePage'));
 const UpcomingFeaturePage = lazy(() => import('./UpcomingFeaturePage'));
 
 const lazyPage = (page: ReactNode) => <LazyRouteBoundary>{page}</LazyRouteBoundary>;
@@ -83,7 +84,7 @@ const AppRoutes = ({ config, storage, navigateExternally }: AppRoutesProps) => (
         <Route path="/me" element={lazyPage(<MyPage config={config} />)} />
         <Route path="/map" element={lazyPage(<MapPage config={config} />)} />
         <Route path="/map/select-location" element={lazyPage(<MapLocationSelectPage config={config} />)} />
-        <Route path="/compare" element={lazyPage(<UpcomingFeaturePage feature="compare" />)} />
+        <Route path="/compare" element={lazyPage(<PropertyComparePage config={config} />)} />
         <Route path="/export" element={lazyPage(<UpcomingFeaturePage feature="export" />)} />
         <Route path="/tips" element={lazyPage(<UpcomingFeaturePage feature="tips" />)} />
       </Route>

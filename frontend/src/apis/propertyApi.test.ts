@@ -58,6 +58,7 @@ describe('FE-2 API 경계', () => {
                   unconfirmedCount: 0,
                   progressRate: 0,
                 },
+                stages: [],
               },
               {
                 id: 11,
@@ -74,6 +75,7 @@ describe('FE-2 API 경계', () => {
                   unconfirmedCount: 0,
                   progressRate: 0,
                 },
+                stages: [],
               },
             ],
           }),
