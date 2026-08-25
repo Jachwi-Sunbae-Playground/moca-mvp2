@@ -119,6 +119,23 @@ const CheckItemPicker = ({
         </small>
       </div>
 
+      <div className={styles.pickerActions}>
+        <BottomActionArea sticky={false} divider={false}>
+          <Button variant="secondary" type="button" disabled={disabled} onClick={onCancel}>
+            취소
+          </Button>
+          <Button
+            fullWidth
+            className={styles.pickerAdd}
+            type="button"
+            disabled={disabled || additionCount === 0}
+            onClick={addSelected}
+          >
+            선택한 {additionCount}개 항목 추가
+          </Button>
+        </BottomActionArea>
+      </div>
+
       {result.isPending ? (
         <div className={styles.compactState} role="status">
           <span className="spinner" /> 항목을 불러오는 중이에요.
@@ -188,22 +205,6 @@ const CheckItemPicker = ({
           {result.isFetchingNextPage ? '불러오는 중…' : '항목 더 보기'}
         </Button>
       )}
-      <div className={styles.pickerActions}>
-        <BottomActionArea sticky={false} divider={false}>
-          <Button variant="secondary" type="button" disabled={disabled} onClick={onCancel}>
-            취소
-          </Button>
-          <Button
-            fullWidth
-            className={styles.pickerAdd}
-            type="button"
-            disabled={disabled || additionCount === 0}
-            onClick={addSelected}
-          >
-            선택한 {additionCount}개 항목 추가
-          </Button>
-        </BottomActionArea>
-      </div>
     </section>
   );
 };

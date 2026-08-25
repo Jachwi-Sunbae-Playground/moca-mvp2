@@ -20,7 +20,6 @@ type ChecklistEditorProps = {
   submitLabel: string;
   isSubmitting: boolean;
   serverError?: string;
-  actionDivider?: boolean;
   viewMode?: 'EDIT' | 'ADD_ITEMS';
   onViewModeChange?: (mode: 'EDIT' | 'ADD_ITEMS') => void;
   onNameChange?: (name: string) => void;
@@ -36,7 +35,6 @@ const ChecklistEditor = ({
   submitLabel,
   isSubmitting,
   serverError,
-  actionDivider = true,
   viewMode = 'EDIT',
   onViewModeChange,
   onNameChange,
@@ -241,6 +239,23 @@ const ChecklistEditor = ({
         + 체크 항목 추가
       </Button>
 
+      <div className={styles.editorActions}>
+        <BottomActionArea sticky={false} divider={false}>
+          <Button type="submit" variant="soft" fullWidth isLoading={isSubmitting} loadingLabel="저장 중…">
+            {submitLabel}
+          </Button>
+        </BottomActionArea>
+      </div>
+
+      <p className={styles.editorSaveStatus} role="status" aria-live="polite">
+        {announcement}
+      </p>
+      {serverError !== undefined && (
+        <p className="form-error" role="alert">
+          {serverError} 작성한 내용은 그대로 유지됩니다. 같은 버튼으로 다시 시도할 수 있어요.
+        </p>
+      )}
+
       <section className={styles.editorSection} aria-labelledby="selected-items-heading">
         <div className={styles.sectionHeadingRow}>
           <div>
@@ -399,22 +414,6 @@ const ChecklistEditor = ({
           </p>
         )}
       </section>
-
-      <p className={styles.editorSaveStatus} role="status" aria-live="polite">
-        {announcement}
-      </p>
-      {serverError !== undefined && (
-        <p className="form-error" role="alert">
-          {serverError} 작성한 내용은 그대로 유지됩니다. 같은 버튼으로 다시 시도할 수 있어요.
-        </p>
-      )}
-      <div className={styles.editorActions}>
-        <BottomActionArea divider={actionDivider}>
-          <Button type="submit" variant="soft" fullWidth isLoading={isSubmitting} loadingLabel="저장 중…">
-            {submitLabel}
-          </Button>
-        </BottomActionArea>
-      </div>
     </form>
   );
 };
