@@ -52,7 +52,7 @@ const property = {
 const nearbyResult = (radius: number) => ({
   center: { latitude: property.latitude, longitude: property.longitude },
   radius,
-  counts: { HOSPITAL: 1, TRANSPORT: 0, SCHOOL: 0, CONVENIENCE: 0, AGENCY: 0 },
+  counts: { HOSPITAL: 1, TRANSPORT: 0, SCHOOL: 0, CONVENIENCE: 1, AGENCY: 0 },
   places: [
     {
       providerPlaceId: 'demo-hospital-1',
@@ -62,6 +62,15 @@ const nearbyResult = (radius: number) => ({
       latitude: 37.485,
       longitude: 126.93,
       distanceMeters: 320,
+    },
+    {
+      providerPlaceId: 'demo-convenience-1',
+      name: '모카 편의점',
+      category: 'CONVENIENCE',
+      address: '서울 관악구 신림로 18',
+      latitude: 37.4845,
+      longitude: 126.9295,
+      distanceMeters: 180,
     },
   ],
 });
@@ -117,7 +126,7 @@ describe('MVP2 지도 화면', () => {
     Object.defineProperty(navigator, 'geolocation', { configurable: true, value: originalGeolocation });
   });
 
-  it('현재 위치와 매물·시설 군집을 표시하고 반경 변경과 매물 주변 분석 이동을 제공한다', async () => {
+  it('현재 위치 요약을 표시하고 시설을 선택했을 때만 핀과 목록을 제공한다', async () => {
     const requestedRadii: string[] = [];
     server.use(
       http.get(`${config.apiBaseUrl}/api/properties`, () =>
@@ -157,8 +166,19 @@ describe('MVP2 지도 화면', () => {
 
     expect(await screen.findByRole('generic', { name: '데모 지도' })).toBeInTheDocument();
     expect(await screen.findByRole('img', { name: '현재 위치' })).toBeInTheDocument();
-    expect(await screen.findByRole('img', { name: '병원 3개' })).toBeInTheDocument();
     await waitFor(() => expect(requestedRadii).toContain('2000'));
+    expect(await screen.findByRole('heading', { name: '현재 위치 주변 2km' })).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: '병원 3개' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '병원 표시하기, 3개' })).toHaveAttribute('aria-pressed', 'false');
+
+    await user.click(screen.getByRole('button', { name: '병원 표시하기, 3개' }));
+    expect(await screen.findByRole('img', { name: '병원 3개' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '시설 목록 보기' }));
+    expect(screen.getByRole('region', { name: '스크롤 가능한 주변 시설 목록' })).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: '주변 시설 목록' })).toHaveTextContent('신림 가까운 의원');
+    expect(screen.getByRole('list', { name: '주변 시설 목록' })).not.toHaveTextContent('모카 편의점');
+
     await user.click(screen.getByRole('button', { name: '1km' }));
     await waitFor(() => expect(requestedRadii).toContain('1000'));
     expect(screen.getByRole('button', { name: '1km' })).toHaveAttribute('aria-pressed', 'true');
@@ -215,7 +235,7 @@ describe('MVP2 지도 화면', () => {
     expect(screen.getByRole('button', { name: '이 위치로 매물 등록하기' })).toBeEnabled();
   });
 
-  it('초기 2km 집계, 반경 재조회, 다중 카테고리와 접힌 시설 목록을 제공한다', async () => {
+  it('초기 카테고리를 끄고 선택 카테고리만 모바일 스크롤 목록에 표시한다', async () => {
     const user = userEvent.setup();
     const requestedRadii: string[] = [];
     server.use(
@@ -231,16 +251,22 @@ describe('MVP2 지도 화면', () => {
 
     expect(await screen.findByRole('heading', { name: '선택한 매물 주변 2km' })).toBeInTheDocument();
     expect(screen.queryByRole('list', { name: '주변 시설 목록' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '병원 표시하기, 1개' })).toHaveAttribute('aria-pressed', 'false');
     await waitFor(() => expect(requestedRadii).toContain('2000'));
 
     await user.click(screen.getByRole('button', { name: '시설 목록 보기' }));
+    expect(screen.getByText('위에서 확인할 시설을 선택해 주세요.')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: '스크롤 가능한 주변 시설 목록' })).toHaveAttribute('tabindex', '0');
+
+    await user.click(screen.getByRole('button', { name: '병원 1개 표시하기' }));
     expect(await screen.findByRole('list', { name: '주변 시설 목록' })).toHaveTextContent('신림 안심의원');
+    expect(screen.getByRole('list', { name: '주변 시설 목록' })).not.toHaveTextContent('모카 편의점');
 
     await user.click(screen.getByRole('button', { name: '500m' }));
     await waitFor(() => expect(requestedRadii).toContain('500'));
 
-    await user.click(screen.getByRole('button', { name: '학교 숨기기, 0개' }));
-    expect(screen.getByRole('button', { name: '학교 표시하기, 0개' })).toHaveAttribute('aria-pressed', 'false');
+    await user.click(screen.getByRole('button', { name: '학교 표시하기, 0개' }));
+    expect(screen.getByRole('button', { name: '학교 숨기기, 0개' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: '병원 숨기기, 1개' })).toHaveAttribute('aria-pressed', 'true');
 
     await user.click(screen.getByRole('button', { name: '전체' }));

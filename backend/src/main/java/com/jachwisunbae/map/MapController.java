@@ -46,7 +46,8 @@ public class MapController {
     @GetMapping("/nearby")
     @Operation(
             summary = "주변 시설 조회",
-            description = "반경과 카테고리에 맞는 실제 장소 좌표와 반환 장소 기준 집계를 조회합니다."
+            description = "반경과 카테고리에 맞는 실제 장소 좌표와 반환 장소 기준 집계를 조회합니다. "
+                    + "Kakao 장소를 기본으로 사용하고 설정 시 TAGO의 중심 500m 실제 버스정류소를 합칩니다."
     )
     public ApiResponse<NearbyResponse> nearby(@RequestParam BigDecimal latitude,
                                               @RequestParam BigDecimal longitude,

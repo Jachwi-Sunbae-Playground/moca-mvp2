@@ -61,10 +61,10 @@
 .marker {
   position: relative;
   display: grid;
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 1.55rem;
+  height: 1.55rem;
   padding: 0;
-  border: 3px solid white;
+  border: 2px solid white;
   border-radius: 50%;
   background: #64748b;
   box-shadow: 0 0.28rem 0.8rem rgb(44 50 39 / 28%);
@@ -147,12 +147,12 @@ button.marker {
 }
 
 .clusterMarker {
-  width: 2.8rem;
-  height: 2.8rem;
-  border-width: 3px;
+  width: 1.95rem;
+  height: 1.95rem;
+  border-width: 2px;
   background: rgb(52 116 236 / 90%);
   box-shadow:
-    0 0 0 0.38rem rgb(52 116 236 / 20%),
+    0 0 0 0.22rem rgb(52 116 236 / 18%),
     0 0.3rem 0.9rem rgb(31 65 127 / 24%);
 }
 
@@ -177,11 +177,11 @@ button.marker {
 }
 
 .clusterMarker .markerIcon {
-  font-size: 0.82rem;
+  font-size: 0.68rem;
 }
 
 .markerIcon {
-  font-size: 1.1rem;
+  font-size: 0.78rem;
   font-weight: 900;
   line-height: 1;
 }

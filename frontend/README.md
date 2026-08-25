@@ -39,25 +39,25 @@ Client Secret, JWT secret, Kakao REST key, S3 자격증명은 프론트에 넣�
 
 ## 화면과 경로
 
-| 화면   | 경로                                                      | 기능                                    |
-| ------ | --------------------------------------------------------- | --------------------------------------- |
-| `00`   | `/login`                                                  | 데모 또는 Google 로그인                 |
-| `01`   | `/properties`                                             | 최근 활동순 매물, 진행 현황, CSV 비교표 |
-| `02`   | `/properties/new`                                         | 주소·좌표를 포함한 매물 등록            |
-| `03`   | `/properties/:propertyId`                                 | 사진·메모·3단계 체크 요약               |
-| `03-1` | `/properties/:propertyId/photos`                          | 업로드·대표 지정·삭제                   |
-| `03-2` | `/properties/:propertyId/memo`                            | 네 개 구조화 메모와 자유 메모 저장      |
-| `03-3` | `/properties/:propertyId/edit`                            | 기본 정보·주소·좌표 전체 수정           |
-| `04`   | `/properties/:propertyId/active-checklists/:stage`        | 기본 또는 내 체크리스트 적용·교체       |
-| `05`   | `/properties/:propertyId/checklists/:propertyChecklistId` | 상태 즉시 저장·메모 자동 저장·진행 집계 |
-| `06`   | `/checklists`                                             | 단계 탭 진입                            |
-| `07`   | `/checklists/:stage`                                      | 단계별 내 체크리스트 목록               |
-| `08`   | `/checklists/:checklistId`                                | 체크리스트 상세·수정                    |
-| `09`   | `/checklists/new`                                         | 기본·선택 항목 조합 생성                |
-| `10`   | `/me`                                                     | 계정·모드·주요 기능 이동·로그아웃       |
-| `13-1` | `/map`                                                    | 현재 위치 반경·매물·실제 시설 좌표 지도 |
-| `13-2` | `/map/select-location`                                    | 현재 위치·접힌 주소 검색·역지오코딩     |
-| `13-3` | `/properties/:propertyId/nearby`                          | 반경별 실제 시설 군집·개별 핀·장소 목록 |
+| 화면   | 경로                                                      | 기능                                      |
+| ------ | --------------------------------------------------------- | ----------------------------------------- |
+| `00`   | `/login`                                                  | 데모 또는 Google 로그인                   |
+| `01`   | `/properties`                                             | 최근 활동순 매물, 진행 현황, CSV 비교표   |
+| `02`   | `/properties/new`                                         | 주소·좌표를 포함한 매물 등록              |
+| `03`   | `/properties/:propertyId`                                 | 사진·메모·3단계 체크 요약                 |
+| `03-1` | `/properties/:propertyId/photos`                          | 업로드·대표 지정·삭제                     |
+| `03-2` | `/properties/:propertyId/memo`                            | 네 개 구조화 메모와 자유 메모 저장        |
+| `03-3` | `/properties/:propertyId/edit`                            | 기본 정보·주소·좌표 전체 수정             |
+| `04`   | `/properties/:propertyId/active-checklists/:stage`        | 기본 또는 내 체크리스트 적용·교체         |
+| `05`   | `/properties/:propertyId/checklists/:propertyChecklistId` | 상태 즉시 저장·메모 자동 저장·진행 집계   |
+| `06`   | `/checklists`                                             | 단계 탭 진입                              |
+| `07`   | `/checklists/:stage`                                      | 단계별 내 체크리스트 목록                 |
+| `08`   | `/checklists/:checklistId`                                | 체크리스트 상세·수정                      |
+| `09`   | `/checklists/new`                                         | 기본·선택 항목 조합 생성                  |
+| `10`   | `/me`                                                     | 계정·모드·주요 기능 이동·로그아웃         |
+| `13-1` | `/map`                                                    | 현재 위치 반경·시설 개수·선택 시설 지도   |
+| `13-2` | `/map/select-location`                                    | 현재 위치·접힌 주소 검색·역지오코딩       |
+| `13-3` | `/properties/:propertyId/nearby`                          | 반경별 시설 개수·선택 시설 핀·스크롤 목록 |
 
 하단 메뉴는 홈·체크리스트·지도·마이를 제공합니다. 모든 보호 화면은 조회 중·저장 중·빈 결과·오류·재시도 상태를 제공하고 키보드 포커스와 명시적 label을 유지합니다.
 

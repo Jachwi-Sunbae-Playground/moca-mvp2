@@ -39,30 +39,46 @@ class KakaoMapProviderTest {
     }
 
     @Test
-    void transportSearchCombinesSubwayAndEveryBusStopPage() {
+    void transportSearchCombinesSubwayAndConfiguredBusStops() {
+        BusStopProvider busStops = (latitude, longitude, radius) -> List.of(
+                new NearbyPlace("tago:11:bus-1", "시청앞", MapCategory.TRANSPORT, "버스정류소",
+                        BigDecimal.valueOf(37.565), BigDecimal.valueOf(126.978), 140),
+                new NearbyPlace("tago:11:bus-2", "덕수궁", MapCategory.TRANSPORT, "버스정류소",
+                        BigDecimal.valueOf(37.564), BigDecimal.valueOf(126.976), 260));
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://dapi.kakao.com");
+        server = MockRestServiceServer.bindTo(builder).build();
+        provider = new KakaoMapProvider(builder.build(), busStops);
         expectCategoryPage("SW8", 1, true, "subway-1", "시청역", "80");
-        expectKeywordPage(1, false, "bus-1", "시청앞 버스정류장", "140");
-        expectKeywordPage(2, true, "bus-2", "덕수궁 버스정류장", "260");
 
         List<NearbyPlace> places = provider.nearby(
                 BigDecimal.valueOf(37.5665), BigDecimal.valueOf(126.978), 1000, Set.of(MapCategory.TRANSPORT));
 
         assertThat(places).extracting(NearbyPlace::providerPlaceId)
-                .containsExactly("subway-1", "bus-1", "bus-2");
+                .containsExactly("subway-1", "tago:11:bus-1", "tago:11:bus-2");
         assertThat(places).allMatch(place -> place.category() == MapCategory.TRANSPORT);
+        server.verify();
+    }
+
+    @Test
+    void transportSearchKeepsSubwayResultsWhenBusStopProviderFails() {
+        BusStopProvider unavailableBusStops = (latitude, longitude, radius) -> {
+            throw new IllegalStateException("TAGO unavailable");
+        };
+        RestClient.Builder builder = RestClient.builder().baseUrl("https://dapi.kakao.com");
+        server = MockRestServiceServer.bindTo(builder).build();
+        provider = new KakaoMapProvider(builder.build(), unavailableBusStops);
+        expectCategoryPage("SW8", 1, true, "subway-1", "시청역", "80");
+
+        List<NearbyPlace> places = provider.nearby(
+                BigDecimal.valueOf(37.5665), BigDecimal.valueOf(126.978), 1000, Set.of(MapCategory.TRANSPORT));
+
+        assertThat(places).extracting(NearbyPlace::providerPlaceId).containsExactly("subway-1");
         server.verify();
     }
 
     private void expectCategoryPage(String category, int page, boolean end, String id, String name, String distance) {
         server.expect(requestTo(org.hamcrest.Matchers.containsString("/v2/local/search/category.json")))
                 .andExpect(queryParam("category_group_code", category))
-                .andExpect(queryParam("page", String.valueOf(page)))
-                .andExpect(queryParam("size", "15"))
-                .andRespond(withSuccess(response(end, id, name, distance), MediaType.APPLICATION_JSON));
-    }
-
-    private void expectKeywordPage(int page, boolean end, String id, String name, String distance) {
-        server.expect(requestTo(org.hamcrest.Matchers.containsString("/v2/local/search/keyword.json")))
                 .andExpect(queryParam("page", String.valueOf(page)))
                 .andExpect(queryParam("size", "15"))
                 .andRespond(withSuccess(response(end, id, name, distance), MediaType.APPLICATION_JSON));

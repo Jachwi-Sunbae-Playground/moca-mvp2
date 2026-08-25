@@ -10,8 +10,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.IntFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,13 +29,16 @@ public class KakaoMapProvider implements MapProvider {
 
     private static final int PAGE_SIZE = 15;
     private static final int MAX_PAGE_COUNT = 3;
+    private static final Logger LOG = LoggerFactory.getLogger(KakaoMapProvider.class);
     private final RestClient client;
+    private final Optional<BusStopProvider> busStopProvider;
 
     @Autowired
     public KakaoMapProvider(@Value("${map.kakao.rest-api-key}") String restApiKey,
                             @Value("${map.connect-timeout-millis:2000}") long connectTimeoutMillis,
-                            @Value("${map.read-timeout-millis:5000}") long readTimeoutMillis) {
-        this(createClient(restApiKey, connectTimeoutMillis, readTimeoutMillis));
+                            @Value("${map.read-timeout-millis:5000}") long readTimeoutMillis,
+                            Optional<BusStopProvider> busStopProvider) {
+        this(createClient(restApiKey, connectTimeoutMillis, readTimeoutMillis), busStopProvider);
     }
 
     private static RestClient createClient(String restApiKey, long connectTimeoutMillis, long readTimeoutMillis) {
@@ -52,7 +58,16 @@ public class KakaoMapProvider implements MapProvider {
     }
 
     KakaoMapProvider(RestClient client) {
+        this(client, Optional.empty());
+    }
+
+    KakaoMapProvider(RestClient client, BusStopProvider busStopProvider) {
+        this(client, Optional.of(busStopProvider));
+    }
+
+    private KakaoMapProvider(RestClient client, Optional<BusStopProvider> busStopProvider) {
         this.client = client;
+        this.busStopProvider = busStopProvider;
     }
 
     @Override
@@ -95,14 +110,22 @@ public class KakaoMapProvider implements MapProvider {
                     .queryParam("radius", radius).queryParam("sort", "distance")
                     .queryParam("page", page).queryParam("size", PAGE_SIZE).build()));
             if (category == MapCategory.TRANSPORT) {
-                appendPages(unique, category, page -> request(uri -> uri.path("/v2/local/search/keyword.json")
-                        .queryParam("query", "버스정류장")
-                        .queryParam("x", longitude).queryParam("y", latitude)
-                        .queryParam("radius", radius).queryParam("sort", "distance")
-                        .queryParam("page", page).queryParam("size", PAGE_SIZE).build()));
+                appendBusStops(unique, latitude, longitude, radius);
             }
         }
         return List.copyOf(unique.values());
+    }
+
+    private void appendBusStops(Map<String, NearbyPlace> unique, BigDecimal latitude, BigDecimal longitude,
+                                int radius) {
+        busStopProvider.ifPresent(provider -> {
+            try {
+                provider.nearby(latitude, longitude, radius)
+                        .forEach(place -> unique.putIfAbsent(place.providerPlaceId(), place));
+            } catch (RuntimeException exception) {
+                LOG.warn("TAGO 버스정류소 조회에 실패해 Kakao 지하철역 결과만 반환합니다.", exception);
+            }
+        });
     }
 
     private void appendPages(Map<String, NearbyPlace> unique, MapCategory category, IntFunction<JsonNode> fetchPage) {
