@@ -148,11 +148,20 @@ describe('체크리스트 탐색과 편집', () => {
     expect(screen.queryByText('원룸 제공 항목')).not.toBeInTheDocument();
 
     const addItemButton = screen.getByRole('button', { name: '+ 체크 항목 추가' });
+    const createButton = screen.getByRole('button', { name: '체크리스트 만들기' });
     const orderHeading = screen.getByRole('heading', { name: '확인 순서' });
     expect(addItemButton.compareDocumentPosition(orderHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(createButton.compareDocumentPosition(orderHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     await user.click(addItemButton);
     const optionalItem = await screen.findByRole('checkbox', { name: secondOnlineItemFixture.question });
+    const cancelButton = screen.getByRole('button', { name: '취소' });
+    const addSelectedButton = screen.getByRole('button', { name: '선택한 0개 항목 추가' });
+    const searchResultsHeading = screen.getByRole('heading', { name: '검색 결과' });
+    expect(cancelButton.compareDocumentPosition(searchResultsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      addSelectedButton.compareDocumentPosition(searchResultsHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(optionalItem).not.toBeChecked();
     await user.click(optionalItem);
     await user.type(screen.getByLabelText('내 질문 직접 추가'), '창틀 곰팡이는 괜찮은가?');

@@ -102,7 +102,6 @@ const ResolvedCreateChecklistPage = ({
             initialItems={(preset.data?.items ?? []).map(checkItemToEditorItem)}
             submitLabel="체크리스트 만들기"
             isSubmitting={create.isPending}
-            actionDivider={false}
             serverError={create.isError ? getChecklistErrorMessage(create.error) : undefined}
             viewMode={isAddingItems ? 'ADD_ITEMS' : 'EDIT'}
             onViewModeChange={(mode) => {
