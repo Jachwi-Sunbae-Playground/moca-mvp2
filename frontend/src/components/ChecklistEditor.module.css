@@ -100,22 +100,19 @@
 }
 
 .selectedCheckItems {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .selectedCheckItems li {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0;
-  border: 0;
-  border-bottom: 1px solid var(--color-border);
-  border-radius: 0;
-}
-
-.selectedCheckItems li:first-child {
-  border-top: 1px solid var(--color-border);
+  gap: 0.6rem;
+  min-height: 4rem;
+  padding: 0.75rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
 }
 
 .dragHandle {
@@ -150,6 +147,7 @@
 }
 
 .selectedCheckItems li[data-drag-over='true'] {
+  border-color: var(--color-primary);
   background: var(--color-surface-brand);
 }
 
@@ -162,6 +160,11 @@
 .itemCopy small {
   display: block;
   overflow-wrap: anywhere;
+}
+
+.itemCopy strong {
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .itemCopy small {

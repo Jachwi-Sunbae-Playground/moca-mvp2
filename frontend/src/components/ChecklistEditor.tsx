@@ -230,6 +230,17 @@ const ChecklistEditor = ({
         />
       </section>
 
+      <Button
+        type="button"
+        variant="secondary"
+        fullWidth
+        className={styles.openPicker}
+        disabled={isSubmitting}
+        onClick={() => onViewModeChange?.('ADD_ITEMS')}
+      >
+        + 체크 항목 추가
+      </Button>
+
       <section className={styles.editorSection} aria-labelledby="selected-items-heading">
         <div className={styles.sectionHeadingRow}>
           <div>
@@ -388,17 +399,6 @@ const ChecklistEditor = ({
           </p>
         )}
       </section>
-
-      <Button
-        type="button"
-        variant="secondary"
-        fullWidth
-        className={styles.openPicker}
-        disabled={isSubmitting}
-        onClick={() => onViewModeChange?.('ADD_ITEMS')}
-      >
-        + 체크 항목 추가
-      </Button>
 
       <p className={styles.editorSaveStatus} role="status" aria-live="polite">
         {announcement}

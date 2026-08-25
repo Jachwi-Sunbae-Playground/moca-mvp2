@@ -147,7 +147,11 @@ describe('체크리스트 탐색과 편집', () => {
     expect(screen.queryByText('빈 목록')).not.toBeInTheDocument();
     expect(screen.queryByText('원룸 제공 항목')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: '+ 체크 항목 추가' }));
+    const addItemButton = screen.getByRole('button', { name: '+ 체크 항목 추가' });
+    const orderHeading = screen.getByRole('heading', { name: '확인 순서' });
+    expect(addItemButton.compareDocumentPosition(orderHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    await user.click(addItemButton);
     const optionalItem = await screen.findByRole('checkbox', { name: secondOnlineItemFixture.question });
     expect(optionalItem).not.toBeChecked();
     await user.click(optionalItem);
@@ -660,10 +664,7 @@ describe('매물 체크리스트 연결과 자동 저장', () => {
       'href',
       '/properties/10/active-checklists/ON_SITE?from=property-detail',
     );
-    expect(screen.getByRole('link', { name: '체크리스트 변경' })).toHaveAttribute(
-      'href',
-      '/properties/10/active-checklists/ONLINE_PHONE?from=property-detail&mode=replace',
-    );
+    expect(screen.queryByRole('link', { name: '체크리스트 변경' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('radio', { name: '주의' }));
     await waitFor(() => expect(statusRequest).toEqual({ status: 'CAUTION' }));
