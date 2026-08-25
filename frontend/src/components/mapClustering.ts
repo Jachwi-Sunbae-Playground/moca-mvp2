@@ -45,6 +45,8 @@ const markerFromCluster = (cluster: PlaceCluster): MapMarker => {
       label: place.name,
       tone: 'place',
       category: place.category,
+      placeId: place.providerPlaceId,
+      actionable: true,
     };
   }
 
@@ -65,6 +67,7 @@ const markerFromCluster = (cluster: PlaceCluster): MapMarker => {
     tone: 'cluster',
     category,
     count: cluster.places.length,
+    actionable: true,
   };
 };
 
@@ -85,7 +88,7 @@ export const clusterNearbyPlaces = (places: NearbyPlace[], level: number): MapMa
     .forEach((place) => {
       const nearest = clusters
         .map((cluster) => ({ cluster, distance: distanceMeters(cluster, place) }))
-        .filter(({ distance }) => distance <= threshold)
+        .filter(({ cluster, distance }) => cluster.places[0]?.category === place.category && distance <= threshold)
         .sort((left, right) => left.distance - right.distance)[0]?.cluster;
       if (nearest === undefined) {
         clusters.push({ latitude: place.latitude, longitude: place.longitude, places: [place] });

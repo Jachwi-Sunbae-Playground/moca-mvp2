@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { MapCategory } from '../types/Map';
 import type { PublicConfig } from '../types/PublicConfig';
+import MapCategoryIcon, { createMapCategoryIconElement } from './MapCategoryIcon';
 import styles from './MapCanvas.module.css';
 
 export type MapMarker = {
@@ -12,6 +13,7 @@ export type MapMarker = {
   tone?: 'property' | 'current' | 'place' | 'selected' | 'cluster';
   category?: MapCategory;
   count?: number;
+  placeId?: string;
   actionable?: boolean;
 };
 
@@ -30,7 +32,7 @@ type MapCanvasProps = {
   showCenterPin?: boolean;
   showRadiusLabels?: boolean;
   selectedMarkerId?: string | null;
-  onSelectMarker?: (id: string) => void;
+  onSelectMarker?: (marker: MapMarker) => void;
   onSelectLocation?: (latitude: number, longitude: number) => void;
   onCenterChange?: (latitude: number, longitude: number) => void;
   onLevelChange?: (level: number) => void;
@@ -89,20 +91,7 @@ const markerSymbol = (marker: MapMarker): string => {
   if (marker.tone === 'cluster') return String(marker.count ?? '');
   if (marker.tone === 'current') return '◎';
   if (marker.tone === 'property' || marker.tone === 'selected') return '⌂';
-  switch (marker.category) {
-    case 'HOSPITAL':
-      return '+';
-    case 'TRANSPORT':
-      return '▤';
-    case 'SCHOOL':
-      return '⌂';
-    case 'CONVENIENCE':
-      return '▱';
-    case 'AGENCY':
-      return '▥';
-    default:
-      return '•';
-  }
+  return '•';
 };
 
 const markerClassName = (marker: MapMarker, selectedMarkerId: string | null): string =>
@@ -121,7 +110,7 @@ const markerClassName = (marker: MapMarker, selectedMarkerId: string | null): st
 const createMarkerContent = (
   marker: MapMarker,
   selectedMarkerId: string | null,
-  onSelectMarker?: (id: string) => void,
+  onSelectMarker?: (marker: MapMarker) => void,
 ): HTMLElement => {
   const canSelect = marker.actionable === true && onSelectMarker !== undefined;
   const element = document.createElement(canSelect ? 'button' : 'div');
@@ -132,16 +121,24 @@ const createMarkerContent = (
   if (!canSelect) element.setAttribute('role', 'img');
   else {
     element.setAttribute('type', 'button');
-    element.addEventListener('click', () => onSelectMarker(marker.id));
+    element.addEventListener('click', (event) => {
+      event.stopPropagation();
+      onSelectMarker(marker);
+    });
   }
 
-  const icon = document.createElement(marker.tone === 'cluster' ? 'strong' : 'span');
-  icon.className = styles.markerIcon;
-  icon.setAttribute('aria-hidden', 'true');
-  icon.textContent = markerSymbol(marker);
-  element.append(icon);
+  const usesCategoryIcon = (marker.tone === 'place' || marker.tone === 'cluster') && marker.category !== undefined;
+  if (usesCategoryIcon && marker.category !== undefined) {
+    element.append(createMapCategoryIconElement(marker.category, styles.categoryIcon));
+  } else {
+    const icon = document.createElement(marker.tone === 'cluster' ? 'strong' : 'span');
+    icon.className = styles.markerIcon;
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = markerSymbol(marker);
+    element.append(icon);
+  }
 
-  if (marker.count !== undefined && marker.tone !== 'cluster') {
+  if (marker.count !== undefined && marker.category !== undefined) {
     const count = document.createElement('strong');
     count.className = styles.markerCount;
     count.textContent = String(marker.count);
@@ -269,7 +266,16 @@ const MapCanvas = ({
           content: createMarkerContent(marker, selectedMarkerId, onSelectMarker),
           xAnchor: 0.5,
           yAnchor: marker.tone === 'property' || marker.tone === 'current' || marker.tone === 'selected' ? 0.82 : 0.5,
-          zIndex: marker.tone === 'selected' ? 9 : marker.tone === 'property' ? 8 : marker.tone === 'current' ? 7 : 5,
+          zIndex:
+            selectedMarkerId === marker.id
+              ? 10
+              : marker.tone === 'selected'
+                ? 9
+                : marker.tone === 'property'
+                  ? 8
+                  : marker.tone === 'current'
+                    ? 7
+                    : 5,
         }),
     );
     return () => {
@@ -329,12 +335,18 @@ const MapCanvas = ({
             />
           ))}
           {markers.map((marker) => {
+            const usesCategoryIcon =
+              (marker.tone === 'place' || marker.tone === 'cluster') && marker.category !== undefined;
             const markerNode = (
               <>
-                <span className={styles.markerIcon} aria-hidden="true">
-                  {markerSymbol(marker)}
-                </span>
-                {marker.count !== undefined && marker.tone !== 'cluster' && (
+                {usesCategoryIcon && marker.category !== undefined ? (
+                  <MapCategoryIcon category={marker.category} className={styles.categoryIcon} />
+                ) : (
+                  <span className={styles.markerIcon} aria-hidden="true">
+                    {markerSymbol(marker)}
+                  </span>
+                )}
+                {marker.count !== undefined && marker.category !== undefined && (
                   <strong className={styles.markerCount}>{marker.count}</strong>
                 )}
                 {(marker.tone === 'current' || marker.tone === 'selected') && (
@@ -367,7 +379,7 @@ const MapCanvas = ({
                 aria-label={marker.label}
                 onClick={(event) => {
                   event.stopPropagation();
-                  onSelectMarker(marker.id);
+                  onSelectMarker(marker);
                 }}
               >
                 {markerNode}

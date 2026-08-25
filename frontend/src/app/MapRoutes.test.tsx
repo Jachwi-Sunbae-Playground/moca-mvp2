@@ -168,16 +168,32 @@ describe('MVP2 지도 화면', () => {
     expect(await screen.findByRole('img', { name: '현재 위치' })).toBeInTheDocument();
     await waitFor(() => expect(requestedRadii).toContain('2000'));
     expect(await screen.findByRole('heading', { name: '현재 위치 주변 2km' })).toBeInTheDocument();
-    expect(screen.queryByRole('img', { name: '병원 3개' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '병원 3개' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '병원 표시하기, 3개' })).toHaveAttribute('aria-pressed', 'false');
 
     await user.click(screen.getByRole('button', { name: '병원 표시하기, 3개' }));
-    expect(await screen.findByRole('img', { name: '병원 3개' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: '병원 3개' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '시설 목록 보기' }));
     expect(screen.getByRole('region', { name: '스크롤 가능한 주변 시설 목록' })).toBeInTheDocument();
     expect(screen.getByRole('list', { name: '주변 시설 목록' })).toHaveTextContent('신림 가까운 의원');
     expect(screen.getByRole('list', { name: '주변 시설 목록' })).not.toHaveTextContent('모카 편의점');
+
+    await user.click(screen.getByRole('button', { name: '편의점 표시하기, 1개' }));
+    const convenienceMarker = await screen.findByRole('button', { name: '모카 편의점' });
+    expect(convenienceMarker.querySelector('[data-map-category-icon="CONVENIENCE"]')).toBeInTheDocument();
+    expect(
+      screen
+        .getByRole('button', { name: '편의점 숨기기, 1개' })
+        .querySelector('[data-map-category-icon="CONVENIENCE"]'),
+    ).toBeInTheDocument();
+    await user.click(convenienceMarker);
+    const placeDetail = await screen.findByRole('region', { name: '모카 편의점 시설 상세' });
+    expect(placeDetail).toHaveTextContent('편의점');
+    expect(placeDetail).toHaveTextContent('모카 편의점');
+    expect(placeDetail).toHaveTextContent('180m');
+    expect(placeDetail).toHaveTextContent('서울 관악구 신림로 18');
+    expect(screen.queryByRole('region', { name: '스크롤 가능한 주변 시설 목록' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '1km' }));
     await waitFor(() => expect(requestedRadii).toContain('1000'));
@@ -261,6 +277,14 @@ describe('MVP2 지도 화면', () => {
     await user.click(screen.getByRole('button', { name: '병원 1개 표시하기' }));
     expect(await screen.findByRole('list', { name: '주변 시설 목록' })).toHaveTextContent('신림 안심의원');
     expect(screen.getByRole('list', { name: '주변 시설 목록' })).not.toHaveTextContent('모카 편의점');
+
+    await user.click(screen.getByRole('button', { name: '편의점 1개 표시하기' }));
+    await user.click(await screen.findByRole('button', { name: '모카 편의점' }));
+    const placeDetail = await screen.findByRole('region', { name: '모카 편의점 시설 상세' });
+    expect(placeDetail).toHaveTextContent('180m');
+    expect(placeDetail).toHaveTextContent('서울 관악구 신림로 18');
+    await user.click(within(placeDetail).getByRole('button', { name: '모카 편의점 상세 닫기' }));
+    expect(screen.queryByRole('region', { name: '모카 편의점 시설 상세' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '500m' }));
     await waitFor(() => expect(requestedRadii).toContain('500'));

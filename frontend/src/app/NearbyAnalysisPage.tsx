@@ -6,6 +6,7 @@ import MapCanvas from '../components/MapCanvas';
 import type { MapMarker, MapRadiusCircle } from '../components/MapCanvas';
 import MapCategoryRail from '../components/MapCategoryRail';
 import MapNearbySheet from '../components/MapNearbySheet';
+import MapPlaceDetailCard from '../components/MapPlaceDetailCard';
 import { clusterNearbyPlaces } from '../components/mapClustering';
 import { ALL_MAP_CATEGORIES } from '../components/mapPresentation';
 import { ButtonLink } from '../components/ui/Button';
@@ -43,6 +44,7 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
   const [selectedCategories, setSelectedCategories] = useState<MapCategory[]>([]);
   const [listExpanded, setListExpanded] = useState(false);
   const [allMode, setAllMode] = useState(false);
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const nearby = useQuery({
     queryKey: ['nearby', propertyId, latitude, longitude, radius, ALL_MAP_CATEGORIES.join(',')],
     queryFn: ({ signal }) => fetchNearby(config, latitude ?? 0, longitude ?? 0, radius, ALL_MAP_CATEGORIES, signal),
@@ -58,6 +60,14 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
     [nearby.data?.places, selectedCategories],
   );
   const facilityMarkers = useMemo(() => clusterNearbyPlaces(filteredPlaces, mapLevel), [filteredPlaces, mapLevel]);
+  const selectedPlace = useMemo(
+    () => filteredPlaces.find((place) => place.providerPlaceId === selectedPlaceId) ?? null,
+    [filteredPlaces, selectedPlaceId],
+  );
+
+  useEffect(() => {
+    if (selectedPlaceId !== null && selectedPlace === null) setSelectedPlaceId(null);
+  }, [selectedPlace, selectedPlaceId]);
   const markers = useMemo<MapMarker[]>(
     () => [
       {
@@ -110,6 +120,19 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
             radiusCenter={center}
             level={mapLevel}
             showRadiusLabels
+            selectedMarkerId={selectedPlace === null ? null : `place-${selectedPlace.providerPlaceId}`}
+            onSelectMarker={(marker) => {
+              if (marker.tone === 'cluster') {
+                setViewportCenter({ latitude: marker.latitude, longitude: marker.longitude });
+                setMapLevel((current) => Math.max(3, current - 1));
+                setSelectedPlaceId(null);
+                return;
+              }
+              if (marker.placeId !== undefined) {
+                setSelectedPlaceId(marker.placeId);
+                setListExpanded(false);
+              }
+            }}
             onCenterChange={(nextLatitude, nextLongitude) => {
               const nextCenter = { latitude: nextLatitude, longitude: nextLongitude };
               setViewportCenter((current) => (coordinatesAreClose(current, nextCenter) ? current : nextCenter));
@@ -122,6 +145,7 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
               type="button"
               aria-pressed={allMode}
               onClick={() => {
+                setSelectedPlaceId(null);
                 setRadius(2000);
                 setMapLevel(levelForRadius(2000));
                 setViewportCenter(center);
@@ -137,6 +161,7 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
                 type="button"
                 aria-pressed={!allMode && radius === value}
                 onClick={() => {
+                  setSelectedPlaceId(null);
                   setRadius(value);
                   setMapLevel(levelForRadius(value));
                   setViewportCenter(center);
@@ -176,6 +201,10 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
             </div>
           )}
 
+          {selectedPlace !== null && (
+            <MapPlaceDetailCard place={selectedPlace} onClose={() => setSelectedPlaceId(null)} />
+          )}
+
           {!property.isPending && !nearby.isPending && !nearby.isError && nearby.data !== undefined && (
             <MapNearbySheet
               eyebrow={property.data?.name ?? '선택한 매물'}
@@ -184,7 +213,10 @@ const ResolvedNearbyAnalysisPage = ({ config, propertyId }: { config: PublicConf
               selectedCategories={selectedCategories}
               places={filteredPlaces}
               expanded={listExpanded}
-              onToggleExpanded={() => setListExpanded((current) => !current)}
+              onToggleExpanded={() => {
+                setListExpanded((current) => !current);
+                if (!listExpanded) setSelectedPlaceId(null);
+              }}
               onToggleCategory={(category) => {
                 setSelectedCategories((current) => toggleCategory(current, category));
                 setAllMode(false);
