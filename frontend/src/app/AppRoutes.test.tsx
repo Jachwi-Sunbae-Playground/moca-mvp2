@@ -63,15 +63,21 @@ describe('닉네임 인증 흐름', () => {
     renderRoutes('/intro');
 
     expect(
-      await screen.findByRole('heading', { name: /집은 짧게 보지만,\s*놓친 문제는\s*매일 반복됩니다\./ }),
+      await screen.findByRole('heading', { name: /월세가 조금 싼 방보다,\s*돈을 잃지 않을 방을\s*고르세요\./ }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '방을 등록하고, 확인하고, 마지막에 비교하세요.' })).toBeInTheDocument();
+    expect(screen.getByText('2년이면 120만원')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: '방을 등록하고, 돈이 새는 질문부터 확인하고, 마지막에 비교하세요.',
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByText('지도나 주소로 매물 등록')).toBeInTheDocument();
-    expect(screen.getByText('사진·메모·체크 기록')).toBeInTheDocument();
-    expect(screen.getByText('후보 매물을 PDF로 비교')).toBeInTheDocument();
+    expect(screen.getByText('돈 새는 질문부터 기록')).toBeInTheDocument();
+    expect(screen.getByText('후보 매물 전체를 PDF로 비교')).toBeInTheDocument();
+    expect(screen.getByText('자취선배는 계약 후를 살아갈 임차인의 편입니다.')).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: '이름 또는 닉네임' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('link', { name: '닉네임으로 바로 시작' }));
+    await user.click(screen.getByRole('link', { name: '내 방에서 돈 새는 곳 확인하기' }));
     expect(await screen.findByRole('heading', { name: '이름만으로 바로 시작해요' })).toBeInTheDocument();
   });
 
