@@ -214,6 +214,11 @@
   line-height: 1.55;
 }
 
+.previewDeck {
+  display: grid;
+  gap: 1rem;
+}
+
 .preview {
   position: relative;
   display: grid;
@@ -251,6 +256,128 @@
 
 .previewHeader strong {
   font-size: 1.05rem;
+}
+
+.recordPreview {
+  gap: 0.65rem;
+  background: color-mix(in srgb, var(--color-brand-100) 24%, var(--color-surface));
+}
+
+.recordPreview::before {
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.previewFacts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.previewFacts span {
+  display: flex;
+  min-width: 0;
+  min-height: 3rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  color: var(--color-ink-soft);
+  font-size: 0.56rem;
+  font-weight: 750;
+}
+
+.previewStages {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.previewStages > div {
+  display: grid;
+  grid-template-columns: 1.7rem minmax(0, 1fr) 4.7rem;
+  min-height: 3rem;
+  align-items: center;
+  gap: 0.55rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.previewStages > div:last-child {
+  border-bottom: 0;
+}
+
+.previewStages > div > span {
+  display: grid;
+  width: 1.65rem;
+  height: 1.65rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  color: var(--color-muted);
+  font-size: 0.65rem;
+  place-items: center;
+}
+
+.previewStages p {
+  display: grid;
+  gap: 0.14rem;
+  margin: 0;
+}
+
+.previewStages strong {
+  font-size: 0.68rem;
+}
+
+.previewStages small {
+  color: var(--color-muted);
+  font-size: 0.54rem;
+}
+
+.previewStages i {
+  position: relative;
+  display: block;
+  height: 0.38rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-check-unconfirmed);
+}
+
+.previewStages i::after {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-check-good);
+  content: '';
+}
+
+.previewStages i[data-progress='complete']::after {
+  width: 100%;
+}
+
+.previewStages i[data-progress='partial']::after {
+  width: 62.5%;
+}
+
+.previewNearby {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding-top: 0.15rem;
+}
+
+.previewNearby strong {
+  margin-right: auto;
+  font-size: 0.66rem;
+}
+
+.previewNearby span {
+  padding: 0.28rem 0.45rem;
+  border-radius: 999px;
+  background: var(--color-brand-100);
+  color: var(--color-primary-dark);
+  font-size: 0.53rem;
+  font-weight: 800;
 }
 
 .previewSaving {
