@@ -63,9 +63,16 @@ describe('닉네임 인증 흐름', () => {
     renderRoutes('/intro');
 
     expect(
-      await screen.findByRole('heading', { name: /월세가 조금 싼 방보다,\s*돈을 잃지 않을 방을\s*고르세요\./ }),
+      await screen.findByRole('heading', {
+        name: /집은 짧게 보지만,\s*놓친 문제는 매일 반복됩니다\.\s*돈을 잃지 않는 방을 고르세요\./,
+      }),
     ).toBeInTheDocument();
+    expect(screen.getByText('집을 구하는 사람을 위한 · 매물의 기록과 관리')).toBeInTheDocument();
+    expect(screen.getByText('매물의 기록과 관리 · 후보 매물 A')).toBeInTheDocument();
+    expect(screen.getByText('매물의 기록과 관리 순서')).toBeInTheDocument();
     expect(screen.getByText('2년이면 120만원')).toBeInTheDocument();
+    expect(screen.getByText('사진 4장')).toBeInTheDocument();
+    expect(screen.getByText('5/8 확인')).toBeInTheDocument();
     expect(
       screen.getByRole('heading', {
         name: '방을 등록하고, 돈이 새는 질문부터 확인하고, 마지막에 비교하세요.',

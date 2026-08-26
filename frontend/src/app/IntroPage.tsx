@@ -88,16 +88,17 @@ const IntroPage = () => (
     <div className={styles.content} id="intro-content">
       <section className={styles.hero} aria-labelledby="intro-heading">
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>집 보는 10분이 · 앞으로의 2년을 만듭니다</p>
+          <p className={styles.eyebrow}>집을 구하는 사람을 위한 · 매물의 기록과 관리</p>
           <h1 id="intro-heading">
-            월세가 조금 싼 방보다,
+            집은 짧게 보지만,
             <br />
-            <mark>돈을 잃지 않을 방을</mark>
+            놓친 문제는 매일 반복됩니다.
             <br />
-            고르세요.
+            <mark>돈을 잃지 않는 방을 고르세요.</mark>
           </h1>
           <p className={styles.heroDescription}>
-            관리비, 보증금, 수리비. 계약 뒤에 알면 늦는 돈부터 집을 보는 순간 확인하세요.
+            주소·사진·메모·체크 결과를 매물별로 기록하고 관리해, 관리비·보증금·수리비처럼 계약 뒤에 알면 늦는 돈을 집을
+            보는 순간 확인하세요.
           </p>
           <p className={styles.heroPositioning}>
             <Icon name="arrow-right" size={17} />
@@ -118,40 +119,96 @@ const IntroPage = () => (
           <p className={styles.entryNote}>Google 로그인 없이 이름이나 닉네임만 입력하면 바로 사용할 수 있어요.</p>
         </div>
 
-        <div className={styles.preview} aria-label="월세만으로 비교했을 때 놓칠 수 있는 비용 예시">
-          <div className={styles.previewHeader}>
-            <span>후보 매물 A · 2년 총비용 다시 보기</span>
-            <strong>역에서 5분 · 최상층 원룸</strong>
-            <small>광고에서는 주변 매물보다 월세 5만원 저렴</small>
-          </div>
-          <div className={styles.previewSaving}>
-            <span>보이는 월세</span>
-            <strong>− 5만원</strong>
-            <small>주변 매물보다 저렴</small>
-          </div>
-          <div className={styles.previewLosses}>
-            <p>
-              <span>관리비·별도 비용</span>
-              <strong>+ 5만원 / 월</strong>
-            </p>
-            <p>
-              <span>전입신고 가능 여부</span>
-              <strong>확인 전</strong>
-            </p>
-            <p>
-              <span>누수·방수 이력</span>
-              <strong>확인 전</strong>
-            </p>
-            <p>
-              <span>보증금 권리관계</span>
-              <strong>확인 전</strong>
-            </p>
-          </div>
-          <div className={styles.previewBottomLine}>
-            <span>월 5만원 차이 × 24개월</span>
-            <strong>2년이면 120만원</strong>
-            <small>예시이며 실제 비용은 매물 조건에 따라 달라집니다.</small>
-          </div>
+        <div className={styles.previewDeck} aria-label="자취선배의 매물 비용 비교와 기록 관리 예시">
+          <article className={styles.preview} aria-label="월세만으로 비교했을 때 놓칠 수 있는 비용 예시">
+            <div className={styles.previewHeader}>
+              <span>손실 비교 · 후보 매물 A의 2년 총비용</span>
+              <strong>역에서 5분 · 최상층 원룸</strong>
+              <small>광고에서는 주변 매물보다 월세 5만원 저렴</small>
+            </div>
+            <div className={styles.previewSaving}>
+              <span>보이는 월세</span>
+              <strong>− 5만원</strong>
+              <small>주변 매물보다 저렴</small>
+            </div>
+            <div className={styles.previewLosses}>
+              <p>
+                <span>관리비·별도 비용</span>
+                <strong>+ 5만원 / 월</strong>
+              </p>
+              <p>
+                <span>전입신고 가능 여부</span>
+                <strong>확인 전</strong>
+              </p>
+              <p>
+                <span>누수·방수 이력</span>
+                <strong>확인 전</strong>
+              </p>
+              <p>
+                <span>보증금 권리관계</span>
+                <strong>확인 전</strong>
+              </p>
+            </div>
+            <div className={styles.previewBottomLine}>
+              <span>월 5만원 차이 × 24개월</span>
+              <strong>2년이면 120만원</strong>
+              <small>예시이며 실제 비용은 매물 조건에 따라 달라집니다.</small>
+            </div>
+          </article>
+
+          <article
+            className={`${styles.preview} ${styles.recordPreview}`}
+            aria-label="사진과 메모, 체크리스트를 모은 매물 기록 관리 예시"
+          >
+            <div className={styles.previewHeader}>
+              <span>매물의 기록과 관리 · 후보 매물 A</span>
+              <strong>신림역 원룸</strong>
+              <small>관악구 신림동 · 보증금 1,000만원 / 월세 55만원</small>
+            </div>
+            <div className={styles.previewFacts}>
+              <span>
+                <Icon name="image" size={15} /> 사진 4장
+              </span>
+              <span>
+                <Icon name="edit" size={15} /> 메모 있음
+              </span>
+              <span>
+                <Icon name="link" size={15} /> 발견 경로
+              </span>
+            </div>
+            <div className={styles.previewStages}>
+              <div>
+                <span>1</span>
+                <p>
+                  <strong>온라인·전화</strong>
+                  <small>6/6 확인</small>
+                </p>
+                <i data-progress="complete" />
+              </div>
+              <div>
+                <span>2</span>
+                <p>
+                  <strong>집에서 확인</strong>
+                  <small>5/8 확인</small>
+                </p>
+                <i data-progress="partial" />
+              </div>
+              <div>
+                <span>3</span>
+                <p>
+                  <strong>계약 전</strong>
+                  <small>필요할 때 시작</small>
+                </p>
+                <i />
+              </div>
+            </div>
+            <div className={styles.previewNearby}>
+              <strong>주변 500m</strong>
+              <span>교통 7</span>
+              <span>편의점 12</span>
+              <span>병원 4</span>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -175,7 +232,7 @@ const IntroPage = () => (
       </section>
 
       <section className={styles.howToUse} id="how-to-use" aria-labelledby="how-heading">
-        <p className={styles.sectionLabel}>돈을 잃지 않기 위한 기록 순서</p>
+        <p className={styles.sectionLabel}>매물의 기록과 관리 순서</p>
         <h2 id="how-heading">방을 등록하고, 돈이 새는 질문부터 확인하고, 마지막에 비교하세요.</h2>
         <ol className={styles.stepList}>
           {steps.map((step, index) => (
@@ -243,9 +300,9 @@ const IntroPage = () => (
           <Icon name="home" size={28} />
         </span>
         <p>다음 방을 보기 전에</p>
-        <h2 id="final-cta-heading">싼 방보다, 돈을 잃지 않을 방을 고르세요.</h2>
+        <h2 id="final-cta-heading">돈을 잃지 않는 방을 고르세요.</h2>
         <p className={styles.finalDescription}>
-          가입 절차 없이 닉네임으로 시작하고, 다음 임장에서 필요한 질문과 기록만 남기면 됩니다.
+          가입 절차 없이 닉네임으로 시작하고, 다음 임장에서 필요한 질문과 답을 매물별로 기록하고 관리하세요.
         </p>
         <Link className={styles.primaryCta} to="/login">
           닉네임으로 무료 시작하기
